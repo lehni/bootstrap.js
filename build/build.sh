@@ -39,6 +39,7 @@ fi
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DRHINO -DHELMA" $MODE
 if [ -d ../src/tests/ ]
+then
 ./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY" $MODE
 ./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DBROWSER_LEGACY" $MODE
 fi
