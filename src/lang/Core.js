@@ -8,8 +8,8 @@
  * Inspirations:
  * http://dean.edwards.name/weblog/2006/03/base/
  * http://dev.helma.org/Wiki/JavaScript+Inheritance+Sugar/
- * http://prototypejs.org/
  * http://mootools.net/
+ * http://prototypejs.org/
  */
 
 ////////////////////////////////////////////////////////////////////////////////
