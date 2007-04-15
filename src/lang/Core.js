@@ -8,16 +8,21 @@
  * Inspirations:
  * http://dean.edwards.name/weblog/2006/03/base/
  * http://dev.helma.org/Wiki/JavaScript+Inheritance+Sugar/
- * http://mootools.net/
  * http://prototypejs.org/
+ * http://mootools.net/
+ *
+ * Some code in this file is based on Mootools.net and adapted to the
+ * architecture of Bootstrap, with added changes in design and architecture
+ * where deemeded necessary.
+ * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
 
 ////////////////////////////////////////////////////////////////////////////////
 // Core (inject / extend)
 
+#ifdef BROWSER_LEGACY
 // Fix __proto__ for browsers where it is not implemented. Do this before 
 // anything else, for "var i in" to work.
-#ifdef BROWSER_LEGACY
 if (!this.__proto__) {
 	var fix = [Object, Function, Number, Boolean, String, Array, Date, RegExp];
 	for (var i in fix)
@@ -59,7 +64,7 @@ undefined = window.undefined;
 #ifdef HELMA
 			// On normal JS, we can hide $static through our dontEnum().
 			// on Helma, the native dontEnum can only be called on fields that
-			// are defined and is not generally valid. So we need to check
+			// are defined already, as an added attribute. So we need to check
 			// against $static here...
 			if (name != "$static") (function(val, name) {
 #else // !HELMA
@@ -279,11 +284,8 @@ undefined = window.undefined;
 
 	// First dontEnum the fields that cannot be overridden (wether they change
 	// value or not, they're allways hidden, by setting the first argument to true)
-	// TODO: Fix this bug in Rhino:
-	// "prototype" is only needed for Rhino, where e.g. for (var i in Function)
-	// enumerates "prototype", while it shouldn't.
 	Object.prototype.dontEnum(true, "dontEnum", "_dontEnum", "__proto__",
-		"prototype", "constructor", "$static");
+		"constructor", "$static");
 #endif // !HELMA
 
 	// From now on Function inject can be used to enhance any prototype, for example
