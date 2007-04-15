@@ -13,10 +13,9 @@ if (!Function.prototype.$constructor) {
 	// Object.toString instanceof Function still returns true.
 	Function = Function.extend({
 		$constructor: function() {
-			var args = $A(arguments), body = args.pop();
-			var cx = Packages.org.mozilla.javascript.Context.getCurrentContext();
-			return cx.compileFunction({}, "function (" + args + ") {" + 
-				body + "}", "Function", 0, null);
+			var params = $A(arguments), body = params.pop();
+			return Packages.org.mozilla.javascript.Context.getCurrentContext().compileFunction(
+				{}, "function (" + params + ") {" + body + "}", "Function", 0, null);
 		}
 	});
 }
