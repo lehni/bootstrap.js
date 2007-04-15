@@ -9,6 +9,7 @@
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
 #endif
+
 #include "Fx.js"
 #include "Fx.CSS.js"
 
