@@ -55,7 +55,7 @@ Array.methods.inject({
 
 	find: function(iter) {
 		// use the faster indexOf in case we're not using iterator functions.
-		if (iter && !/function|regexp/.test($typeof(iter))) return this[this.indexOf(iter)];
+		if (iter && !/^(function|regexp)$/.test($typeof(iter))) return this[this.indexOf(iter)];
 		else return Enumerable.find.call(this, iter);
 	},
 
