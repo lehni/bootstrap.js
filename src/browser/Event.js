@@ -153,7 +153,7 @@ Event = Object.extend(function() {
 			this.control = event.ctrlKey;
 			this.alt = event.altKey;
 			this.meta = event.metaKey;
-			if (/mousewheel|DOMMouseScroll/.test(this.type)) {
+			if (/^(mousewheel|DOMMouseScroll)$/.test(this.type)) {
 				this.wheel = event.wheelDelta ?
 					event.wheelDelta / (window.opera ? -120 : 120) : 
 					- (event.detail || 0) / 3;

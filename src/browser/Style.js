@@ -35,7 +35,7 @@ Element.inject(function() {
 				// this.currentStyle: IE, document.defaultView: everything else
 				if (!style) style = document.defaultView && document.defaultView.getComputedStyle(this, '').getPropertyValue(name.hyphenate())
 					|| this.currentStyle && this.currentStyle[name];
-				else if (style == 'auto' && /width|height/.test(name))
+				else if (style == 'auto' && /^(width|height)$/.test(name))
 					return this['offset' + name.capitalize()] + 'px';
 			}
 			// case 'clip': if (name == 'clip') // TODO: split clip rect!

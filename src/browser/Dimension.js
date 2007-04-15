@@ -53,7 +53,7 @@ Element.inject(function() {
 
 		getRelativeOffset: cumulate('offset', 'offsetParent', function(el) {
 	        return Element.prototype.getTag.call(el) != 'body' &&
-				!/relative|absolute/.test(Element.prototype.getStyle.call(el, 'position'))
+				!/^(relative|absolute)$/.test(Element.prototype.getStyle.call(el, 'position'))
 		}),
 
 		// TODO: needed?

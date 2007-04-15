@@ -47,7 +47,7 @@ window.inject({
 			}
 			focus = params.focus;
 			params = params.each(function(p, n) {
-				if (!/focus|confirm/.test(n))
+				if (!/^(focus|confirm)$/.test(n))
 					this.push(n + '=' + p);
 			}, []).join(',');
 		}

@@ -244,9 +244,9 @@ Element.inject(function() {
 
 		appendText: function(text) {
 			if (Browser.IE) {
-				switch(this.getTag()) {
-					case 'style': this.styleSheet.cssText = text; return this;
-					case 'script': this.setProperty('text', text); return this;
+				switch (this.getTag()) {
+				case 'style': this.styleSheet.cssText = text; return this;
+				case 'script': this.setProperty('text', text); return this;
 				}
 			}
 			this.appendChild(document.createTextNode(text));
@@ -383,7 +383,7 @@ Element.tags = (function() {
 		input: {
 			getValue: function() {
 				if (this.checked && /checkbox|radio/.test(this.type) ||
-					/hidden|text|password/.test(this.type))
+					/^(hidden|text|password)$/.test(this.type))
 					return this.value;
 			}			
 		}.inject(formElement),
