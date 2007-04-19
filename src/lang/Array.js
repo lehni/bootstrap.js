@@ -12,10 +12,11 @@
  */
 function $A(list, start, end) {
 	if (!list) return [];
-	else if (list.toArray && !start && end == null) return list.toArray();
-	var res = [];
-	if (!start) start = 0;
 	if (end == null) end = list.length;
+	if (list.toArray && !start && end == list.length)
+		return list.toArray();
+	if (!start) start = 0;
+	var res = [];
 	for (var i = start; i < end; i++)
 		res[i - start] = list[i];
 	return res;
