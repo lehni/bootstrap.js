@@ -13,8 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Window
 
-// Fix background flickering on IE. Notice: jsstrip.py was modified
-// to not remove compile time switches for IE.
+// Fix background flickering on IE.
 /*@cc_on
 try { document.execCommand('BackgroundImageCache', false, true); }
 catch (e) {}
@@ -28,7 +27,6 @@ window.inject({
 	 * If param is an object, additional parameters maybe be defined, such as
 	 * params.confirm, params.focus, etc. Also, if params.width & height are 
 	 * defined, The window is centered on screen.
-	 * TODO: check new window.open!
 	 */
 	open: function(url, title, params) {
 		var focus;

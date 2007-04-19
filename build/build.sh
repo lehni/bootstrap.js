@@ -9,7 +9,7 @@
 # The build script that produces all the different versions of the
 # bootstrap library:
 #
-# bootstrap.js          For new generation browsers.
+# bootstrap.browser.js  For new generation browsers.
 # bootstrap-legacy.js   For legacy browsers (IE 5, Opera 7, etc)
 # bootsrap-rhino.js     For Rhino based JS engines in Java
 # bootstrap-helma.js    For Helma, the JS Web Application Server
@@ -34,10 +34,10 @@ if [ ! -d ../out/ ]
 then
 	mkdir ../out/
 fi
-./preprocess.sh ../src/build.js ../out/bootstrap.js "-DBROWSER" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DRHINO -DHELMA" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DGETTER_SETTER" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DGETTER_SETTER" $MODE
 if [ -d ../src/tests/ ]
 then
 ./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY" $MODE
@@ -48,3 +48,4 @@ fi
 
 ./preprocess.sh ../src/util/Template.js ../out/Template-helma.js "-DRHINO -DHELMA" $MODE
 ./preprocess.sh ../src/util/Template.js ../out/Template-rhino.js "-DRHINO" $MODE
+./preprocess.sh ../src/util/Template.js ../out/Template-browser.js "-DBROWSER" $MODE

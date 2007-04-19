@@ -49,17 +49,17 @@ Element.inject(function() {
 			// convert multi params to array:
 			if (arguments.length > 2) value = $A(arguments, 1);
 			switch (name) {
-				case 'opacity':
-					if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
-					if (Browser.IE) this.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
-					this.style.opacity = this.opacity = value;
-					this.setVisible(value);
-					break;
-				case 'clip':
-					this.style.clip = $typeof(value) == 'array' ? 'rect(' + value.join('px ') + 'px)' : value;
-					break;
-				default:
-					this.style[name.toCamelCase()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
+			case 'opacity':
+				if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
+				if (Browser.IE) this.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
+				this.style.opacity = this.opacity = value;
+				this.setVisible(value);
+				break;
+			case 'clip':
+				this.style.clip = $typeof(value) == 'array' ? 'rect(' + value.join('px ') + 'px)' : value;
+				break;
+			default:
+				this.style[name.toCamelCase()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
 			}
 			return this;
 		},
@@ -72,13 +72,13 @@ Element.inject(function() {
 
 		setStyles: function(styles) {
 			switch ($typeof(styles)) {
-				case 'object':
-					styles.each(function(style, name) {
-						this.setStyle(name, style);
-					}, this);
-					break;
-				case 'string':
-					this.cssText = styles;
+			case 'object':
+				styles.each(function(style, name) {
+					this.setStyle(name, style);
+				}, this);
+				break;
+			case 'string':
+				this.cssText = styles;
 			}
 			return this;
 		},
@@ -101,7 +101,7 @@ Element.inject(function() {
 		}
 	};
 
-	// create getters and setters for some often used css properties:
+	// Create getters and setters for some often used css properties:
 	$A('opacity color background border margin padding clip display').each(function(name) {
 		var part = name.capitalize();
 		methods['get' + part] = function() {
@@ -113,7 +113,7 @@ Element.inject(function() {
 		};
 	});
 
-	// dimension properties:
+	// Dimension properties:
 	$A('left top width height').each(function(name) {
 		var part = name.capitalize();
 		methods['get' + part] = function() {

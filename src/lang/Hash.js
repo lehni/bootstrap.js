@@ -48,7 +48,6 @@ Hash = Object.extend({
 	 */
 	merge: function(obj) {
 		return obj.each(function(val, i) {
-			//this[i] = val;
 			this[i] = $typeof(this[i]) != 'object' ? val : arguments.callee.call(this[i], val);
 		}, this);
 	},

@@ -37,6 +37,6 @@ Notes:
 
   use this:
 
-      /one|two|three/.test('two');
+      /^(one|two|three)$/.test('two');
 
   It is shorter, much faster on Firefox, and about on pair on others.
