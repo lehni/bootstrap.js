@@ -1,81 +1,19 @@
 /**
- * JavaScript Template Engine for Helma
+ * JavaScript Template Engine
  * (c) 2005 - 2007, Juerg Lehni, http://www.scratchdisk.com
  *
+ * Template.js is released under the MIT license
  * http://dev.helma.org/Wiki/JavaScript+Template+Engine/
- * 
- * Revisions:
- * 
- * 0.22  More clean-ups in macro parsing code, distinction between control tags
- *       and macro tags is now only on the handling level, not parsing level.
- *       This adds feature like prefix / suffix to foreach and if / elseif, and
- *       resulted in cleaner code. 
- *       Additionally, the separator parameter can now be set in foreach.
+ * http://bootstrap-js.net/ 
+ */
+
+/**
+ * IMPORTANT:
  *
- * 0.21  Major rewrite and refactoring of most parts, adaption of Hannes' latest
- *       additions to Helma skins (sub templates, nested macros, filters),
- *       varios design changes (e.g. only allow to define and set $-variables for
- *       inside templates).
- *
- * 0.20  Refactored the code rendering code to be more readibly and smaller.
- *       Removed Helma dependency, by using preprocessing macros.
- *
- * 0.19  Added support for sub templates and a special macro
- *       for both rendering sub templates and external templates.
- * 
- * 0.18  Added support for encoding parameter, fixed a bug in <% else %>
- * 
- * 0.17  Many clean-ups and simplifications of regular expressions and parsing.
- *       At parsing time, no code is evaluated any longer, except the final
- *       result. This leads to further speed improvements by about 1.5.
- * 
- * 0.16  Fixed issues with the display of errors. The correct line numbers
- *       should be reported now. If a macro call results in an exception
- *       The exception is caught and repported just like in Helma skins now.
- * 
- * 0.15  Added the possibility for macro tags to swallow the following line
- *       separator, if there is any, by adding a minus at the end: <% macro -%>.
- *       Control tags like if, else, elseif, end, foreach, set and comments 
- *       (<%-- --%>) automatically swallow the following line seperator.
- *
- * 0.14  Added support for res.handlers.
- *       Switched to java.util.regex for the tag parser.
- *       Fixed a bug with escaped quotes in macro parameters.
- *       Reformated template generating code to be more readable.
- * 
- * 0.13  Added support for properties in <% %>-tags (not only macros)
- *       and fixed an incompatibility with the Rhino Debugger and jstl templates.
- * 
- * 0.12  Fixed various bugs that were introduced in the 0.11 rewrite.
- * 
- * 0.11  Replaced all the dirty hacks for keeping track of template line numbers 
- *       and linking them to code line numbers by a clean implementation of the
- *       same functionality.
- *       The result is a faster and less resource hungry parser.
- *       Cleaned up the code, seperated tag parser form line parser.
- * 
- * 0.10  More speed improvements, parsing is now around 6-7 times faster
- *       than in 0.8
- * 
- * 0.9   Various speed improvements, leading to an overall decrease of parsing
- *       time by more than factor 3.
- * 
- * 0.8   Added support for HopObject collections in foreach
- *       Removed regexp filter for if() expressions that sometimes seemed
- *       to deadlock
- *       Fixed a bug with finding the right template in the inheritance chain
- *       if it was overriden by another one.
- * 
- * 0.7   Fixed problems with error reports. Full stacktraces are now printed,
- *       and errors caused in macros called from the template are now properly
- *       detected and reported.
- *       Switched to using Context.evaluateString() instead of eval(),
- *       for improve of speed and reception of proper exceptions.
- * 
- * 0.6   fixed a bug that caused macros in  objects other than 'this' and
- *       'root' to fail.
- * 
- * 0.5   first public release.
+ * Template.js is designed to be mostly independent of Bootstrap.js,
+ * but uses two of its functions: trim() and capitalize() from String.prototype.
+ * These are present in other frameworks as well. If not, they need to be
+ * added manually, or Template.js need to be changed.
  */
 
 #ifdef HELMA
@@ -91,7 +29,7 @@ if (!global.encodeAll)
 // Retrieve a reference to the global scope.
 global = (function() { return this })();
 
-// Define TemplateWriter that copies Helma's ResponseTrans
+// Define TemplateWriter that mimics Helma's ResponseTrans
 function TemplateWriter() {
 	this.buffers = [];
 	this.current = [];
@@ -106,7 +44,7 @@ TemplateWriter.prototype = {
 	writeln: function(what) {
 		if (what != null)
 			this.current.push(what);
-		this.current.push('\n');
+		this.current.push(Template.LINE_BREAK);
 	},
 
 	push: function() {
@@ -173,6 +111,12 @@ function Template(object, name) {
 	}
 }
 
+#ifdef RHINO
+Template.LINE_BREAK = java.lang.System.getProperty('line.separator');
+#else
+Template.LINE_BREAK = '\n';
+#endif
+
 Template.prototype = {
 	render: function(object, param, out) {
 		try {
@@ -236,28 +180,37 @@ Template.prototype = {
 		// this supports multiline tags, such as <% ...>...\n...</%>
 		// the finding of closing tags counts nested tags, to make sub templates
 		// work
-		var buffer = []; // line buffer
-		var lineBreak = java.lang.System.getProperty("line.separator");
 		var skipLineBreak = false;
 		var tagCounter = 0;
 		var templateTag = null;
-		// Container for the generated code lines.
-		var code = [ "this.__render__ = function(param, template, out) {" ];
 		// Stack for control tags and loops
 		var stack = { control: [], loop: {} };
-		var last = null;
-		try {
-			function append() {
-				if (buffer.length > 0) {
-					// Write out text lines
-					var part = buffer.join('');
-					if (templateTag)
-						templateTag.buffer.push(part);
-					else
-						code.push('out.write("' + this.encodeJs(part) + '");');
-					buffer.length = 0;
-				}
+		// String buffer, joined with '' to retrieve the concatenated string
+		var buffer = [];
+		// Container for the generated code lines.
+		var code = [ "this.__render__ = function(param, template, out) {" ];
+		// Append strings in buffer either to templateTag or to code, depending
+		// on the mode we're in.
+		function append() {
+			if (buffer.length) {
+				// Write out text lines
+				var part = buffer.join('');
+				if (templateTag)
+					templateTag.buffer.push(part);
+				else // Encodes by escaping ",',\n,\r
+#ifdef RHINO
+					code.push('out.write(' + uneval(part) + ');');
+#else // !RHINO
+					// Do not rely on uneval on the client side, although it's 
+					// there on some browsers...
+					// Unfortunatelly, part.replace(/["'\n\r]/mg, "\\$&") does
+					// not work on Safari. TODO: Report bug:
+					code.push('out.write("' + part.replace(/(["'\n\r])/mg, "\\$1") + '");');
+#endif // !RHINO
+				buffer.length = 0;
 			}
+		}
+		try {
 			for (var i = 0; i < lines.length; i++) {
 				var line = lines[i];
 				var start = 0, end = 0;
@@ -277,7 +230,7 @@ Template.prototype = {
 							if (skipLineBreak)
 								skipLineBreak = false;
 							else
-								buffer.push(line.substring(end), lineBreak);
+								buffer.push(line.substring(end), Template.LINE_BREAK);
 							break;
 						}
 					} else {
@@ -312,7 +265,7 @@ Template.prototype = {
 							// Now buffer collects lines between tags
 							buffer.length = 0;
 						} else {
-							buffer.push(line.substring(start), lineBreak);
+							buffer.push(line.substring(start), Template.LINE_BREAK);
 							break;
 						}
 					}
@@ -341,7 +294,7 @@ Template.prototype = {
 				this.tags.unshift(null);
 			}
 			code.push('}');
-			return code.join(lineBreak);
+			return code.join(Template.LINE_BREAK);
 		} catch (e) {
 			this.throwError(e, code.length);
 		}
@@ -538,12 +491,14 @@ Template.prototype = {
 		// Convert other macros to filter strings:
 		for (var i = 0; i < macros.length; i++) {
 			var m = macros[i];
-			macros[i] = '{ command: "' + m.command + '", name: "' + m.name + '", object: ' + m.object + ', arguments: ' + m.arguments + ' }';
+			macros[i] = '{ command: "' + m.command + '", name: "' + m.name +
+				'", object: ' + m.object + ', arguments: ' + m.arguments + ' }';
 		}
 		macro.filters = macros.length > 0 ? '[ ' + macros.join(', ') + ' ]' : null;
 		var values = macro.values, encoding = values.encoding;
 		if (encoding) {
 			// Convert encoding to encoder function:
+			// TODO: capitalize() is defined in Bootstrap!
 			values.encoder = 'encode' + encoding.substring(1, encoding.length - 1).capitalize();
 			// If default is set, encode it now:
 			if (values['default'])
@@ -603,6 +558,10 @@ Template.prototype = {
 						// variable reference and not an explicit string / array / etc.
 						!(/^["'[]/.test(value))	?	"	if (" + list + " instanceof HopObject) " + list + " = " + list + ".list();" : null,
 #endif // HELMA
+						// TODO: finish toList support!
+						// Problem: There is currently no easy way to retrieve the key for values...
+						// Possibilities: Store pairs as { key: , value: } in toList...
+													"	if (" + list + ".length == undefined) " + list + " = template.toList(" + list + ");",
 													"	var " + length + " = " + list + ".length" + (values.separator ? ", " + first + " = true" : "") + ";",
 													"	for (var " + index + " = 0; " + index + " < " + length + "; " + index + "++) {",
 													"		var " + variable + " = " + list + "[" + index + "];",
@@ -626,7 +585,7 @@ Template.prototype = {
 													"			else out.write(" + separator + ");",
 													"			out.write(val);",
 													"		}");
-						code.push(						"}");
+						code.push(					"	}");
 					}
 					code.push(						"}");
 					break;
@@ -703,7 +662,8 @@ Template.prototype = {
 			result = result.match(/^(.*?);?$/)[1];
 			if (values.encoder)
 				result = values.encoder + "(" + result + ")";
-			// Optimizations: only call template.write if necessary:
+			// Optimizations: Only call template.write if post processing is necessary.
+			// Write out directly if it's all easy.
 			if (postProcess)
 				code.push(							"template.write(" + result + ", " + macro.filters + ", " + values.prefix + ", " +
 															values.suffix + ", " + values['default']  + ", out);");
@@ -752,8 +712,8 @@ Template.prototype = {
 				case "length": return loop.length;
 				case "isFirst": return "(" + loop.index + " == 0)";
 				case "isLast": return "(" + loop.index + " == " + loop.length + " - 1)";
-				case "even": return "((" + loop.index + " & 1) == 0)";
-				case "odd": return "((" + loop.index + " & 1) == 1)";
+				case "isEven": return "((" + loop.index + " & 1) == 0)";
+				case "isOdd": return "((" + loop.index + " & 1) == 1)";
 				}
 			}
 			return part;
@@ -790,8 +750,8 @@ Template.prototype = {
 	 */
 	write: function(value, filters, prefix, suffix, deflt, out) {
 		if (value != null && value !== '') {
+			// Walk through the filters and apply them, if defined.
 			if (filters) {
-				// Walk through the filters, if defined.
 				for (var i = 0; i < filters.length; i++) {
 					var filter = filters[i];
 					var func = filter.object && filter.object[filter.name + "_filter"];
@@ -801,6 +761,8 @@ Template.prototype = {
 						else if (func.exec) // filter regexp
 							value = func.exec(value)[0];
 					} else {
+						// TODO: How to handle encode on server / client side?
+						// see renderMacro()
 						out.write('[Filter unhandled: "' + filter.command + '"]');
 					}
 				}
@@ -823,15 +785,19 @@ Template.prototype = {
 	renderMacro: function(command, object, name, param, args, out) {
 		var unhandled = false, value;
 		if (object) {
-			// see  if there's a macro with that name,
-			// and if not, assume a property
+			// See  if there's a macro with that name, and if not, assume a property
 			var macro = object[name + "_macro"];
 			if (macro) {
 				try {
 					// Add a reference to this template and the param
 					// object of the template as the parent to inherit from.
-					args[0].__template__ = this.parent || this;
-					args[0].__param__ = param;
+					var prm = args[0];
+					prm.__template__ = this.parent || this;
+					prm.__param__ = param;
+					// Also pass __out__, so if a macro wants to directly render
+					// there and does not want to rely on res to be around (e.g.)
+					// compatibility with browser and server), it can:
+					prm.__out__ = out;
 					value = macro.apply(object, args);
 				} catch (e) {
 					var tag = this.getTagFromException(e);
@@ -839,10 +805,9 @@ Template.prototype = {
 					if (tag && tag.content) {
 						message += ' (' + e.fileName + '; line ' + tag.lineNumber + ': ' +
 #ifdef HELMA
-							// encode errors, as they are passed through to Jetty
-							// and appear garbled otherwise
 							encode(tag.content) + ')';
 #else // !HELMA
+							// TODO: How to handle encode on server / client side?
 							tag.content + ')';
 #endif // !HELMA
 					} else if (e.fileName) {
@@ -864,25 +829,21 @@ Template.prototype = {
 	},
 
 	/**
-	 * Encodes the passed string by escaping ",',\n,\r so it can be used
-	 * within a JS String.
+	 * Converts the passed object to an iteration list. This is needed in foreach,
+	 * as requested by users on the Helma-user list.
+	 * This adds weight though, is it really needed?
+	 * TODO: consider creating a MICRO version with less features for browser.
 	 */
-	encodeJs: function(str) {
-#ifdef RHINO
-		return str ? (str = uneval(str)).substring(1, str.length - 1) : str;
-#else // !RHINO
-		return str.replace(/["'\n\r]/mg, "\\$&");
-#endif // !RHINO
-#ifdef HIDDEN
-		return java.util.regex.Pattern.compile("[\"'\n\r]",
-			java.util.regex.Pattern.MULTILINE).matcher(str).replaceAll("\\\\$0");
-
-		// The following is much faster than the above
-		// encode strings for javascript by escaping chars
-		var replace = Packages.org.mortbay.util.StringUtil.replace;
-		return replace(replace(replace(replace(str, '"', '\\"'), "'", "\\'"),
-			'\n', '\\n'), '\r', '\\r');
-#endif // HIDDEN
+	toList: function(obj) {
+		var ret = [];
+		// Support for .each, where Bootstrap is loaded and a plain for-in loop
+		// not supported any longer.
+		// TODO: consider moving to Bootstrap completely!
+		if (obj.each)
+			obj.each(function(v) { ret.push(v); });
+		else
+			for (var i in obj) { ret.push(obj[i]); }
+		return ret;
 	},
 
 	/**
@@ -890,15 +851,16 @@ Template.prototype = {
 	 * and stores it in the template object.
 	 */
 	compile: function() {
-		var lines;
 		try {
+#ifdef RHINO
+			var lines;
 			if  (this.resource) {
 #ifdef HIDDEN
 			 	var content = this.resource.getContent(getProperty("skinCharset"));
-			 	// store the original lines:
+			 	// Store the original lines:
 			 	var lines = content.split(/[\r\n]/mg);
 #endif // HIDDEN
-				// use java.io.BufferedReader for reading the lines into a line array,
+				// Use java.io.BufferedReader for reading the lines into a line array,
 				// as this is much faster than the regexp above
 #ifdef HELMA
 				var charset = getProperty("skinCharset");
@@ -921,6 +883,9 @@ Template.prototype = {
 			} else {
 				lines = [];
 			}
+#else // !RHINO
+			var lines = this.content.split(/[\r\n]/mg);
+#endif // !RHINO
 			this.subTemplates = {};
 			// Keep a reference to all sub templates to be
 			// rendered into variable names (as defined by <% $name %> tags...)
@@ -945,7 +910,9 @@ Template.prototype = {
 		} catch (e) {
 			this.throwError(e);
 		}
+#ifdef HELMA
 		this.lastChecked = new Date().getTime();
+#endif // !HELMA
 	},
 
 #ifdef HELMA
@@ -995,7 +962,8 @@ Template.prototype = {
 		 	message += ", line: " + (tag.lineNumber + 1) + ', in ' +
 #ifdef HELMA
 		 		encode(tag.content);
-			// encode errors, as they are passed through to Jetty and appear garbled otherwise
+			// Encode errors, as they are passed through to Jetty and appear
+			// garbled otherwise
 #else // !HELMA
 				tag.content;
 #endif // !HELMA
@@ -1040,6 +1008,7 @@ Template.prototype = {
 }
 
 #ifdef HELMA
+
 HopObject.prototype.getTemplate = function(template) {
 	var name = template;
 	if (!(template instanceof Template)) {
@@ -1092,18 +1061,64 @@ HopObject.prototype.template_macro = function(param, name) {
 
 #else // !HELMA
 
-/*
-Object.prototype.renderTemplate = function(template, param) {
-	if (!(template instanceof Template)) {
-		if (/\.jstl$/.test(template))
-			template = new Template(new java.io.File(template));
-		else
-			template = new Template(template);
-	}
-	return template.render(this, param);
-}
+/**
+ * A dictionary with methods that can be injected into any prototype to 
+ * get templating functionality.
+ */
+Template.methods = (function() {
+	var templates = {};
 
-Object.prototype.dontEnum("renderTemplate");
-*/
+	return {
+		/*
+		 * On Rhino, template can either be a template object or a file name
+		 * to be loaded from the disk.
+		 * On browsers, there is no file access, so the string is taken as
+		 * the full template source, which is also used for lookups of cached
+		 * template objects...
+		 * TODO: Use browser embedded hidden textareas instead?
+		 * TODO: On browser, subtemplates do not work, as name is actually
+		 * the full code right now...
+		 */
+		getTemplate: function(template) {
+			var name = template;
+			if (!(template instanceof Template)) {
+				// Handle sub templates:
+				var pos = name.indexOf('#');
+				if (pos != -1) {
+					template = this.getTemplate(name.substring(0, pos));
+					if (template)
+						return template.getSubTemplate(name.substring(pos + 1));
+				}
+				template = templates[name];
+			}
+			if (!template)
+				template = templates[name] = new Template(
+#ifdef RHINO
+					new java.io.File(baseDir + "/templates/" + name + ".jstl"));
+#else
+					name);
+#endif
+			return template;
+		},
+
+		renderTemplate: function(template, param, out) {
+			try {
+				template = this.getTemplate(template);
+				if (template)
+					return template.render(this, param, out);
+			} catch (e) {
+				error(e);
+			}
+		},
+
+		template_macro: function(param, name) {
+			if (name[0] == '#') {
+				return param.__template__.renderSubTemplate(this, name.substring(1), param);
+			} else {
+				return this.renderTemplate(name, param);
+			}
+		}
+	};
+})();
 
 #endif // !HELMA
