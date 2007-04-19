@@ -76,8 +76,14 @@ undefined = window.undefined;
 				}
 				*/
 				var res = val, baseVal = base && base[name];
+#ifdef GETTER_SETTER
+				var func = typeof val == 'function', match;
+				if (func && baseVal && val !== baseVal && /\$super\b/.test(val)) {
+#else // !GETTER_SETTER
+				var func = typeof val == 'function', match;
 				if (typeof val == 'function' && baseVal && val !== baseVal &&
-					/\$super\b/.test(val)) {
+						/\$super\b/.test(val)) {
+#endif // !GETTER_SETTER
 #ifdef HELMA
 					// If there is a realBase to read from, and the base
 					// function has already the _version field set, it is a
@@ -93,7 +99,7 @@ undefined = window.undefined;
 					// was restarted after each changed and the client version
 					// of base.js was used.
 					if (realBase && base == dest && baseVal._version &&
-						baseVal._version != version)
+							baseVal._version != version)
 						base = realBase;
 #endif // HELMA
 					res = function() {
@@ -117,7 +123,16 @@ undefined = window.undefined;
 						res._version = version;
 #endif // HELMA
 				}
+#ifdef GETTER_SETTER
+				// Check if the function defines a getter or setter by looking
+				// at its name. TODO: measure speed decrease of inject due to this!
+				if (func && (match = name.match(/([^$]*)\$(g|s)et$/)))
+					dest['__define' + match[2].toUpperCase() + 'etter__'](match[1], res);
+				else
+					dest[name] = res;
+#else // !GETTER_SETTER
 				dest[name] = res;
+#endif // !GETTER_SETTER
 				// Parameter hide was named dontEnum, but this caused 
 				// problems on Opera, where it then seems to point to
 				// Object.prototype.dontEnum, which must be a bug in Opera.
@@ -181,7 +196,8 @@ undefined = window.undefined;
 		inject(this.prototype, src, base ? base.prototype : this.prototype, hide);
 #else // HELMA
 		// Pass realBase if defined.
-		inject(proto, src, base ? base.prototype : proto, hide, version, realBase && realBase.prototype);
+		inject(proto, src, base ? base.prototype : proto, hide, version,
+				realBase && realBase.prototype);
 #endif // HELMA
 		// Copy over static fields from base, as prototype-like inheritance is not
 		// possible for static fields. If base is null, this does nothing.
@@ -285,16 +301,17 @@ undefined = window.undefined;
 	// First dontEnum the fields that cannot be overridden (wether they change
 	// value or not, they're allways hidden, by setting the first argument to true)
 	Object.prototype.dontEnum(true, "dontEnum", "_dontEnum", "__proto__",
-		"constructor", "$static");
+			"constructor", "$static");
 #endif // !HELMA
 
-	// From now on Function inject can be used to enhance any prototype, for example
-	// Object:
+	// From now on Function inject can be used to enhance any prototype,
+	// for example Object:
 	Object.inject({
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
-		 * Just like in .each, objects only contained in the prototype(s) are filtered.
+		 * Just like in .each, objects only contained in the prototype(s) are
+		 * filtered.
 		 */
 		has: function(name) {
 #ifndef HELMA // !HELMA
@@ -311,11 +328,11 @@ undefined = window.undefined;
 #ifdef BROWSER_LEGACY
 			var val = this[name], entry;
 			return val !== undefined && (!(entry = this._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== val)
+					entry.allow && entry.object[name] !== val)
 #else // !BROWSER_LEGACY
 			var entry;
 			return name in this && (!(entry = this._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== this[name])
+					entry.allow && entry.object[name] !== this[name])
 #endif // !BROWSER_LEGACY
 #else // HELMA
 			return name in this;
@@ -356,6 +373,9 @@ function $typeof(obj) {
 	return obj && (obj._type || typeof obj) || undefined;
 #endif // !BROWSER
 }
+
+// Retrieve a reference to the global scope, usually window.
+global = (function() { return this })();
 
 // TODO: consider moving this somewhere more appropriate
 function $random(min, max) {
