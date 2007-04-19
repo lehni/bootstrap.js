@@ -27,10 +27,9 @@ Elements = Object.extend({
 
 	$static: {
 		inject: function(src) {
-			// Iterate through all the values in src and add a closure to
-			// functions that calls the function on each of the collection's
-			// elements:
-			// Call the overriden Hash.inject, to add the enhanced functions.
+			// For reach function that is injected into Elements, create a new
+			// function that iterates that calls the function on each of the
+			// collection's elements.
 			// src can either be a function to be called, or a object literal.
 			return this.$super((typeof src == 'function' ? src() : src).each(function(val, i) {
 				this[i] = typeof val != 'function' ? val : function() {
@@ -51,7 +50,6 @@ Elements = Object.extend({
 // Element
 
 // TODO: right now, filter is only applied when el is a string.
-
 function $(el, filter) {
 	if (el) {
 		if (el._extended || [window, document].contains(el))
@@ -83,8 +81,8 @@ function $(el, filter) {
 // getElementsBySelector
 function $$(sel, filter) {
 	switch ($typeof(sel)) {
-		case 'element': return new Elements($(sel));
-		case 'string': sel = ($(filter) || document).getElementsBySelector(sel);
+	case 'element': return new Elements($(sel));
+	case 'string': sel = ($(filter) || document).getElementsBySelector(sel);
 	}
 	// use $each as sel might be array-like (ElementList)
 	return $each(sel || [], function(el) {
@@ -316,20 +314,20 @@ Element.inject(function() {
 
 		setProperty: function(prop, value) {
 			switch (prop) {
-				case 'class': this.className = value; break;
-				case 'style': if (this.setStyle) this.setStyle(value); break;
-				/* TODO: needed?
-				case 'name':
-					if (Browser.IE6) {
-						var el = new Element('<' + this.getTag() + ' name="' + value + '" />');
-						['value', 'id', 'className', 'style'].each(function(attr) {
-							el[attr] = this[attr];
-						});
-						if (this.parentNode) this.replaceWith(el);
-						return el;
-					}
-				*/
-				default: this.setAttribute(prop, value);
+			case 'class': this.className = value; break;
+			case 'style': if (this.setStyle) this.setStyle(value); break;
+			/* TODO: needed?
+			case 'name':
+				if (Browser.IE6) {
+					var el = new Element('<' + this.getTag() + ' name="' + value + '" />');
+					['value', 'id', 'className', 'style'].each(function(attr) {
+						el[attr] = this[attr];
+					});
+					if (this.parentNode) this.replaceWith(el);
+					return el;
+				}
+			*/
+			default: this.setAttribute(prop, value);
 			}
 			return this;
 		},
