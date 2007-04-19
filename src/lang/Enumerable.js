@@ -20,10 +20,12 @@ function $each(obj, iter, bind) {
 };
 
 /**
- * The enumerable interface, defining various functions that only rely on
- * $each() to be implemented in an prototype that the interface is injected into.
+ * The Enumerable interface. To add enumerable functionality to any prototype,
+ * just use Constructor.inject(Enumerable);
+ * This adds the function .each() that can handle both arrays (detected through
+ * .length) and dictionaries (if it's not an array, enumerating with for-in).
  *
- * Inspired by Prototype.js and unfinished, but with various optimizations.
+ * Inspired by Prototype.js.
  */
 Enumerable = (function() {
 	/**
@@ -34,26 +36,34 @@ Enumerable = (function() {
 	 * Wherever this private function is used in the Enumerable functions
 	 * bellow, a RegExp object, a Function or null may be passed.
 	 */
-
 	function iterator(iter) {
 		if (!iter) return function(val) { return val };
 		switch ($typeof(iter)) {
-			case 'function': return iter;
-			case 'regexp': return function(val) { return iter.test(val) };
+		case 'function': return iter;
+		case 'regexp': return function(val) { return iter.test(val) };
 		}
 		return function(val) { return val == iter };
 	}
 
-	function iterate(fn, name, convert, start) {
+	/**
+	 * Converts the passed function to an iterate-function.
+	 * This is part of an optimization that is based on the observation that
+	 * calling the iterator through bind.__iterate is faster than using iter.apply()
+	 * each time.
+	 * So iterate wraps the passed function in a closure that sets the __iterate
+	 * function (defined by name) on the bind object and then calls the original
+	 * function, restoring the original state after it returns.
+	 * This is used in many places in Enumerable, each place defining its own 
+	 * name for the iterate function, so there are no clashes if calls are nested.
+	 */
+	function iterate(fn, name) {
 #ifndef HELMA
 		// dontEnum all iterators once and for all on browsers:
 		Object.prototype.dontEnum(true, name);
 #endif
 		return function(iter, bind) {
-			if (convert) iter = iterator(iter);
+			iter = iterator(iter);
 			if (!bind) bind = this;
-			// Calling the iterator through bind.__each is faster than
-			// using .apply each time.
 			var prev = bind[name];
 			bind[name] = iter;
 #ifdef HELMA
@@ -74,7 +84,6 @@ Enumerable = (function() {
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
 		for (var i = 0; i < this.length; i++)
 			bind.__each(this[i], i, this);
-			//iter.call(bind, this[i], i, this);
 	};
 
 	var each_Object = function(iter, bind) {
@@ -90,21 +99,17 @@ Enumerable = (function() {
 			// added properties. This line here is the same as Object.prototype.has
 			if (!entry || entry.allow && entry.object[i] !== this[i])
 				bind.__each(val, i, this);
-				//iter.call(bind, val, i, this);
 		}
 #else // HELMA
 		// no need to check on the server as dontEnum is allways used to hide
 		for (var i in this)
 			bind.__each(this[i], i, this);
-			// iter.call(bind, this[i], i, this);
 #endif // HELMA
 	};
 
 	return {
 		/**
-		 * The core of all Enumerable functions. It simply wrapps __TODO__ that is 
-		 * to be defined by the prototype implementing Enumerable and adds
-		 * handling of $break to it.
+		 * The core of all Enumerable functions. TODO: document
 		 */
 		each: iterate(function(iter, bind) {
 			try { (this.length != null ? each_Array : each_Object).call(this, iter, bind); }
@@ -123,7 +128,7 @@ Enumerable = (function() {
 					throw $break;
 				}
 			}, {}).value;
-		}, "__find", true),
+		}, "__find"),
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -133,15 +138,16 @@ Enumerable = (function() {
 		 * regarding iterators (as defined in iterator())
 		 */
 		some: function(iter, bind) {
-			// when injecting into Array, there might already be a definition of .some
-			// (Firefox JS 1.5+), so use it as it's faster and does the same, except
-			// for the iterator conversion which is handled by iterator() here:
+			// when injecting into Array, there might already be a definition of
+			// .some() (Firefox JS 1.5+), so use it as it's faster and does the
+			// same, except for the iterator conversion which is handled by
+			// iterator() here:
 			return this.$super ? this.$super(iterator(iter), bind) :
 				this.find(iter, bind) !== undefined;
 		},
 
 		/**
-		 * Returns true if the condition defined by the passed iterator is true¨
+		 * Returns true if the condition defined by the passed iterator is true
 		 * for	all elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
 		 * This is compatible with JS 1.5's .every, but adds more flexibility
@@ -155,7 +161,7 @@ Enumerable = (function() {
 				// benchmarking)
 				return this.__every(val, i, that);
 			}, bind) === undefined;
-		}, "__every", true),
+		}, "__every"),
 
 		/**
 		 * Collects the result of the given iterator applied to each of the
@@ -169,7 +175,7 @@ Enumerable = (function() {
 			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
 				this.push(bind.__map(val, i, that));
 			}, []);
-		}, "__map", true),
+		}, "__map"),
 
 		/**
 		 * Collects all elements for which the condition of the passed iterator
@@ -182,7 +188,7 @@ Enumerable = (function() {
 			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
 				if (bind.__filter(val, i, that)) this.push(val);
 			}, []);
-		}, "__filter", true),
+		}, "__filter"),
 
 		/**
 		 * Returns true if the given object is part of this collection,
@@ -203,7 +209,7 @@ Enumerable = (function() {
 				val = bind.__max(val, i, that);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
-		}, "__max", true),
+		}, "__max"),
 
 		/**
 		 * Returns the minimum value of the result of the passed iterator
@@ -215,7 +221,7 @@ Enumerable = (function() {
 				val = bind.__min(val, i, that);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
-		}, "__min", true),
+		}, "__min"),
 
 		/**
 		 * Collects the values of the given property of each of the elements
@@ -239,7 +245,7 @@ Enumerable = (function() {
 				var a = left.compare, b = right.compare;
 				return a < b ? -1 : a > b ? 1 : 0;
 			}).pluck('value');
-		}, "__sortBy", true),
+		}, "__sortBy"),
 
 		/**
 		 * Swaps two elements of the object at the given indices
