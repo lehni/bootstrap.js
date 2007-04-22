@@ -41,12 +41,6 @@ TemplateWriter.prototype = {
 			this.current.push(what);
 	},
 
-	writeln: function(what) {
-		if (what != null)
-			this.current.push(what);
-		this.current.push(Template.LINE_BREAK);
-	},
-
 	push: function() {
 		this.buffers.push(this.current);
 		this.current = [];
@@ -110,12 +104,6 @@ function Template(object, name) {
 		this.compile();
 	}
 }
-
-#ifdef RHINO
-Template.LINE_BREAK = java.lang.System.getProperty('line.separator');
-#else
-Template.LINE_BREAK = '\n';
-#endif
 
 Template.prototype = {
 	render: function(object, param, out) {
@@ -189,6 +177,11 @@ Template.prototype = {
 		var buffer = [];
 		// Container for the generated code lines.
 		var code = [ "this.__render__ = function(param, template, out) {" ];
+#ifdef RHINO
+		var lineBreak = java.lang.System.getProperty('line.separator');
+#else
+		var lineBreak = '\n';
+#endif
 		// Append strings in buffer either to templateTag or to code, depending
 		// on the mode we're in.
 		function append() {
@@ -230,7 +223,7 @@ Template.prototype = {
 							if (skipLineBreak)
 								skipLineBreak = false;
 							else
-								buffer.push(line.substring(end), Template.LINE_BREAK);
+								buffer.push(line.substring(end), lineBreak);
 							break;
 						}
 					} else {
@@ -265,7 +258,7 @@ Template.prototype = {
 							// Now buffer collects lines between tags
 							buffer.length = 0;
 						} else {
-							buffer.push(line.substring(start), Template.LINE_BREAK);
+							buffer.push(line.substring(start), lineBreak);
 							break;
 						}
 					}
@@ -294,7 +287,7 @@ Template.prototype = {
 				this.tags.unshift(null);
 			}
 			code.push('}');
-			return code.join(Template.LINE_BREAK);
+			return code.join(lineBreak);
 		} catch (e) {
 			this.throwError(e, code.length);
 		}
@@ -333,7 +326,7 @@ Template.prototype = {
 					pos = (end = nonWhite.exec(content)) ? end.index : content.length;
 					start = pos;
 					continue;
-				} else if (ch == '=' || (ch == '|' && content[pos + 1] != '|')) { // Named parameter / filter
+				} else if ((ch == '=' || ch == '|') && content[pos + 1] != ch) {  // Named parameter / filter
 					// The check above discovers || as a logical parameter and does not 
 					// count the first | as a single item.
 					// Named parameters and start of filters can be handled the same
@@ -451,7 +444,7 @@ Template.prototype = {
 				// Appending is allowed as long as no named or unnamed parameter
 				// is specified.
 				append = true;
-			} else if (/.=$/.test(part)) { // named param
+			} else if (/\w=$/.test(part)) { // Named param, but not double ==
 				// TODO: Calling nextPart here should only return values, nothing else!
 				// add error handling...
 				var key = part.substring(0, part.length - 1), value = nextPart();
