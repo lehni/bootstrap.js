@@ -46,13 +46,6 @@ undefined = window.undefined;
 #else // !HELMA
 	function inject(dest, src, base, hide) {
 #endif // !HELMA
-		// Iterate through all definitions in src with an iteator function
-		// that checks if the field is a function that needs to be wrapped for
-		// calls of $super. This is only needed if the function in base is
-		// different from the one in src, and if the one in src is actually
-		// calling base through $super. the string of the function is parsed
-		// for $super to detect calls.
-		// dest[name] then is set to either src[name] or the wrapped function.
 #ifdef BROWSER_LEGACY
 		// For some very weird reason, ""; fixes a bug on MACIE where .replace
 		// sometimes would not be present when this meaningless emtpy string 
@@ -60,6 +53,13 @@ undefined = window.undefined;
 		// here pulls the extend String prototype into the scope...
 		"";
 #endif
+// Iterate through all definitions in src with an iteator function
+// that checks if the field is a function that needs to be wrapped for
+// calls of $super. This is only needed if the function in base is
+// different from the one in src, and if the one in src is actually
+// calling base through $super. the string of the function is parsed
+// for $super to detect calls.
+// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) for (var name in src)
 #ifdef HELMA
 			// On normal JS, we can hide $static through our dontEnum().
@@ -143,14 +143,14 @@ undefined = window.undefined;
 	}
 
 	function extend(obj) {
-		// create the constructor for the new prototype that calls $constructor
+		// Create the constructor for the new prototype that calls $constructor
 		// if it is defined.
 		var ctor = function() {
-#ifdef LEGACY
-			// fix __proto__
+#ifdef BROWSER_LEGACY
+			// Fix __proto__
 			this.__proto__ = obj;
 #endif
-			// call the constructor function, if defined and we're not inheriting
+			// Call the constructor function, if defined and we're not inheriting
 			// in which case ctor.dont would be set, see further bellow.
 			if (this.$constructor && arguments[0] !== ctor.dont)
 				return this.$constructor.apply(this, arguments);
@@ -301,7 +301,7 @@ undefined = window.undefined;
 	// First dontEnum the fields that cannot be overridden (wether they change
 	// value or not, they're allways hidden, by setting the first argument to true)
 	Object.prototype.dontEnum(true, "dontEnum", "_dontEnum", "__proto__",
-			"constructor", "$static");
+			"prototype", "constructor", "$static");
 #endif // !HELMA
 
 	// From now on Function inject can be used to enhance any prototype,

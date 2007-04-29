@@ -49,16 +49,19 @@ Elements = Object.extend({
 ////////////////////////////////////////////////////////////////////////////////
 // Element
 
-// TODO: right now, filter is only applied when el is a string.
+// TODO: Right now, filter is only applied when el is a string.
 function $(el, filter) {
 	if (el) {
-		if (el._extended || [window, document].contains(el))
+		if (el._extended || el == window || el == document)
 			return el;
 		if (typeof(el) == 'string')
 			el = ($(filter) || document).getElementById(el);
 		if ($typeof(el) == 'element' && el.tagName) {
 			if (!el.__proto__) Garbage.collect(el);
-			if (!el.inject) el.inject = Object.prototype.inject;
+#ifdef BROWSER_LEGACY
+			if (!el.inject)
+				el.inject = Object.prototype.inject;
+#endif
 			// This is pretty nifty: We do not even need to know how all the
 			// different browsers call their HTML Elements (DOMElement on
 			// Safari, HTMLElement on Firefox, etc), just look at __proto__
@@ -69,7 +72,7 @@ function $(el, filter) {
 			// On Opera, el.__proto__ == Object.prototype, so check against that
 			// too:
 			if (!el._type) el.inject.call(el.__proto__ && el.__proto__ != Object.prototype ? el.__proto__ : el, Element.prototype);
-			// now we inject additional methods depending on the tag of the element
+			// Now we inject additional methods depending on the tag of the element
 			// as defined above. If nothing is defined, this does not do anything.
 			el.inject(Element.tags[el.getTag()]);
 			el._extended = true;
@@ -78,7 +81,7 @@ function $(el, filter) {
 	}
 };
 
-// getElementsBySelector
+// Short-cut to getElementsBySelector
 function $$(sel, filter) {
 	switch ($typeof(sel)) {
 	case 'element': return new Elements($(sel));
@@ -90,7 +93,7 @@ function $$(sel, filter) {
 	}, new Elements());
 };
 
-// getElementsBySelector, return first element
+// Short-cut to getElementsBySelector, return first element
 function $E(sel, filter) {
 	return $$(sel, filter)[0];
 };
@@ -135,28 +138,23 @@ Element.inject(function() {
 
 		getElementsBySelector: function(selector) {
 			var res = new Elements();
-			selector.split(',').each(function(sel) {
+			(typeof selector == 'string' ? selector.split(',') : selector).each(function(sel) {
 				var els = null;
 				sel.clean().split(' ').each(function(sel, i) {
-					// Mac IE does not support (?:), so live without it here:
-					// Allow * in classnames, as a wildcard which is later replaced by .*
-					
-					//                     1         3           4                     6           8                 9
-					//                     tag       id          class                 attr. name  attr. operator    attr. value
-					//var ps = sel.match(/^(\w*|\*)(#([\w_-]+)|\.([\*\w_-]+))?(\[["\']?(\w+)["\']?(([\*\^\$]?=)["\']?(\w*)["\']?)?\])?$/);
-					
-					//                   1         3           4               6      8              9
-					//                   tag       id          class           a.name attr. operator attr. value
-					
+					// Cache selector parsing results:
 					var param;
 					if (cache[sel]) param = cache[sel].param;
 					else {
+						// Mac IE does not support (?:), so live without it here:
+						// Allow * in classnames, as a wildcard which is later replaced by .*
+						//                  1         3           4               6      8             9
+						//                  tag       id          class           a.name attr.operator attr.value
 						param = sel.match(/^(\w*|\*)(#([\w_-]+)|\.([\*\w_-]+))?(\[(\w+)(([!*^$]?=)["']?([^"'\]]*)["']?)?\])?$/);
 						param[1] = param[1] || '*';
 						cache[sel] = { param: param };
 					}
 					if (!param) return;
-					if (i == 0) { // fill in els accordingly
+					if (i == 0) { // Fill in els accordingly
 						if (param[3]) {
 							var el = this.getElementById(param[3]);
 							if (!el || param[1] != '*' && Element.prototype.getTag.call(el) != param[1]) throw $break;
@@ -164,7 +162,7 @@ Element.inject(function() {
 						} else {
 							els = $A(this.getElementsByTagName(param[1]));
 						}
-					} else { // filter
+					} else { // Filter
 						els = els.each(function(val) {
 							this.append(val.getElementsByTagName(param[1]))
 						}, []);
@@ -172,9 +170,10 @@ Element.inject(function() {
 							return (el.id == param[3]);
 						});
 					}
-					// replace wildcard (*) with regexp (.*)
+					// Replace wildcard (*) with regexp (.*)
 					if (param[4]) els = els.filter(function(el) {
-						return Element.prototype.hasClass.call(el, param[4].replace('*', '.*'));
+						return el.className.test('(^|\\s*)' + param[4].replace('*', '.*') + '(\\s*|$)');
+						// return Element.prototype.hasClass.call(el, param[4].replace('*', '.*'));
 					});
 					if (param[6]) els = els.filter(function(name, value, operator) {
 						var att = this.getProperty(param[6]), value = param[9], operator = param[8];
@@ -186,7 +185,10 @@ Element.inject(function() {
 							operator == '!=' && att != value;
 					});
 				}, this);
-				if (els) res.include(els);
+				// Wrap the elements and add them, but only if they were not aded already
+				$each(els, function(el) {
+					if (this.indexOf(el = $(el)) == -1) this.push(el);
+				}, res);
 			}, this);
 			return res;
 		},

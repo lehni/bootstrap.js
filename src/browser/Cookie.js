@@ -20,7 +20,7 @@ Cookie = {
 	},
 	
 	get: function(name) {
-		var res = document.cookie.match('(?:^|;)\\s*' + name + '=([^;]*)');
+		var res = document.cookie.match('(^|;)\\s*' + name + "=([^;]*)");
 		if (res) return unescape(res[1]);
 	},
 

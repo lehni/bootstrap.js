@@ -47,9 +47,9 @@ Hash = Object.extend({
 	 * Calls merge on value pairs if they are dictionaries.
 	 */
 	merge: function(obj) {
-		return obj.each(function(val, i) {
+		return obj ? obj.each(function(val, i) {
 			this[i] = $typeof(this[i]) != 'object' ? val : arguments.callee.call(this[i], val);
-		}, this);
+		}, this) : this;
 	},
 
 	/**
