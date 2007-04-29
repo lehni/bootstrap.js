@@ -31,11 +31,13 @@ Elements = Object.extend({
 			// function that iterates that calls the function on each of the
 			// collection's elements.
 			// src can either be a function to be called, or a object literal.
-			return this.$super((typeof src == 'function' ? src() : src).each(function(val, i) {
-				this[i] = typeof val != 'function' ? val : function() {
+			return this.$super((typeof src == 'function' ? src() : src).each(function(val, key) {
+				this[key] = typeof val != 'function' ? val : function() {
 					var args = arguments, values = [], els = true;
-					this.each(function(obj, i) {
-						var ret = val.apply(obj, args);
+					this.each(function(obj) {
+						// Try to use original method if it's there, in order
+						// to support $super
+						var ret = (obj[key] || val).apply(obj, args);
 						values.push(ret);
 						if ($typeof(ret) != 'element') els = false;
 					});
@@ -303,7 +305,7 @@ Element.inject(function() {
 		},
 
 		hasChild: function(el) {
-			return $A(this.getElementsByTagName('*')).contains(el);
+			return $A(this.getElementsByTagName('*')).indexOf(el) != -1;
 		},
 
 		getTag: function() {
@@ -374,7 +376,7 @@ Element.tags = (function() {
 					el.blur();
 				});
 			},
-			
+
 			enable: function(enable) {
 				this.getElements().each(function(el) {
 					el.enable(enable);
@@ -394,6 +396,16 @@ Element.tags = (function() {
 			getValue: function() {
 				if (this.selectedIndex != -1)
 					return this.options[this.selectedIndex].value;
+			},
+
+			add: function(opt) {
+				this.options[this.options.length] = opt instanceof Option ? opt
+						: new Option(opt);
+			},
+
+			clear: function() {
+				this.selectedIndex = -1;
+				this.options.length = 0;
 			}
 		}.inject(formElement),
 
