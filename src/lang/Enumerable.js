@@ -126,16 +126,17 @@ Enumerable = (function() {
 		}, "__each"),
 
 		/**
-		 * Searches the elements for the first where the condition of the passed
-		 * iterator is true and returns its value.
+		 * Searches the list for the first element where the condition of the
+		 * passed iterator is met and returns its key / value pair as an object:
+		 * { key: ... , value: ... }
 		 */
 		find: iterate(function(iter, bind, that) {
 			return this.each(function(val, key) {
 				if (bind.__find(val, key, that)) {
-					this.value = val;
+					this.found = { key: key, value: val };
 					throw $break;
 				}
-			}, {}).value;
+			}, {}).found;
 		}, "__find"),
 
 		/**
@@ -197,15 +198,6 @@ Enumerable = (function() {
 				if (bind.__filter(val, i, that)) this.push(val);
 			}, []);
 		}, "__filter"),
-
-		/**
-		 * Returns true if the given object is part of this collection,
-		 * false otherwise. Does not support iterators, even if a function
-		 * is passed, that functions is searched for.
-		 */
-		contains: function(obj) {
-			return this.find(function(val) { return obj == val }) !== undefined;
-		},
 
 		/**
 		 * Returns the maximum value of the result of the passed iterator
