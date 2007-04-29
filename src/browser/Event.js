@@ -15,28 +15,35 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
+tester = null;
+
 Element.eventMethods = {
 	addEvent: function(type, func) {
 		this.events = this.events || {};
-		var fns = this.events[type] = this.events[type] || [];
-		if (!fns.contains(func)) {
-			fns.push(func);
-			// check if the function takes a parameter. if so, it must
+		var entries = this.events[type] = this.events[type] || [];
+		if (!entries.find(function(entry) { return entry.func == func })) {
+			// Do not store bound in the function object, as functions may be
+			// shared among several elements, and they each have their own 
+			// bound function. So use entries that point to both instead, as 
+			// both the original function and the bound function are needed
+			// for removal of the event listener.
+			// Check if the function takes a parameter. If so, it must
 			// want an event. Wrap it so it recieves a wrapped event, and
 			// bind it to that at the same time, as on PC IE, event listeners
 			// are not called bound to their objects.
-			var that = this, fn = func, hasEvent = fn.parameters().length > 0;
-			if (hasEvent) fn = function(event) { // wants event param
-				return func.call(that, new Event(event));
-			};
+			var that = this, fn = func;
+			if (fn.parameters().length > 0)
+				fn = function(event) { // wants event param
+					return func.call(that, new Event(event));
+				};
 			if (this.addEventListener) {
 				this.addEventListener(type == 'mousewheel' && Browser.GECKO ?
 					'DOMMouseScroll' : type, fn, false);
 			} else if (this.attachEvent) {
-				// on PC IE, the handler allways needs to be bound.
-				// But if hasEvent is true, it was already wrapped above.
-				if (!hasEvent) fn = func.bind(this);
-				func.bound = fn;
+				// On IE, the handler allways needs to be bound.
+				// But if the function recieves an event in the parameter list,
+				// it was already wrapped above.
+				if (fn == func) fn = func.bind(this);
 				this.attachEvent('on' + type, fn);
 #ifdef BROWSER_LEGACY
 			} else {
@@ -44,8 +51,8 @@ Element.eventMethods = {
 				// and preventDefault
 				this['on' + type] = function(event) {
 					event = new Event(event);
-					fns.each(function(fn) {
-						fn.call(that, event);
+					entries.each(function(entry) {
+						entry.func.call(that, event);
 						if (event.event.cancelBubble) throw $break;
 					});
 					// passing "this" for bind above breaks throw $break on MACIE
@@ -54,6 +61,7 @@ Element.eventMethods = {
 				};
 #endif // !BROWSER_LEGACY
 			}
+			entries.push({ func: func, bound: fn });
 		}
 		return this;
 	},
@@ -65,21 +73,21 @@ Element.eventMethods = {
 	},
 
 	removeEvent: function(type, func) {
-		var fns = (this.events || {})[type];
-		if (fns) {
+		var entries = (this.events || {})[type], entry;
+		if (entries) {
 #ifdef BROWSER_LEGACY
-			// when sutting down, added functions seem to disappear here on
+			// When shutting down, added functions seem to disappear here on
 			// Mac IE. Fix it the easy way.
-			fns = $A(fns);
+			entries = this.events[type] = $A(entries);
 #endif // !BROWSER_LEGACY
-			if (fns.remove(func)) {
+			if (entry = entries.remove(function(entry) { return entry.func == func })) {
 				if (this.removeEventListener) {
 					this.removeEventListener(type == 'mousewheel' && window.gecko ?
-						'DOMMouseScroll' : type, func, false);
+						'DOMMouseScroll' : type, entry.bound, false);
 				} else if (this.detachEvent) {
-					this.detachEvent('on' + type, func.bound);
+					this.detachEvent('on' + type, entry.bound);
 #ifdef BROWSER_LEGACY
-				} else if (!fns.length) {
+				} else if (!entries.length) {
 					this['on' + type] = null;
 #endif // !BROWSER_LEGACY
 				}
@@ -106,11 +114,11 @@ Element.eventMethods = {
 	},
 
 	fireEvent: function(type) {
-		var fns = (this.events || {})[type];
-		if (fns) {
+		var entries = (this.events || {})[type];
+		if (entries) {
 			var args = $A(arguments, 1);
-			fns.each(function(fn) {
-				fn.apply(this, args);
+			entries.each(function(entry) {
+				entry.func.apply(this, args);
 			}, this);
 		}
 	},
@@ -121,7 +129,7 @@ Element.eventMethods = {
 	dispose: function() {
 		this.removeEvents();
 	}
-}
+};
 
 window.inject(Element.eventMethods);
 document.inject(Element.eventMethods);
@@ -159,10 +167,10 @@ Event = Object.extend(function() {
 				this.wheel = event.wheelDelta ?
 					event.wheelDelta / (window.opera ? -120 : 120) : 
 					- (event.detail || 0) / 3;
-			} else if (/key/.test(this.type)) {
+			} else if (/^key/.test(this.type)) {
 				this.code = event.which || event.keyCode;
 				this.key = keys[this.code] || String.fromCharCode(this.code).toLowerCase();
-			} else if (/mouse/.test(this.type) || this.type == 'click') {
+			} else if (/^mouse|^click$/.test(this.type)) {
 				this.page = {
 					x: event.pageX || event.clientX + document.documentElement.scrollLeft,
 					y: event.pageY || event.clientY + document.documentElement.scrollTop
