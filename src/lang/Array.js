@@ -56,13 +56,16 @@ Array.methods.inject({
 
 	find: function(iter) {
 		// use the faster indexOf in case we're not using iterator functions.
-		if (iter && !/^(function|regexp)$/.test($typeof(iter))) return this[this.indexOf(iter)];
-		else return Enumerable.find.call(this, iter);
+		if (iter && !/^(function|regexp)$/.test($typeof(iter))) {
+			var i = this.indexOf(iter);
+			return { key: i, value: this[i] };
+		}
+		return Enumerable.find.call(this, iter);
 	},
 
-	remove: function(obj) {
-		var i = this.indexOf(obj);
-		if (i != -1) return this.splice(i, 1);
+	remove: function(iter) {
+		var entry = this.find(iter);
+		if (entry) return this.splice(entry.key, 1)[0];
 	},
 
 	/**
