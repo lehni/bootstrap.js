@@ -15,8 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
-tester = null;
-
 Element.eventMethods = {
 	addEvent: function(type, func) {
 		this.events = this.events || {};
