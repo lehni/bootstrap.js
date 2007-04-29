@@ -70,7 +70,7 @@ window.inject({
 				if (document.readyState && (Browser.KHTML || Browser.MACIE)) { // safari and konqueror
 					this.timer = (function() {
 						window.status = document.readyState;
-						if (['loaded','complete'].contains(document.readyState)) domReady();
+						if (/^(loaded|complete)$/.test(document.readyState)) domReady();
 					}).periodic(50);
 				} else if (document.readyState && Browser.IE) { //ie
 					document.write('<script id=ie_ready defer src=javascript:void(0)><\/script>');

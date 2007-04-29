@@ -16,7 +16,7 @@
 // Style
 
 Element.inject(function() {
-	var methods = {
+	var fields = {
 		getStyle: function(name, dontCompute) {
 			name = name.camelize();
 			var style = this.style[name];
@@ -92,6 +92,7 @@ Element.inject(function() {
 			return this.setStyle('visibility', visible ? 'inherit' : 'hidden');
 		},
 
+		// TODO: does this belong to Dimension.js rather than here?
 		getZIndex: function() {
 			return this.getStyle('zIndex').toInt() || 0;
 		},
@@ -102,29 +103,19 @@ Element.inject(function() {
 	};
 
 	// Create getters and setters for some often used css properties:
-	$A('opacity color background border margin padding clip display').each(function(name) {
+	// TODO: add more? e.g. border margin padding display
+	$A('opacity color background clip').each(function(name) {
 		var part = name.capitalize();
-		methods['get' + part] = function() {
+		fields['get' + part] = function() {
 			return this.getStyle(name);
 		};
-		methods['set' + part] = function(value) {
+		fields['set' + part] = function(value) {
 			// pass mutliple params as array
 			return this.setStyle(name, arguments.length > 1 ? $A(arguments) : value);
 		};
 	});
 
-	// Dimension properties:
-	$A('left top width height').each(function(name) {
-		var part = name.capitalize();
-		methods['get' + part] = function() {
-			return this['offset' + part];
-		};
-		methods['set' + part] = function(value) {
-			this.style[name] = Math.round(value) + 'px';
-		};
-	});
-
-	return methods;
+	return fields;
 });
 
 #endif // __browser_Style__
