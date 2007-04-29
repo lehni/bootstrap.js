@@ -25,6 +25,8 @@ Notes:
   not as a conditional statement "if (property in object)". But the following
   works: if (object.property !== undefined).
 
+- Use charAt for char lookup in strings, as string[index] does not work on Mac IE.
+
 - Do only rely on all Array functions to be present after bootstrap.js has
   been included, as browser/legacy/Array.js adds a few functions.
 

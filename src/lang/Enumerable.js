@@ -66,6 +66,14 @@ Enumerable = (function() {
 			if (!bind) bind = this;
 			var prev = bind[name];
 			bind[name] = iter;
+			// HACK: If the object does not allow setting of values,
+			// create a new unsealed object that inherits from it.
+			/*
+			if (bind[name] != iter) {
+				bind = bind.extend();
+				bind[name] = iter;
+			}
+			*/
 #ifdef HELMA
 			// On the server, we can only dontEnum once the property is defined.
 			bind.dontEnum(name);

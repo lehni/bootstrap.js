@@ -25,20 +25,23 @@ String.inject({
 		return parseFloat(this);
 	},
 
-	toCamelCase: function() {
-		return this.replace(/-\D/g, function(match) {
+	camelize: function(separator) {
+		return this.replace(new RegExp(separator || '-', 'g'), function(match) {
 			return match.charAt(1).toUpperCase();
 		});
 	},
 
-	// TODO: find more JS like name?
-	hyphenate: function() {
-		return this.replace(/\w[A-Z]/g, function(match) {
-			return (match.charAt(0) + '-' + match.charAt(1).toLowerCase());
+	uncamelize: function(separator) {
+		separator = separator || '-';
+		return this.replace(/[a-zA-Z][A-Z0-9]|[0-9][a-zA-Z]/g, function(match) {
+			return match.charAt(0) + separator + match.charAt(1);
 		});
 	},
 
-	// TODO: find more JS like name?
+	hyphenate: function() {
+		return this.uncamelize().toLowerCase();
+	},
+
 	capitalize: function() {
 #ifdef BROWSER_LEGACY
 		// MACIE does not seem to know \b in Regexps

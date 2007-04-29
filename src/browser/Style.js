@@ -18,7 +18,7 @@
 Element.inject(function() {
 	var methods = {
 		getStyle: function(name, dontCompute) {
-			name = name.toCamelCase();
+			name = name.camelize();
 			var style = this.style[name];
 			if (!style) switch (name) {
 				case 'opacity':
@@ -59,7 +59,7 @@ Element.inject(function() {
 				this.style.clip = $typeof(value) == 'array' ? 'rect(' + value.join('px ') + 'px)' : value;
 				break;
 			default:
-				this.style[name.toCamelCase()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
+				this.style[name.camelize()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
 			}
 			return this;
 		},

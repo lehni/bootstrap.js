@@ -121,7 +121,7 @@ Array.methods.inject({
 	 * Appends the elments of the given enumerable object.
 	 */
 	append: function(obj) {
-		// do not rely on obj to have .each set, as it might come from another
+		// Do not rely on obj to have .each set, as it might come from another
 		// frame.
 		return $each(obj, function(val) {
 			this.push(val);
@@ -132,11 +132,13 @@ Array.methods.inject({
 	 * adds all elements in the passed array, if they are not contained
 	 * in the array already.
 	 */
+	/* TODO: needed?
 	include: function(obj) {
 		return $each(obj, function(val) {
 			if (this.indexOf(val) == -1) this.push(val);
 		}, this);
 	},
+	*/
 
 	/**
 	 * Flattens multi-dimensional array structures by breaking down each

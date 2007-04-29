@@ -4,23 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Function
 
-#ifdef RHINO
-if (!Function.prototype.$constructor) {
-	// Override the function object with an implementation of a more efficient
-	// Consctructor that creates properly generated functions instead of
-	// interpretated ones. These are faster.
-	// This does not seem to break anything, as afterward
-	// Object.toString instanceof Function still returns true.
-	Function = Function.extend({
-		$constructor: function() {
-			var params = $A(arguments), body = params.pop();
-			return Packages.org.mozilla.javascript.Context.getCurrentContext().compileFunction(
-				{}, "function (" + params + ") {" + body + "}", "Function", 0, null);
-		}
-	});
-}
-#endif // RHINO
-
 Function.inject(function() {
 
 #ifdef BROWSER
