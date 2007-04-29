@@ -41,7 +41,7 @@ Element.inject(function() {
 		}
 	}
 
-	return {
+	var fields = {
 		getSize: function() {
 			return { width: this.offsetWidth, height: this.offsetHeight };
 		},
@@ -58,10 +58,10 @@ Element.inject(function() {
 				!/^(relative|absolute)$/.test(Element.prototype.getStyle.call(el, 'position'))
 		}),
 
-		// TODO: needed?
+		// TODO: Needed?
 		getScrollOffset: cumulate('scroll', 'parentNode'),
 
-		// TODO: consider rename:
+		// TODO: Consider rename:
 		getScrollPos: function() {
 			return { x: this.scrollLeft, y: this.scrollTop };
 		},
@@ -91,8 +91,26 @@ Element.inject(function() {
 		scrollTo: function(x, y) {
 			this.scrollLeft = x;
 			this.scrollTop = y;
+		},
+
+		moveTo: function(x, y) {
+			this.style.left = x + 'px';
+			this.style.top = x + 'px';
 		}
 	};
+
+	// Dimension properties:
+	$A('left top width height').each(function(name) {
+		var part = name.capitalize();
+		fields['get' + part] = function() {
+			return this['offset' + part];
+		};
+		fields['set' + part] = function(value) {
+			this.style[name] = value + 'px';
+		};
+	});
+
+	return fields;
 });
 
 #endif // __browser_Dimension__
