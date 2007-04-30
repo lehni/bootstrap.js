@@ -25,49 +25,53 @@ Element.eventMethods = {
 			// bound function. So use entries that point to both instead, as 
 			// both the original function and the bound function are needed
 			// for removal of the event listener.
-			// Check if the function takes a parameter. If so, it must
-			// want an event. Wrap it so it recieves a wrapped event, and
-			// bind it to that at the same time, as on PC IE, event listeners
-			// are not called bound to their objects.
-			var that = this, fn = func;
-			if (fn.parameters().length > 0)
-				fn = function(event) { // wants event param
-					return func.call(that, new Event(event));
-				};
-			if (this.addEventListener) {
-				this.addEventListener(type == 'mousewheel' && Browser.GECKO ?
-					'DOMMouseScroll' : type, fn, false);
-			} else if (this.attachEvent) {
-				// On IE, the handler allways needs to be bound.
-				// But if the function recieves an event in the parameter list,
-				// it was already wrapped above.
-				if (fn == func) fn = func.bind(this);
-				this.attachEvent('on' + type, fn);
-#ifdef BROWSER_LEGACY
-			} else {
-				// Simulate multiple callbacks, with support for stopPropagation
-				// and preventDefault
-				this['on' + type] = function(event) {
-					event = new Event(event);
-					entries.each(function(entry) {
-						entry.func.call(that, event);
-						if (event.event.cancelBubble) throw $break;
-					});
-					// passing "this" for bind above breaks throw $break on MACIE
-					// the reason is maybe that this is a native element...?
-					return event.event.returnValue;
-				};
-#endif // !BROWSER_LEGACY
+			// See if we need to fake an event here.
+			var orig = func, fake = Element.events[type];
+			if (fake) {
+				if (fake.add) func = fake.add.call(this, func) || func;
+				if (fake.property) this[fake.property] = orig;
+				func = fake.listener || func;
+				type = fake.type;
 			}
-			entries.push({ func: func, bound: fn });
+			if (type) {
+				var bound = func, that = this;
+				// Check if the function takes a parameter. If so, it must
+				// want an event. Wrap it so it recieves a wrapped event, and
+				// bind it to that at the same time, as on PC IE, event listeners
+				// are not called bound to their objects.
+				if (func.parameters().length > 0)
+					bound = function(event) { // wants event param
+						return func.call(that, new Event(event));
+					};
+				if (this.addEventListener) {
+					this.addEventListener(type, bound, false);
+				} else if (this.attachEvent) {
+					// On IE, the handler allways needs to be bound.
+					// But if the function recieves an event in the parameter list,
+					// it was already wrapped above.
+					if (bound == func) bound = func.bind(this);
+					this.attachEvent('on' + type, bound);
+#ifdef BROWSER_LEGACY
+				} else {
+					// Simulate multiple callbacks, with support for
+					// stopPropagation and preventDefault
+					this['on' + type] = function(event) {
+						event = new Event(event);
+						entries.each(function(entry) {
+							entry.func.call(that, event);
+							if (event.event.cancelBubble) throw $break;
+						});
+						// passing "this" for bind above breaks throw $break on
+						// MACIE.
+						// The reason is maybe that this is a native element?
+						return event.event.returnValue;
+					};
+#endif // !BROWSER_LEGACY
+				}
+			}
+			entries.push({ func: func, bound: bound });
 		}
 		return this;
-	},
-
-	addEvents: function(src) {
-		return (src || []).each(function(fn, type) {
-			this.addEvent(type, fn);
-		}, this);
 	},
 
 	removeEvent: function(type, func) {
@@ -79,19 +83,32 @@ Element.eventMethods = {
 			entries = this.events[type] = $A(entries);
 #endif // !BROWSER_LEGACY
 			if (entry = entries.remove(function(entry) { return entry.func == func })) {
-				if (this.removeEventListener) {
-					this.removeEventListener(type == 'mousewheel' && window.gecko ?
-						'DOMMouseScroll' : type, entry.bound, false);
-				} else if (this.detachEvent) {
-					this.detachEvent('on' + type, entry.bound);
+				var fake = Element.events[type];
+				if (fake) {
+					if (fake.remove) fake.remove.call(this, func);
+					if (fake.property) delete this[fake.property];
+					type = fake.type;
+				}
+				if (type) {
+					if (this.removeEventListener) {
+						this.removeEventListener(type, entry.bound, false);
+					} else if (this.detachEvent) {
+						this.detachEvent('on' + type, entry.bound);
 #ifdef BROWSER_LEGACY
-				} else if (!entries.length) {
-					this['on' + type] = null;
+					} else if (!entries.length) {
+						this['on' + type] = null;
 #endif // !BROWSER_LEGACY
+					}
 				}
 			}
 		}
 		return this;
+	},
+
+	addEvents: function(src) {
+		return (src || []).each(function(fn, type) {
+			this.addEvent(type, fn);
+		}, this);
 	},
 
 	removeEvents: function(type) {
@@ -132,6 +149,24 @@ Element.eventMethods = {
 window.inject(Element.eventMethods);
 document.inject(Element.eventMethods);
 Element.inject(Element.eventMethods);
+
+Element.events = (function() {
+	function hover(type, real) {
+		return {
+			type: real,
+			listener: function(event) {
+				if (event.relatedTarget != this && !this.hasChild(event.relatedTarget))
+					this.fireEvent(type, event);
+			}
+		}
+	}
+	return {
+		mouseenter: hover('mouseenter', 'mouseover'),
+		mouseleave: hover('mouseleave', 'mouseout'),
+		mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' }
+	};
+})();
+
 
 // Opera 7 does not let us override Event. But after deleting it,
 // overriding is possible
