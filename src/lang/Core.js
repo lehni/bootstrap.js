@@ -53,13 +53,13 @@ undefined = window.undefined;
 		// here pulls the extend String prototype into the scope...
 		"";
 #endif
-// Iterate through all definitions in src with an iteator function
-// that checks if the field is a function that needs to be wrapped for
-// calls of $super. This is only needed if the function in base is
-// different from the one in src, and if the one in src is actually
-// calling base through $super. the string of the function is parsed
-// for $super to detect calls.
-// dest[name] then is set to either src[name] or the wrapped function.
+		// Iterate through all definitions in src with an iteator function
+		// that checks if the field is a function that needs to be wrapped for
+		// calls of $super. This is only needed if the function in base is
+		// different from the one in src, and if the one in src is actually
+		// calling base through $super. the string of the function is parsed
+		// for $super to detect calls.
+		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) for (var name in src)
 #ifdef HELMA
 			// On normal JS, we can hide $static through our dontEnum().
@@ -68,7 +68,7 @@ undefined = window.undefined;
 			// against $static here...
 			if (name != "$static") (function(val, name) {
 #else // !HELMA
-			if (!src.has || src.has(name)) (function(val, name) {
+			if (has(src, name)) (function(val, name) {
 #endif // !HELMA
 				/* TODO: decide what to do with this!
 				if (typeof val == 'function' && /\$super\./.test(val)) {
@@ -142,6 +142,11 @@ undefined = window.undefined;
 		return dest;
 	}
 
+	/**
+	 * Private function that creates a constructor to extend the given object.
+	 * When this constructor is called through new, a new object is craeted
+	 * that inherits all from obj.
+	 */
 	function extend(obj) {
 		// Create the constructor for the new prototype that calls $constructor
 		// if it is defined.
@@ -158,6 +163,35 @@ undefined = window.undefined;
 		ctor.prototype = obj;
 		return ctor;
 	}
+
+	/**
+	 * Private function that checks if an object contains a given property.
+	 */
+	function has(obj, name) {
+#ifndef HELMA // !HELMA
+		// This is tricky: as described in Object.prototype.dontEnum, the
+		// _dontEnum  objects form a inheritance sequence between prototypes.
+		// So if we check  obj._dontEnum[name], we're not sure that the
+		// value returned is actually from the current object. It might be
+		// from a parent in the inheritance chain. This is why dontEnum
+		// stores a reference to the object on which dontEnum was called for
+		// that object. If the value there differs from the one in obj, 
+		// it means it was modified somewhere between obj and there.
+		// If the entry allows overriding, we return true although _dontEnum
+		// lists it.
+#ifdef BROWSER_LEGACY
+		var val = obj[name], entry;
+		return val !== undefined && (!(entry = obj._dontEnum[name]) ||
+				entry.allow && entry.object[name] !== val);
+#else // !BROWSER_LEGACY
+		var entry;
+		return name in obj && (!(entry = obj._dontEnum[name]) ||
+				entry.allow && entry.object[name] !== obj[name]);
+#endif // !BROWSER_LEGACY
+#else // HELMA
+		return name in this;
+#endif // HELMA
+	},
 
 	Function.prototype.inject = function(src, hide, base) {
 		// When called from extend, a third argument is passed, pointing
@@ -314,36 +348,15 @@ undefined = window.undefined;
 		 * filtered.
 		 */
 		has: function(name) {
-#ifndef HELMA // !HELMA
-			// This is tricky: as described in Object.prototype.dontEnum, the
-			// _dontEnum  objects form a inheritance sequence between prototypes.
-			// So if we check  this._dontEnum[name], we're not sure that the
-			// value returned is actually from the current object. It might be
-			// from a parent in the inheritance chain. This is why dontEnum
-			// stores a reference to the object on which dontEnum was called for
-			// that object. If the value there differs from the one in "this", 
-			// it means it was modified somewhere between "this" and there.
-			// If the entry allows overriding, we return true although _dontEnum
-			// lists it.
-#ifdef BROWSER_LEGACY
-			var val = this[name], entry;
-			return val !== undefined && (!(entry = this._dontEnum[name]) ||
-					entry.allow && entry.object[name] !== val)
-#else // !BROWSER_LEGACY
-			var entry;
-			return name in this && (!(entry = this._dontEnum[name]) ||
-					entry.allow && entry.object[name] !== this[name])
-#endif // !BROWSER_LEGACY
-#else // HELMA
-			return name in this;
-#endif // HELMA
+			return has(this, name);
 		},
 
 		/**
 		 * Injects the fields from the given object, adding $super functionality
 		 */
 		inject: function(src, hide) {
-			return inject(this, src, this, hide);
+			// src can either be a function to be called, or an object literal.
+			return inject(this, typeof src == 'function' ? src() : src, this, hide);
 		},
 
 		/**
@@ -365,6 +378,13 @@ undefined = window.undefined;
 	}, true);
 })();
 
+#ifdef BROWSER
+global = window;
+#else // !BROWSER
+// Retrieve a reference to the global scope, usually window.
+global = (function() { return this })();
+#endif // !BROWSER
+
 function $typeof(obj) {
 #ifdef BROWSER
 	// handle elements, as needed by Element.js
@@ -373,9 +393,6 @@ function $typeof(obj) {
 	return obj && (obj._type || typeof obj) || undefined;
 #endif // !BROWSER
 }
-
-// Retrieve a reference to the global scope, usually window.
-global = (function() { return this })();
 
 // TODO: consider moving this somewhere more appropriate
 function $random(min, max) {
