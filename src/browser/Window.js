@@ -21,7 +21,6 @@ catch (e) {}
 
 window.inject({
 	/**
-	 * @id window.open
 	 * Overrides window.open to allow more options in the third parameter.
 	 * If params is a string, the standard window.open is executed.
 	 * If param is an object, additional parameters maybe be defined, such as
@@ -54,37 +53,37 @@ window.inject({
 		var win = this.$super(url, title.replace(/\s+|\.+|-+/gi, ''), params);
 		if (win && focus) win.focus();
 		return win;
-	},
-
-	addEvent: function(type, fn) {
-		if (type == 'domready') {
-			if (this.loaded) fn();
-			else if (!this.events || !this.events.domready) {
-				var domReady = function() {
-					if (this.loaded) return;
-					this.loaded = true;
-					if (this.timer)  this.timer = this.timer.clear();
-					Element.prototype.fireEvent.call(this, 'domready');
-					this.events.domready = null;
-				}.bind(this);
-				if (document.readyState && (Browser.KHTML || Browser.MACIE)) { // safari and konqueror
-					this.timer = (function() {
-						window.status = document.readyState;
-						if (/^(loaded|complete)$/.test(document.readyState)) domReady();
-					}).periodic(50);
-				} else if (document.readyState && Browser.IE) { //ie
-					document.write('<script id=ie_ready defer src=javascript:void(0)><\/script>');
-					$('ie_ready').onreadystatechange = function() {
-						if (this.readyState == 'complete') domReady();
-					};
-				} else { // others
-					this.addEvent('load', domReady);
-					document.addEvent('DOMContentLoaded', domReady);
-				}
-			}
-		}
-		return this.$super(type, fn);
 	}
 });
+
+Element.events.domready = {
+	add: function(fn) {
+		if (window.loaded) fn.call(this);
+		else {
+			var domReady = function() {
+				if (window.loaded) return;
+				window.loaded = true;
+				if (window.timer)  window.timer = window.timer.clear();
+				this.fireEvent('domready');
+			}.bind(this);
+			if (document.readyState && (Browser.KHTML || Browser.MACIE)) { // Safari and Konqueror
+				window.timer = (function() {
+					if (/^(loaded|complete)$/.test(document.readyState)) domReady();
+				}).periodic(50);
+			} else if (document.readyState && Browser.IE) { // IE
+				document.write('<script id=ie_ready defer src="'
+					+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
+					+ '"><\/script>');
+				$('ie_ready').onreadystatechange = function() {
+					if (window.readyState == 'complete') domReady();
+				};
+			} else { // Others
+				window.addEvent('load', domReady);
+				document.addEvent('DOMContentLoaded', domReady);
+			}
+		}
+	}
+};
+
 
 #endif // __browser_Window__

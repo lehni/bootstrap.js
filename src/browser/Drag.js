@@ -9,13 +9,13 @@
 
 // Fake dragstart, drag and dragend events, all in a self contained injectd scope.
 
-Element.inject(function() {
+Element.events.inject(function() {
 	var object, last;
 
 	function dragStart(event) {
 		event.type = 'dragstart';
-		if (this.onDragStart) this.onDragStart(event);
 		last = event.page;
+		if (this.onDragStart) this.onDragStart(event);
 		event.stop();
 		document.addEvent('mousemove', drag);
 		document.addEvent('mouseup', dragEnd);
@@ -42,32 +42,17 @@ Element.inject(function() {
 		object = null;
 	}
 
-	// Due to the call to $super, this function can be used for both
-	// addEvent and removeEvent. The only thing different are the fake
-	// handlers when removing, so there's a third argument for that.
-	function handleEvent(that, type, func, fake) {
-		switch (type) {
-		case 'drag':
-		case 'dragstart':
-			if (type == 'drag') that.onDrag = fake;
-			else that.onDragStart = fake;
-			that.$super('mousedown', dragStart);
-			break;
-		case 'dragend': that.onDragEnd = fake; break;
-		default:
-			that.$super(type, func);
-		}
-		return that;
-	}
-
 	return {
-		addEvent: function(type, func) {
-			// We need to use this.$super somewhere, otherwise it wont bet set for us!
-			return handleEvent(this, type, func, func, this.$super);
+		drag: {
+			property: 'onDrag'
 		},
-
-		removeEvent: function(type, func) {
-			return handleEvent(this, type, func, null, this.$super);
+		dragstart: {
+			property: 'onDragStart',
+			type: 'mousedown',
+			listener: dragStart
+		},
+		dragend: {
+			property: 'onDragEnd'
 		}
 	};
 });
