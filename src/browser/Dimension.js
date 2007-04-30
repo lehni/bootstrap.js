@@ -88,14 +88,24 @@ Element.inject(function() {
 			}, { position: 'absolute' }));
 		},
 
+		moveTo: function(x, y) {
+			this.setLeft(x);
+			this.setTop(y);
+		},
+
+		moveBy: function(x, y) {
+			if (x) this.setLeft(this.getLeft() + x);
+			if (y) this.setTop(this.getTop() + y);
+		},
+
 		scrollTo: function(x, y) {
 			this.scrollLeft = x;
 			this.scrollTop = y;
 		},
 
-		moveTo: function(x, y) {
-			this.style.left = x + 'px';
-			this.style.top = x + 'px';
+		scrollBy: function(x, y) {
+			this.scrollLeft += x;
+			this.scrollTop += y;
 		}
 	};
 
