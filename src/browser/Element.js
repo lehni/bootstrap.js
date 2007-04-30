@@ -342,12 +342,12 @@ Element.inject(function() {
 			}, this);
 		},
 
-		getHtml: function(html) {
+		getHtml: function() {
 			return this.innerHTML;
 		},
 
 		setHtml: function(html) {
-			this.innerHTML = $A(arguments).join('');
+			this.innerHTML = html;
 			return this;
 		}
 	}
@@ -389,7 +389,7 @@ Element.tags = (function() {
 				if (this.checked && /checkbox|radio/.test(this.type) ||
 					/^(hidden|text|password)$/.test(this.type))
 					return this.value;
-			}			
+			}
 		}.inject(formElement),
 
 		select: {

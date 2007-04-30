@@ -43,13 +43,13 @@ Element.events.inject(function() {
 	}
 
 	return {
-		drag: {
-			property: 'onDrag'
-		},
 		dragstart: {
 			property: 'onDragStart',
 			type: 'mousedown',
 			listener: dragStart
+		},
+		drag: {
+			property: 'onDrag'
 		},
 		dragend: {
 			property: 'onDragEnd'
