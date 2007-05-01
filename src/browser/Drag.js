@@ -16,10 +16,13 @@ Element.events.inject(function() {
 		event.type = 'dragstart';
 		last = event.page;
 		if (this.onDragStart) this.onDragStart(event);
-		event.stop();
-		document.addEvent('mousemove', drag);
-		document.addEvent('mouseup', dragEnd);
-		object = this;
+		// onDragStart might stop the event, check here
+		if (!event.stopped) {
+			event.stop();
+			document.addEvent('mousemove', drag);
+			document.addEvent('mouseup', dragEnd);
+			object = this;
+		}
 	}
 
 	function drag(event) {
