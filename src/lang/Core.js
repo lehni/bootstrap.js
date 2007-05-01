@@ -191,7 +191,7 @@ undefined = window.undefined;
 #else // HELMA
 		return name in this;
 #endif // HELMA
-	},
+	}
 
 	Function.prototype.inject = function(src, hide, base) {
 		// When called from extend, a third argument is passed, pointing
@@ -334,8 +334,8 @@ undefined = window.undefined;
 
 	// First dontEnum the fields that cannot be overridden (wether they change
 	// value or not, they're allways hidden, by setting the first argument to true)
-	Object.prototype.dontEnum(true, "dontEnum", "_dontEnum", "__proto__",
-			"prototype", "constructor", "$static");
+	Object.prototype.dontEnum(true, 'dontEnum', '_dontEnum', '__proto__',
+			'prototype', 'constructor', '$static');
 #endif // !HELMA
 
 	// From now on Function inject can be used to enhance any prototype,
@@ -398,3 +398,10 @@ function $typeof(obj) {
 function $random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
+
+Object.inject({
+	debug: function() {
+		return /^(string|number|function|regexp)$/.test($typeof(this)) ? this
+			: this.each(function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
+	}
+}, true);
