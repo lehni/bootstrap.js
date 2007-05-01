@@ -54,17 +54,17 @@ Array.methods.inject({
 		return -1;
 	},
 
-	find: function(iter) {
+	findEntry: function(iter) {
 		// use the faster indexOf in case we're not using iterator functions.
 		if (iter && !/^(function|regexp)$/.test($typeof(iter))) {
 			var i = this.indexOf(iter);
 			return { key: i, value: this[i] };
 		}
-		return Enumerable.find.call(this, iter);
+		return Enumerable.findEntry.call(this, iter);
 	},
 
 	remove: function(iter) {
-		var entry = this.find(iter);
+		var entry = this.findEntry(iter);
 		if (entry) return this.splice(entry.key, 1)[0];
 	},
 
