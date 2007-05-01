@@ -389,7 +389,8 @@ Template.prototype = {
 					// Finish previous macro and push it onto list
 					// convert param and unnamed to a arguments array that can directly be used
 					// when calling the macro. param comes first, unnamed after.
-					macro.arguments = '[ { ' + macro.param.join(', ') + ' }, ' + macro.unnamed.join(', ') + ' ]';
+					var unnamed = macro.unnamed.join(', ');
+					macro.arguments = '[ { ' + macro.param.join(', ') + ' } ' + (unnamed ? ', ' + unnamed : '') + ' ]';
 					// Split object and property / macro name
 					var match = macro.command.match(/^([^.]*)\.(.*)$/);
 					if (match) {
@@ -493,9 +494,11 @@ Template.prototype = {
 			// Convert encoding to encoder function:
 			// TODO: capitalize() is defined in Bootstrap!
 			values.encoder = 'encode' + encoding.substring(1, encoding.length - 1).capitalize();
-			// If default is set, encode it now:
-			if (values['default'])
-				values['default'] = global[values.encoder](values['default']);
+			// If default is, encode it now if it is a string literal, create the encoding call otherwise.
+			var def = values['default'];
+			if (def)
+				values['default'] = /^'"/.test(def) ? '"' + global[values.encoder](def.substring(1, def.length - 1)) + '"'
+					: values.encoder + '(' + def + ')';
 		}
 		// All control macros swallow line breaks:
 		macro.swallow = swallow || macro.isControl;
