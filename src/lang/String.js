@@ -5,6 +5,8 @@
 // String
 
 String.inject({
+	_type: 'string',
+
 	test: function(exp, param) {
 		return new RegExp(exp, param || '').test(this);
 	},
@@ -45,11 +47,11 @@ String.inject({
 	capitalize: function() {
 #ifdef BROWSER_LEGACY
 		// MACIE does not seem to know \b in Regexps
-		return (" " + this.toLowerCase()).replace(/\s[a-z]/g, function(match) {
+		return (" " + this).replace(/\s[a-z]/g, function(match) {
 			return match.toUpperCase();
 		}).substring(1);
 #else // !BROWSER_LEGACY
-		return this.toLowerCase().replace(/\b[a-z]/g, function(match) {
+		return this.replace(/\b[a-z]/g, function(match) {
 			return match.toUpperCase();
 		});
 #endif // !BROWSER_LEGACY
