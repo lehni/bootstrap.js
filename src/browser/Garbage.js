@@ -22,16 +22,18 @@ Garbage = (function() {
 	// Add the unload handler which walks through objects and cleans each of
 	// them:
 	window.addEvent('unload', function() {
-		objects.each(function(obj) {
+		objects.append(window, document);
+		for (var i = 0; i < objects.length; i++) {
+			var obj = objects[i];
 			if (obj.dispose) obj.dispose();
-			if ($typeof(obj) == 'element') {
-				for (var n in Element.prototype)
-					obj[n] = null;
-			} else { // normal object
-				for (var n in obj)
-					delete obj[n];
+			if (obj._type == 'element') { // Element
+				for (var p in Element.prototype) obj[p] = null;
+				for (var p in obj.data.tags) obj[p] = null;
+				obj.data = null;
+			} else { // Normal object
+				for (var p in obj) delete obj[p];
 			}
-		});
+		}
 	});
 
 	return {
