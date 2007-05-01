@@ -54,12 +54,12 @@ Elements = Object.extend({
 // TODO: Right now, filter is only applied when el is a string.
 function $(el, filter) {
 	if (el) {
-		if (el._extended || el == window || el == document)
+		if (el.data || el == window || el == document)
 			return el;
 		if (typeof(el) == 'string')
 			el = ($(filter) || document).getElementById(el);
 		if ($typeof(el) == 'element' && el.tagName) {
-			if (!el.__proto__) Garbage.collect(el);
+			Garbage.collect(el);
 #ifdef BROWSER_LEGACY
 			if (!el.inject)
 				el.inject = Object.prototype.inject;
@@ -76,9 +76,13 @@ function $(el, filter) {
 			if (!el._type) el.inject.call(el.__proto__ && el.__proto__ != Object.prototype ? el.__proto__ : el, Element.prototype);
 			// Now we inject additional methods depending on the tag of the element
 			// as defined above. If nothing is defined, this does not do anything.
-			el.inject(Element.tags[el.getTag()]);
-			el._extended = true;
-			return el;
+			// el.data is where we store all the additional values, to be cleared
+			// for garbage collection in the end. It is also used as an indicator
+			// for wether the object was already wrapped before or not.
+			// We need to keep a reference to the injected tag fields for garbage
+			// collection in the end.
+			el.data = { tags: Element.tags[el.getTag()] };
+			return el.inject(el.data.tags);
 		}
 	}
 };
@@ -102,9 +106,19 @@ function $E(sel, filter) {
 
 Element = Object.extend(function() {
 	return {
-		$constructor: function(el) {
-			if (typeof(el) == 'string') el = document.createElement(el);
-			return $(el);
+		$constructor: function(el, props) {
+			if (typeof(el) == 'string') {
+				if (Browser.IE && props && (props.name || props.type))
+					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
+						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
+					/* TODO: needed?
+					delete props.name;
+					delete props.type;
+					*/
+				el = document.createElement(el);
+			}
+			el = $(el);
+			return (!props || !el) ? el : el.set(props);
 		},
 
 		$static: {
@@ -137,6 +151,16 @@ Element.inject(function() {
 		// and $() to not inject Element functions into elements that already
 		// have them:
 		_type: 'element',
+
+		set: function(props) {
+			return props.each(function(val, key) {
+				var set = this[({
+					styles: 'setStyles', events: 'addEvents', properties: 'setProperties'
+				})[key]];
+				if (set) set.call(this, val);
+				else this.setProperty(key, val);
+			}, this);
+		},
 
 		getElementsBySelector: function(selector) {
 			var res = new Elements();
@@ -198,7 +222,7 @@ Element.inject(function() {
 		getElementById: function(id) {
 			var el = document.getElementById(id);
 			if (el)
-				for (var par = el.parentNode; el && par != this; par = parent.parentNode)
+				for (var par = el.parentNode; el && par != this; par = par.parentNode)
 					if (!par) el = null;
 			return el;
 		},
@@ -221,7 +245,7 @@ Element.inject(function() {
 			return this;
 		},
 
-		injectInside: function(el) {
+		injectInto: function(el) {
 			element(el).appendChild(this);
 			return this;
 		},
