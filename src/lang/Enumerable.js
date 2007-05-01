@@ -130,7 +130,7 @@ Enumerable = (function() {
 		 * passed iterator is met and returns its key / value pair as an object:
 		 * { key: ... , value: ... }
 		 */
-		find: iterate(function(iter, bind, that) {
+		findEntry: iterate(function(iter, bind, that) {
 			return this.each(function(val, key) {
 				if (bind.__find(val, key, that)) {
 					this.found = { key: key, value: val };
@@ -138,6 +138,15 @@ Enumerable = (function() {
 				}
 			}, {}).found;
 		}, "__find"),
+
+		/**
+		 * Searches the list for the first element where the condition of the
+		 * passed iterator is met and returns its value.
+		 */
+		find: function(iter, bind) {
+			var entry = this.findEntry(iter, bind);
+			return entry && entry.value;
+		},
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -152,7 +161,7 @@ Enumerable = (function() {
 			// same, except for the iterator conversion which is handled by
 			// iterator() here:
 			return this.$super ? this.$super(iterator(iter), bind) :
-				this.find(iter, bind) !== undefined;
+				this.findEntry(iter, bind) !== undefined;
 		},
 
 		/**
@@ -164,7 +173,7 @@ Enumerable = (function() {
 		 */
 		every: iterate(function(iter, bind, that) {
 			// Just like in .some, use .every if it's there
-			return this.$super ? this.$super(iter, bind) : this.find(function(val, i) {
+			return this.$super ? this.$super(iter, bind) : this.findEntry(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
@@ -248,12 +257,14 @@ Enumerable = (function() {
 		}, "__sortBy"),
 
 		/**
-		 * Swaps two elements of the object at the given indices
+		 * Swaps two elements of the object at the given indices, and returns
+		 * the value that is placed at the first index.
 		 */
 		swap: function(i, j) {
-			var tmp = this[i];
-			this[i] = this[j];
-			this[j] = tmp;
+			var tmp = this[j];
+			this[j] = this[i];
+			this[i] = tmp;
+			return tmp;
 		},
 
 		/**
