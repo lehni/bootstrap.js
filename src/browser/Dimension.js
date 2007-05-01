@@ -88,28 +88,42 @@ Element.inject(function() {
 			}, { position: 'absolute' }));
 		},
 
-		moveTo: function(x, y) {
-			this.setLeft(x);
-			this.setTop(y);
-		},
-
-		moveBy: function(x, y) {
-			if (x) this.setLeft(this.getLeft() + x);
-			if (y) this.setTop(this.getTop() + y);
+		// TODO: maybe confusing name? something with 'within'?
+		contains: function(pos) {
+			var bounds = this.getBounds();
+			return pos.x >= bounds.left && pos.x < bounds.right &&
+				pos.y >= bounds.top && pos.y < bounds.bottom;
 		},
 
 		scrollTo: function(x, y) {
 			this.scrollLeft = x;
 			this.scrollTop = y;
 		},
-
-		scrollBy: function(x, y) {
-			this.scrollLeft += x;
-			this.scrollTop += y;
+		
+		$static: {
+			getAt: function(pos, exclude) {
+				var el = $E('body');
+				while (true) {
+					var max = -1;
+					var ch = el.getFirst();
+					while (ch) {
+						if (ch.contains(pos) && ch != exclude) {
+							var z = ch.style.zIndex.toInt() || 0;
+							if (z >= max) {
+								el = ch;
+								max = z;
+							}
+						}
+						ch = ch.getNext();
+					}
+					if (max < 0) break;
+				}
+				return el;
+			}
 		}
 	};
 
-	// Dimension properties:
+	// Dimension getters and setters:
 	$A('left top width height').each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
