@@ -19,7 +19,7 @@ Element.eventMethods = {
 	addEvent: function(type, func) {
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
-		if (!entries.find(function(entry) { return entry.func == func })) {
+		if (func && !entries.find(function(entry) { return entry.func == func })) {
 			// Do not store bound in the function object, as functions may be
 			// shared among several elements, and they each have their own 
 			// bound function. So use entries that point to both instead, as 
@@ -76,7 +76,7 @@ Element.eventMethods = {
 
 	removeEvent: function(type, func) {
 		var entries = (this.events || {})[type], entry;
-		if (entries) {
+		if (func && entries) {
 #ifdef BROWSER_LEGACY
 			// When shutting down, added functions seem to disappear here on
 			// Mac IE. Fix it the easy way.
@@ -227,6 +227,8 @@ Event = Object.extend(function() {
 		stopPropagation: function() {
 			if (this.event.stopPropagation) this.event.stopPropagation();
 			else this.event.cancelBubble = true;
+			// Needed for dragging
+			this.stopped = true;
 			return this;
 	    },
 
