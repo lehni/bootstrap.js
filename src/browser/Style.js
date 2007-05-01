@@ -22,7 +22,8 @@ Element.inject(function() {
 			var style = this.style[name];
 			if (!style) switch (name) {
 				case 'opacity':
-					return this.opacity || this.opacity == 0 ? this.opacity : this.getVisible() ? 1 : 0;
+					var op = this.data.opacity;
+					return op || op == 0 ? op : this.getVisible() ? 1 : 0;
 				case 'margin':
 				case 'padding':
 					var res = [];
@@ -40,6 +41,7 @@ Element.inject(function() {
 				else if (style == 'auto' && /^(width|height)$/.test(name))
 					return this['offset' + name.capitalize()] + 'px';
 			}
+			// TODO: ? if (name == 'zIndex') return style.toInt() || 0;
 			// case 'clip': if (name == 'clip') // TODO: split clip rect!
 			// TODO: color! return (style && /color/i.test(name) && /rgb/.test(style)) ? style.rgbToHex() : style;
 			return style;
@@ -49,11 +51,14 @@ Element.inject(function() {
 			// convert multi params to array:
 			if (arguments.length > 2) value = $A(arguments, 1);
 			switch (name) {
+			case 'visibility':
+				this.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
+				break;
 			case 'opacity':
 				if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
 				if (Browser.IE) this.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
-				this.style.opacity = this.opacity = value;
-				this.setVisible(value);
+				this.style.opacity = this.data.opacity = value;
+				this.setStyle('visibility', value.toInt());
 				break;
 			case 'clip':
 				this.style.clip = $typeof(value) == 'array' ? 'rect(' + value.join('px ') + 'px)' : value;
@@ -73,38 +78,22 @@ Element.inject(function() {
 		setStyles: function(styles) {
 			switch ($typeof(styles)) {
 			case 'object':
-				styles.each(function(style, name) {
-					this.setStyle(name, style);
+				styles.each(function(val, key) {
+					// only set styles that have a defined value (null !== undefined)
+					if (val !== undefined)
+						this.setStyle(key, val);
 				}, this);
 				break;
 			case 'string':
 				this.cssText = styles;
 			}
 			return this;
-		},
-
-		getVisible: function() {
-			var vis = this.getStyle('visibility');
-			return vis == 'visible' || vis == 'inherit' || vis == 'inherited' || vis == '';
-		},
-
-		setVisible: function(visible) {
-			return this.setStyle('visibility', visible ? 'inherit' : 'hidden');
-		},
-
-		// TODO: does this belong to Dimension.js rather than here?
-		getZIndex: function() {
-			return this.getStyle('zIndex').toInt() || 0;
-		},
-
-		setZIndex: function(value) {
-			this.style.zIndex = value;
 		}
 	};
 
 	// Create getters and setters for some often used css properties:
 	// TODO: add more? e.g. border margin padding display
-	$A('opacity color background clip').each(function(name) {
+	$A('opacity color background visibility clip zIndex').each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
 			return this.getStyle(name);
