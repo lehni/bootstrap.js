@@ -460,7 +460,7 @@ Template.prototype = {
 					macro.values[key] = value;
 				// Appending to macro command not allowed after first parameter
 				append = false;
-			} else if (part == '|' && !macro.isControl) { // start a filter
+			} else if (part == '|') { // start a filter
 				isFirst = true;
 			} else { // unnamed param
 				// Unnamed parameters are not allowed in <%= tags
@@ -487,8 +487,8 @@ Template.prototype = {
 			macros[i] = '{ command: "' + m.command + '", name: "' + m.name +
 				'", object: ' + m.object + ', arguments: ' + m.arguments + ' }';
 		}
-		macro.filters = macros.length > 0 ? '[ ' + macros.join(', ') + ' ]' : null;
 		var values = macro.values, encoding = values.encoding;
+		values.filters = macros.length > 0 ? '[ ' + macros.join(', ') + ' ]' : null;
 		if (encoding) {
 			// Convert encoding to encoder function:
 			// TODO: capitalize() is defined in Bootstrap!
@@ -516,7 +516,7 @@ Template.prototype = {
 		if (!macro)
 			throw "Invalid tag";
 		var values = macro.values, result;
-		var postProcess = values.prefix || values.suffix || macro.filters;
+		var postProcess = values.prefix || values.suffix || values.filters;
 		var codeIndexBefore = code.length;
 		if (macro.isData) { // param, response, request, session, or a <%= %> tag
 			result = this.parseLoopVariables(macro.command + " " + macro.opcode, stack);
@@ -645,7 +645,7 @@ Template.prototype = {
 				code.push(		postProcess		?	"out.push();" : null,
 													"var val = template.renderMacro('" + macro.command + "', " + object + ", '" +
 															macro.name + "', param, " + macro.arguments + ", out);",
-								postProcess		?	"template.write(out.pop(), " + macro.filters + ", " + values.prefix + ", " +
+								postProcess		?	"template.write(out.pop(), " + values.filters + ", " + values.prefix + ", " +
 															values.suffix + ", null, out);" : null);
 				result = "val";
 			}
@@ -658,7 +658,7 @@ Template.prototype = {
 			// Optimizations: Only call template.write if post processing is necessary.
 			// Write out directly if it's all easy.
 			if (postProcess)
-				code.push(							"template.write(" + result + ", " + macro.filters + ", " + values.prefix + ", " +
+				code.push(							"template.write(" + result + ", " + values.filters + ", " + values.prefix + ", " +
 															values.suffix + ", " + values['default']  + ", out);");
 			else {
 				if (toString) {
