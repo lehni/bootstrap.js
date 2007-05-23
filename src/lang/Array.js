@@ -132,6 +132,18 @@ Array.methods.inject({
 	},
 
 	/**
+	 * Creates an object containing the array's values assigned to the
+	 * given keys assigned.
+	 */
+	assign: function(keys) {
+		var self = this, index = 0;
+		return keys.each(function(key) {
+			this[key] = self[index++];
+			if (index == self.length) throw $break;
+		}, {});
+	},
+
+	/**
 	 * adds all elements in the passed array, if they are not contained
 	 * in the array already.
 	 */

@@ -50,7 +50,7 @@ Asset = {
 
  	images: function(srcs, opts) {
 		opts = opts || {};
-		if ($typeof(srcs) != 'array') srcs = [srcs];
+		if (!src.push) srcs = [srcs];
 		var imgs = [], count = 0;
 		return $$(srcs.each(function(src) {
 			this.push(Asset.image(src, {

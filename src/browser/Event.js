@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
-Element.eventMethods = {
+Element.EventMethods = {
 	addEvent: function(type, func) {
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
@@ -26,7 +26,7 @@ Element.eventMethods = {
 			// both the original function and the bound function are needed
 			// for removal of the event listener.
 			// See if we need to fake an event here.
-			var orig = func, fake = Element.events[type];
+			var orig = func, fake = Element.Events[type];
 			if (fake) {
 				if (fake.add) func = fake.add.call(this, func) || func;
 				if (fake.property) this[fake.property] = orig;
@@ -34,14 +34,14 @@ Element.eventMethods = {
 				type = fake.type;
 			}
 			if (type) {
-				var bound = func, that = this;
+				var bound = func, self = this;
 				// Check if the function takes a parameter. If so, it must
 				// want an event. Wrap it so it recieves a wrapped event, and
 				// bind it to that at the same time, as on PC IE, event listeners
 				// are not called bound to their objects.
 				if (func.parameters().length > 0)
 					bound = function(event) { // wants event param
-						return func.call(that, new Event(event));
+						return func.call(self, new Event(event));
 					};
 				if (this.addEventListener) {
 					this.addEventListener(type, bound, false);
@@ -58,7 +58,7 @@ Element.eventMethods = {
 					this['on' + type] = function(event) {
 						event = new Event(event);
 						entries.each(function(entry) {
-							entry.func.call(that, event);
+							entry.func.call(self, event);
 							if (event.event.cancelBubble) throw $break;
 						});
 						// passing "this" for bind above breaks throw $break on
@@ -83,7 +83,7 @@ Element.eventMethods = {
 			entries = this.events[type] = $A(entries);
 #endif // !BROWSER_LEGACY
 			if (entry = entries.remove(function(entry) { return entry.func == func })) {
-				var fake = Element.events[type];
+				var fake = Element.Events[type];
 				if (fake) {
 					if (fake.remove) fake.remove.call(this, func);
 					if (fake.property) delete this[fake.property];
@@ -146,11 +146,11 @@ Element.eventMethods = {
 	}
 };
 
-window.inject(Element.eventMethods);
-document.inject(Element.eventMethods);
-Element.inject(Element.eventMethods);
+window.inject(Element.EventMethods);
+document.inject(Element.EventMethods);
+Element.inject(Element.EventMethods);
 
-Element.events = (function() {
+Element.Events = (function() {
 	function hover(type, real) {
 		return {
 			type: real,

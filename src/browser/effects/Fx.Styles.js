@@ -23,9 +23,9 @@ Fx.Styles = Fx.Base.extend({
 	},
 
 	get: function() {
-		var that = this;
+		var self = this;
 		return this.from.each(function(val, i) {
-			this[i] = that.css[i].compute(that.from[i], that.to[i], that);
+			this[i] = self.css[i].compute(self.from[i], self.to[i], self);
 		}, {});
 	},
 

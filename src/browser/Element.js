@@ -36,7 +36,8 @@ Elements = Object.extend({
 					var args = arguments, values = [], els = true;
 					this.each(function(obj) {
 						// Try to use original method if it's there, in order
-						// to support $super
+						// to support $super, as this will be the wrapper that
+						// sets it
 						var ret = (obj[key] || val).apply(obj, args);
 						values.push(ret);
 						if ($typeof(ret) != 'element') els = false;
@@ -81,13 +82,14 @@ function $(el, filter) {
 			// for wether the object was already wrapped before or not.
 			// We need to keep a reference to the injected tag fields for garbage
 			// collection in the end.
-			el.data = { tags: Element.tags[el.getTag()] };
+			el.data = { tags: Element.Tags[el.getTag()] };
 			return el.inject(el.data.tags);
 		}
 	}
 };
 
 // Short-cut to getElementsBySelector
+// TODO: Right now, filter is only applied when el is a string.
 function $$(sel, filter) {
 	switch ($typeof(sel)) {
 	case 'element': return new Elements($(sel));
@@ -108,13 +110,13 @@ Element = Object.extend(function() {
 	return {
 		$constructor: function(el, props) {
 			if (typeof(el) == 'string') {
-				if (Browser.IE && props && (props.name || props.type))
+				if (Browser.IE && props && (props.name || props.type)) {
 					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
-					/* TODO: needed?
+					// TODO: needed?
 					delete props.name;
 					delete props.type;
-					*/
+				}
 				el = document.createElement(el);
 			}
 			el = $(el);
@@ -143,7 +145,7 @@ Element.inject(function() {
 		while (el && $typeof(el) != 'element') el = el[name];
 		return $(el);
 	}
-	
+
 	var cache = {};
 
 	return {
@@ -196,10 +198,9 @@ Element.inject(function() {
 							return (el.id == param[3]);
 						});
 					}
-					// Replace wildcard (*) with regexp (.*)
 					if (param[4]) els = els.filter(function(el) {
-						return el.className.test('(^|\\s*)' + param[4].replace('*', '.*') + '(\\s*|$)');
-						// return Element.prototype.hasClass.call(el, param[4].replace('*', '.*'));
+						//return el.className.test('(^|\\s*)' + param[4] + '(\\s*|$)');
+						return Element.prototype.hasClass.call(el, param[4]);
 					});
 					if (param[6]) els = els.filter(function(name, value, operator) {
 						var att = this.getProperty(param[6]), value = param[9], operator = param[8];
@@ -317,7 +318,7 @@ Element.inject(function() {
 		},
 
 		getLast: function() {
-			return walk(this, 'nextSibling', 'lastChild');
+			return walk(this, 'previousSibling', 'lastChild');
 		},
 
 		getParent: function() {
@@ -337,26 +338,21 @@ Element.inject(function() {
 		},
 
 		getProperty: function(name) {
-			return (name == 'class') ? this.className : this.getAttribute(name);
+			var index = Element.Properties[name];
+			return (index) ? this[index] : this.getAttribute(name);
 		},
 
-		setProperty: function(prop, value) {
-			switch (prop) {
-			case 'class': this.className = value; break;
-			case 'style': if (this.setStyle) this.setStyle(value); break;
-			/* TODO: needed?
-			case 'name':
-				if (Browser.IE6) {
-					var el = new Element('<' + this.getTag() + ' name="' + value + '" />');
-					['value', 'id', 'className', 'style'].each(function(attr) {
-						el[attr] = this[attr];
-					});
-					if (this.parentNode) this.replaceWith(el);
-					return el;
-				}
-			*/
-			default: this.setAttribute(prop, value);
-			}
+		removeProperty: function(name) {
+			var index = Element.Properties[name];
+			if (index) this[index] = '';
+			else this.removeAttribute(name);
+			return this;
+		},
+
+		setProperty: function(name, value) {
+			var index = Element.Properties[name];
+			if (index) this[index] = value;
+			else this.setAttribute(name, value);
 			return this;
 		},
 
@@ -377,9 +373,16 @@ Element.inject(function() {
 	}
 });
 
+Element.Properties = {
+	'class': 'className', 'for': 'htmlFor', colspan: 'colSpan',
+	rowspan: 'rowSpan', accesskey: 'accessKey', tabindex: 'tabIndex',
+	maxlength: 'maxLength', readonly: 'readOnly', value: 'value',
+	disabled: 'disabled', checked: 'checked', multiple: 'multiple'
+};
+
 // Define functions for additional tags (form elements).
 // $() injects these into the given elements based on their tagNames:
-Element.tags = (function() {
+Element.Tags = (function() {
 	// Methods common in input, select and textarea:
 	var formElement = {
 		enable: function(enable) {

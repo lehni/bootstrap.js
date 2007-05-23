@@ -97,7 +97,7 @@ undefined = window.undefined;
 					// in a previous compilation cicle and has since disappeared.
 					// Like this, the result is allways as if the Helma app
 					// was restarted after each changed and the client version
-					// of base.js was used.
+					// of Bootstrap.js was used.
 					if (realBase && base == dest && baseVal._version &&
 							baseVal._version != version)
 						base = realBase;
@@ -189,6 +189,7 @@ undefined = window.undefined;
 				entry.allow && entry.object[name] !== obj[name]);
 #endif // !BROWSER_LEGACY
 #else // HELMA
+		// In helma, dontEnum is used to hide fields, so count on ' in ' here.
 		return name in this;
 #endif // HELMA
 	}
@@ -248,7 +249,7 @@ undefined = window.undefined;
 		// For versioning, define onCodeUpdate to update _version each time:
 		if (version) {
 			// See if it is already defined, and override in a way that allows
-			// outside definitions of onCodeUpdate to coexist with base.
+			// outside definitions of onCodeUpdate to coexist with Bootstrap.js.
 			// Use _version to flag the function that increases _version.
 			// Only override if it's another function or if it is not defined yet.
 			var update = proto.onCodeUpdate;
@@ -378,12 +379,8 @@ undefined = window.undefined;
 	}, true);
 })();
 
-#ifdef BROWSER
-global = window;
-#else // !BROWSER
 // Retrieve a reference to the global scope, usually window.
-global = (function() { return this })();
-#endif // !BROWSER
+global = this;
 
 function $typeof(obj) {
 #ifdef BROWSER
@@ -399,9 +396,11 @@ function $random(min, max) {
 	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+#ifdef EXTEND_OBJECT
 Object.inject({
 	debug: function() {
 		return /^(string|number|function|regexp)$/.test($typeof(this)) ? this
 			: this.each(function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
 	}
 }, true);
+#endif

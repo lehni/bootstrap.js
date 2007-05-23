@@ -27,7 +27,7 @@ if (!global.encodeAll)
 #else // !HELMA
 
 // Retrieve a reference to the global scope.
-global = (function() { return this })();
+global = this;
 
 // Define TemplateWriter that mimics Helma's ResponseTrans
 function TemplateWriter() {
@@ -375,6 +375,7 @@ Template.prototype = {
 			}
 		}
 
+		// TODO: macro is not the right name here, as it is also filters: functional units between |...
 		var macros = [], macro = null, isMain = true;
 
 		function nextMacro(next) {
