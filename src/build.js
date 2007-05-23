@@ -1,6 +1,5 @@
 #include "lang/Core.js"
 #include "lang/Function.js"
-//#include "lang/Enumerable_apply.js"
 #include "lang/Enumerable.js"
 #include "lang/Object.js"
 #include "lang/Array.js"

@@ -9,7 +9,7 @@
 
 // Fake dragstart, drag and dragend events, all in a self contained injectd scope.
 
-Element.events.inject(function() {
+Element.Events.inject(function() {
 	var object, last;
 
 	function dragStart(event) {

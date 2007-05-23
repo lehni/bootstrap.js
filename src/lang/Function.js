@@ -12,8 +12,8 @@ Function.inject(function() {
 	var timerId = 0;
 
 #endif // BROWSER_LEGACY
-	function timer(that, type, args, ms) {
-		var fn = that.bind.apply(that, $A(args, 1));
+	function timer(self, type, args, ms) {
+		var fn = self.bind.apply(self, $A(args, 1));
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
 		Function.timers[id] = fn;
@@ -61,16 +61,16 @@ Function.inject(function() {
 #endif // !BROWSER
 
 		bind: function(obj) {
-			var that = this, args = $A(arguments, 1);
+			var self = this, args = $A(arguments, 1);
 			return function() {
-				return that.apply(obj, args.concat($A(arguments)));
+				return self.apply(obj, args.concat($A(arguments)));
 			}
 		},
 
 		attempt: function(obj) {
-			var that = this, args = $A(arguments, 1);
+			var self = this, args = $A(arguments, 1);
 			return function() {
-				try { return that.apply(obj, args.concat($A(arguments))); }
+				try { return self.apply(obj, args.concat($A(arguments))); }
 				catch(e) { return e; }
 			}
 		}
@@ -96,13 +96,16 @@ if (!Function.prototype.apply) {
 		// through caching of caller functions
 		apply: function(obj, args, start) {
 			if (!start) start = 0;
-			// generate lookup slot name as integer for faster execution.
-			// make room for a maximum of 64 arguments (start can be 0 or 1)
+			// Generate lookup slot name as integer for faster execution.
+			// make room for a maximum of 64 arguments.
+			// 'start' is the index in args, 0 for 'apply' and 1 for 'call'.
+			// This allows passing an unmodified arguments list as array.
 			var count = args ? args.length : 0, index = start * 64 + count;
-			// use cached caller functions for the exact amount of parameters
+			// Use cached caller functions for the exact amount of parameters
 			// like this, we prevent creation of argument lists each time. 
-			// only tehe first call is slower, everything that follows wit the
-			// same amount of parameters should execute at almost native speed.
+			// Only the first call is slower, as the caller function is created.
+			// Everything that follows wit the same amount of parameters should
+			// execute at rather decent speed.
 			var fn = cache[index];
 			if (!fn) {
 				fn = [];
@@ -114,10 +117,10 @@ if (!Function.prototype.apply) {
 			if (obj) {
 				obj.__f = this;
 				try { return fn(obj, args); }
-				// delete on window object does not work on IE 5 PC
+				// Delete on window object does not work on IE 5 PC
 				finally { obj.__f = undefined; }
 			} else {
-				// this should be executed in window to be compliant, but
+				// This should be executed in window to be compliant, but
 				// for some reasion, on MacIE execution there is much slower
 				// than on an empty object. so do not rely on this to point
 				// to the global scope when not set otherwise

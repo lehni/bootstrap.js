@@ -45,6 +45,7 @@ window.inject({
 					Math.max(0, (screen.height - params.height) / 2 - 40));
 			}
 			focus = params.focus;
+			// Now convert paramets to string.
 			params = params.each(function(p, n) {
 				if (!/^(focus|confirm)$/.test(n))
 					this.push(n + '=' + p);
@@ -56,7 +57,7 @@ window.inject({
 	}
 });
 
-Element.events.domready = {
+Element.Events.domready = {
 	add: function(fn) {
 		if (window.loaded) fn.call(this);
 		else {

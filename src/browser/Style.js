@@ -61,7 +61,7 @@ Element.inject(function() {
 				this.setStyle('visibility', value.toInt());
 				break;
 			case 'clip':
-				this.style.clip = $typeof(value) == 'array' ? 'rect(' + value.join('px ') + 'px)' : value;
+				this.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
 				break;
 			default:
 				this.style[name.camelize()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
@@ -70,18 +70,18 @@ Element.inject(function() {
 		},
 
 		getStyles: function() {
-			return arguments.each(function(val) {
-				this[val] = that.getStyle(val);
+			return arguments.each(function(name) {
+				this[name] = that.getStyle(name);
 			}, {});
 		},
 
 		setStyles: function(styles) {
 			switch ($typeof(styles)) {
 			case 'object':
-				styles.each(function(val, key) {
+				styles.each(function(style, name) {
 					// only set styles that have a defined value (null !== undefined)
-					if (val !== undefined)
-						this.setStyle(key, val);
+					if (style !== undefined)
+						this.setStyle(name, style);
 				}, this);
 				break;
 			case 'string':
@@ -93,6 +93,7 @@ Element.inject(function() {
 
 	// Create getters and setters for some often used css properties:
 	// TODO: add more? e.g. border margin padding display
+	// TODO: do clip and zIndex belong to Dimension.js?
 	$A('opacity color background visibility clip zIndex').each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {

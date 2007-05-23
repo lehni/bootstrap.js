@@ -83,9 +83,22 @@ Element.inject(function() {
 		},
 
 		setBounds: function(bounds) {
+			// convert (left, top, width, height, clip) or ([left, top, width, height, clip]) to ({ left: , top: , width: , height: , clip: })
+			if (!bounds || $typeof(bounds) != 'object')
+				bounds = (bounds && bounds.assign ? bounds : $A(arguments)).assign(
+						['left', 'top', 'width', 'height', 'clip']);
+			// clip: if specified as an array, set directly, otherwise set to
+			// native bounds afterwards
+			var clip = bounds.clip && !bounds.clip.push;
+			if (clip) delete bounds.clip;
+			// apply:
 			this.setStyles(bounds.each(function(val, i) {
 				if (val || val == 0) this[i] = val + 'px';
 			}, { position: 'absolute' }));
+			// for clipping, do not rely on #width and #height to be set.
+			// setBounds might be called with only #width, #height, #right or #bottom set.
+			if (clip) this.setClip(0, this.getWidth(), this.getHeight(), 0);
+			return this;
 		},
 
 		// TODO: maybe confusing name? something with 'within'?
@@ -124,7 +137,7 @@ Element.inject(function() {
 	};
 
 	// Dimension getters and setters:
-	$A('left top width height').each(function(name) {
+	$A('left top right bottom width height').each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
 			return this['offset' + part];
