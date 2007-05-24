@@ -34,18 +34,75 @@ undefined = window.undefined;
 #endif // BROWSER_LEGACY
 
 (function() { // bootstrap
+#if defined(EXTEND_OBJECT) || defined(DONT_ENUM) || defined(BROWSER_LEGACY)
+#define HAS(obj, name) has(obj, name)
+	/**
+	 * Private function that checks if an object contains a given property.
+	 */
+	function has(obj, name) {
+#ifdef DONT_ENUM
+		// This is tricky: as described in Object.prototype.dontEnum, the
+		// _dontEnum  objects form a inheritance sequence between prototypes.
+		// So if we check  obj._dontEnum[name], we're not sure that the
+		// value returned is actually from the current object. It might be
+		// from a parent in the inheritance chain. This is why dontEnum
+		// stores a reference to the object on which dontEnum was called for
+		// that object. If the value there differs from the one in obj, 
+		// it means it was modified somewhere between obj and there.
+		// If the entry allows overriding, we return true although _dontEnum
+		// lists it.
+#ifdef BROWSER_LEGACY
+		var val = obj[name], entry;
+		return val !== undefined && (!(entry = obj._dontEnum[name]) ||
+				entry.allow && entry.object[name] !== val);
+#else // !BROWSER_LEGACY
+		var entry;
+		return name in obj && (!(entry = obj._dontEnum[name]) ||
+				entry.allow && entry.object[name] !== obj[name]);
+#endif // !BROWSER_LEGACY
+#else // !DONT_ENUM
+#ifdef EXTEND_OBJECT
+		// We need to filter out what does not belong to the object itself.
+		// This is done by comparing the value with the value of the same
+		// name in the prototype. If the value is equal it's defined in one
+		// of the prototypes, not the object itself.
+		// Also, key starting with __ are filtered out, as they are
+		// iterators or legacy browser's function objects.
+#ifdef LEGACY_BROWSER
+		var val = this[name];
+		return val !== this.__proto__ && val !== this.__proto__[name] && name.substring(0, 2) != '__';
+#else // !LEGACY_BROWSER
+		return this[name] !== this.__proto__[name] && name.substring(0, 2) != '__';
+#endif // !LEGACY_BROWSER
+#else // !EXTEND_OBJECT
+#ifdef BROWSER_LEGACY
+		return this[name] !== undefined;
+#else // !BROWSER_LEGACY
+		return name in this;
+#endif // !BROWSER_LEGACY
+#endif // !EXTEND_OBJECT
+#endif // !DONT_ENUM
+	}
+#else // !EXTEND_OBJECT && !DONT_ENUM && !BROWSER_LEGACY
+#define HAS(obj, name) name in obj
+#endif
+
 	/**
 	 * Private function that injects functions from src into dest, overriding
 	 * (and inherinting from) base. if allowProto is set, the name "prototype"
 	 * is inherited too. This is false for static fields, as prototype there
 	 * points to the classes' prototype.
 	 */
-#ifdef HELMA
+#ifndef HELMA // !HELMA
+#ifdef DONT_ENUM
+	function inject(dest, src, base, hide) {
+#else
+	function inject(dest, src, base) {
+#endif
+#else // HELMA
 	// Real base is used for the versioning mechanism as desribed above.
 	function inject(dest, src, base, hide, version, realBase) {
-#else // !HELMA
-	function inject(dest, src, base, hide) {
-#endif // !HELMA
+#endif // HELMA
 #ifdef BROWSER_LEGACY
 		// For some very weird reason, ""; fixes a bug on MACIE where .replace
 		// sometimes would not be present when this meaningless emtpy string 
@@ -61,15 +118,19 @@ undefined = window.undefined;
 		// for $super to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) for (var name in src)
-#ifdef HELMA
+#ifndef HELMA // !HELMA
+#ifdef DONT_ENUM
+			if (HAS(src, name)) (function(val, name) {
+#else // !DONT_ENUM
+			if (HAS(src, name) && name != '$static') (function(val, name) {
+#endif // !DONT_ENUM
+#else // HELMA
 			// On normal JS, we can hide $static through our dontEnum().
 			// on Helma, the native dontEnum can only be called on fields that
 			// are defined already, as an added attribute. So we need to check
 			// against $static here...
-			if (name != "$static") (function(val, name) {
-#else // !HELMA
-			if (has(src, name)) (function(val, name) {
-#endif // !HELMA
+			if (name != '$static') (function(val, name) {
+#endif // HELMA
 				/* TODO: decide what to do with this!
 				if (typeof val == 'function' && /\$super\./.test(val)) {
 					val = new Function(val.parameters(), val.body().replace(/\$super\./, 'this.__proto__.__proto__.'));
@@ -136,8 +197,10 @@ undefined = window.undefined;
 				// Parameter hide was named dontEnum, but this caused 
 				// problems on Opera, where it then seems to point to
 				// Object.prototype.dontEnum, which must be a bug in Opera.
-				if (hide && dest.dontEnum != null)
+#if defined(DONT_ENUM) || defined(HELMA)
+				if (hide && dest.dontEnum)
 					dest.dontEnum(name);
+#endif
 			})(src[name], name);
 		return dest;
 	}
@@ -162,36 +225,6 @@ undefined = window.undefined;
 		};
 		ctor.prototype = obj;
 		return ctor;
-	}
-
-	/**
-	 * Private function that checks if an object contains a given property.
-	 */
-	function has(obj, name) {
-#ifndef HELMA // !HELMA
-		// This is tricky: as described in Object.prototype.dontEnum, the
-		// _dontEnum  objects form a inheritance sequence between prototypes.
-		// So if we check  obj._dontEnum[name], we're not sure that the
-		// value returned is actually from the current object. It might be
-		// from a parent in the inheritance chain. This is why dontEnum
-		// stores a reference to the object on which dontEnum was called for
-		// that object. If the value there differs from the one in obj, 
-		// it means it was modified somewhere between obj and there.
-		// If the entry allows overriding, we return true although _dontEnum
-		// lists it.
-#ifdef BROWSER_LEGACY
-		var val = obj[name], entry;
-		return val !== undefined && (!(entry = obj._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== val);
-#else // !BROWSER_LEGACY
-		var entry;
-		return name in obj && (!(entry = obj._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== obj[name]);
-#endif // !BROWSER_LEGACY
-#else // HELMA
-		// In helma, dontEnum is used to hide fields, so count on ' in ' here.
-		return name in this;
-#endif // HELMA
 	}
 
 	Function.prototype.inject = function(src, hide, base) {
@@ -293,7 +326,7 @@ undefined = window.undefined;
 		return this.inject.call(ctor, src, hide, this);
 	};
 
-#ifndef HELMA
+#ifdef DONT_ENUM
 	Object.prototype.dontEnum = function(force) {
 		// inherit _dontEnum with all its settings from prototype and extend.
 		// _dontEnum objects form an own inheritance sequence, in parallel to 
@@ -337,8 +370,9 @@ undefined = window.undefined;
 	// value or not, they're allways hidden, by setting the first argument to true)
 	Object.prototype.dontEnum(true, 'dontEnum', '_dontEnum', '__proto__',
 			'prototype', 'constructor', '$static');
-#endif // !HELMA
+#endif // DONT_ENUM
 
+#ifdef EXTEND_OBJECT
 	// From now on Function inject can be used to enhance any prototype,
 	// for example Object:
 	Object.inject({
@@ -376,7 +410,8 @@ undefined = window.undefined;
 			// set and is garbage collected right after.
 			return (new (extend(this))).inject(src, hide);
 		}
-	}, true);
+	}HIDE);
+#endif
 })();
 
 // Retrieve a reference to the global scope, usually window.
@@ -402,5 +437,5 @@ Object.inject({
 		return /^(string|number|function|regexp)$/.test($typeof(this)) ? this
 			: this.each(function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
 	}
-}, true);
+}HIDE);
 #endif

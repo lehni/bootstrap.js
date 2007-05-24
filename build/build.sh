@@ -34,7 +34,7 @@ if [ ! -d ../out/ ]
 then
 	mkdir ../out/
 fi
-./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DEXTEND_OBJECT -DDONT_ENUM_ -DSET_ITERATOR_" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DEXTEND_OBJECT_ -DDONT_ENUM_ -DSET_ITERATOR_" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DGETTER_SETTER" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DGETTER_SETTER" $MODE

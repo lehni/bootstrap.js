@@ -117,9 +117,9 @@ Enumerable = (function() {
 	var each_Object = function(iter, bind) {
 #ifdef DONT_ENUM
 		// We use for-in here, but need to filter out what should not be iterated.
-		// Object#dontEnum defines a method to flag such a fields, 
-		// and Object#has a way to find out for any given key if it is enumerable
-		// or not (See Core). The loop here uses an inline version of Object#has.  
+		// Object#dontEnum defines a method to flag such a fields, and Object#has
+		// a way to find out for any given key if it is enumerable or not.
+		// The loop here uses an inline version of Object#has (See Core).  
 		var entries = this._dontEnum || {};
 		for (var i in this) {
 			var val = this[i], entry = entries[i];
@@ -129,12 +129,8 @@ Enumerable = (function() {
 				ITERATOR_CALL(bind,iter,val,i,this,__each);
 		}
 #elif !defined(HELMA) && (defined(SET_ITERATOR) || defined(EXTEND_OBJECT))
-		// We use for-in here, but need to filter out what does not belong
-		// to the object itself. This is done by comparing the value with
-		// the value of the same name in the prototype. If the value is
-		// equal it's defined in one of the prototypes, not the object
-		// itself. Also, key starting with __ are filtered out, as they are
-		// iterators or legacy browser's function objects.
+		// We use for-in here, but need to filter out what should not be iterated.
+		// The loop here uses an inline version of Object#has (See Core).
 		for (var i in this) {
 			var val = this[i];
 #ifdef LEGACY_BROWSER
