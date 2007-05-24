@@ -1,3 +1,9 @@
+#if defined(DONT_ENUM) || defined(HELMA)
+#define HIDE , true
+#else
+#define HIDE
+#endif
+
 #include "lang/Core.js"
 #include "lang/Function.js"
 #include "lang/Enumerable.js"
