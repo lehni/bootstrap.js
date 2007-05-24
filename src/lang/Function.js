@@ -87,8 +87,10 @@ Function.inject(function() {
 // Function.call / apply does not work properly on IE 5 PC / Mac
 
 if (!Function.prototype.apply) {
-	// never enum __f, the helper property introduced bellow
-	Object.prototype.dontEnum(true, "__f");
+#ifdef DONT_ENUM
+	// Never enum __f, the helper property introduced bellow
+	Object.prototype.dontEnum(true, '__f');
+#endif // DONT_ENUM
 	var cache = {};
 
 	Function.inject({
