@@ -74,10 +74,10 @@ String.inject({
 // String replace with a function as a second argument does not work on quite
 // a few browsers. Fix it here:
 
-if ("aa".replace(/\w/g, function() { return arguments[1] }) !== "01") {
+if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
 	String.inject({
 		replace: function(search, replace) {
-			// if no function is specified, use the internal implementation
+			// If no function is specified, use the internal implementation
 			if (typeof replace != 'function')
 				return this.$super(search, replace);
 			var parts = [], pos = 0, a;

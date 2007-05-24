@@ -5,7 +5,7 @@
 // RegExp
 
 RegExp.inject({
-	// tell $typeof what to return for regexps.
+	// Tell $typeof what to return for regexps.
 	_type: "regexp"
 });
 
@@ -14,7 +14,7 @@ RegExp.inject({
 ////////////////////////////////////////////////////////////////////////////////
 // RegExp Legacy
 
-// RegExp do not define global an exec does not work properly on IE 5 PC / Mac
+// RegExp do not define global an exec does not work properly on IE 5
 
 if (!/ /g.global) {
 	RegExp.inject({
