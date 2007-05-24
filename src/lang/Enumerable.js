@@ -1,6 +1,22 @@
 #ifndef __lang_Enumerable__
 #define __lang_Enumerable__
 
+// Use macros to produce different version of the code bellow,
+// depending on wether SET_ITERATOR is set or not.
+#ifdef SET_ITERATOR
+// The field 'name' on the 'bind' object is set to the iterator before iteration.
+// We can call it directly instead using #call.
+// This leads to better performance (2x on Firefox), and even more  on legacy
+// browsers where we can avoid the emulated Function.call.
+#define ITERATOR_CALL(bind, iter, value, key, self, name) bind.name(value, key, self)
+#define ITERATOR_PARAM(name) , #name
+#else // !SET_ITERATOR
+// Call the iterator funciton on the bind object through Function.call. This is
+// cleanear but slower than the SET_ITERATOR hack.
+#define ITERATOR_CALL(bind, iter, value, key, self, name) iter.call(bind, value, key, self)
+#define ITERATOR_PARAM(name)
+#endif // !SET_ITERATOR
+
 ////////////////////////////////////////////////////////////////////////////////
 // Enumerable
 
@@ -56,63 +72,84 @@ Enumerable = (function() {
 	 * This is used in many places in Enumerable, each place defining its own 
 	 * name for the iterate function, so there are no clashes if calls are nested.
 	 */
+#ifdef SET_ITERATOR
 	function iterate(fn, name) {
-#ifndef HELMA
-		// dontEnum all iterators once and for all on browsers:
-		Object.prototype.dontEnum(true, name);
+#else
+	function iterate(fn) {
 #endif
+#if defined(SET_ITERATOR) && defined(DONT_ENUM)
+		// dontEnum all set iterators once and for all on browsers:
+		Object.prototype.dontEnum(true, name);
+#endif // APPLY_ITERATOR && DONT_ENUM
 		return function(iter, bind) {
 			iter = iterator(iter);
 			if (!bind) bind = this;
+#ifdef SET_ITERATOR
+			// Backup previous value of the field, and set iterator.
 			var prev = bind[name];
 			bind[name] = iter;
-			// HACK: If the object does not allow setting of values,
-			// create a new unsealed object that inherits from it.
-			/*
-			if (bind[name] != iter) {
-				bind = bind.extend();
-				bind[name] = iter;
-			}
-			*/
 #ifdef HELMA
-			// On the server, we can only dontEnum once the property is defined.
+			// On Helma, we can only dontEnum once the property is defined.
 			bind.dontEnum(name);
-#endif
+#endif // HELMA
+#endif// !SET_ITERATOR
 			// Interesting benchmark observation: The loops seem execute 
 			// faster when called on the object (this), so outsource to
 			// the above functions each_Array / each_Object here.
-			// pass this twice, so it can be recieved as "that" in the iterating
+			// pass this twice, so it can be recieved as 'self' in the iterating
 			// functions, to be passed to the iterator (and being able to use 
-			// "this" in .each differently)
+			// 'this' in .each differently)
+#ifdef SET_ITERATOR
+			// Allways restore previous value in the end.
 			try { return fn.call(this, iter, bind, this); }
 			finally { bind[name] = prev; }
+#else // !SET_ITERATOR
+			return fn.call(this, iter, bind, this);
+#endif// !SET_ITERATOR
 		};
 	}
 
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
 		for (var i = 0; i < this.length; i++)
-			bind.__each(this[i], i, this);
+			ITERATOR_CALL(bind,iter,this[i],i,this,__each);
 	};
 
 	var each_Object = function(iter, bind) {
+#ifdef DONT_ENUM
+		// We use for-in here, but need to filter out what should not be iterated.
+		// Object#dontEnum defines a method to flag such a fields, 
+		// and Object#has a way to find out for any given key if it is enumerable
+		// or not (See Core). The loop here uses an inline version of Object#has.  
+		var entries = this._dontEnum || {};
+		for (var i in this) {
+			var val = this[i], entry = entries[i];
+			// Skip dontEnum fields.
+			// This line here is similar to Object.prototype.has
+			if (!entry || entry.allow && entry.object[i] !== this[i])
+				ITERATOR_CALL(bind,iter,val,i,this,__each);
+		}
+#elif !defined(HELMA) && (defined(SET_ITERATOR) || defined(EXTEND_OBJECT))
 		// We use for-in here, but need to filter out what does not belong
 		// to the object itself. This is done by comparing the value with
 		// the value of the same name in the prototype. If the value is
 		// equal it's defined in one of the prototypes, not the object
-		// itself.
-#ifndef HELMA
-		var entries = this._dontEnum || {};
+		// itself. Also, key starting with __ are filtered out, as they are
+		// iterators or legacy browser's function objects.
 		for (var i in this) {
-			var val = this[i], entry = entries[i];
-			// added properties. This line here is the same as Object.prototype.has
-			if (!entry || entry.allow && entry.object[i] !== this[i])
-				bind.__each(val, i, this);
+			var val = this[i];
+#ifdef LEGACY_BROWSER
+			if (val !== this.__proto__ && val !== this.__proto__[i] && i.substring(0, 2) != '__')
+#else // !LEGACY_BROWSER
+			if (val !== this.__proto__[i] && i.substring(0, 2) != '__')
+#endif // !LEGACY_BROWSER
+				ITERATOR_CALL(bind,iter,val,i,this,__each);
 		}
-#else // HELMA
-		// no need to check on the server as dontEnum is allways used to hide
+#else // HELMA || !SET_ITERATOR && !EXTEND_OBJECT
+		// No need to check when not extending Object and when on Helma as
+		// dontEnum is always used to hide fields there.
 		for (var i in this)
-			bind.__each(this[i], i, this);
-#endif // HELMA
+			ITERATOR_CALL(bind,iter,this[i],i,this,__each);
+#endif
 	};
 
 	return {
@@ -123,21 +160,21 @@ Enumerable = (function() {
 			try { (this.length != null ? each_Array : each_Object).call(this, iter, bind); }
 			catch (e) { if (e !== $break) throw e; }
 			return bind;
-		}, "__each"),
+		}ITERATOR_PARAM('__each')),
 
 		/**
 		 * Searches the list for the first element where the condition of the
 		 * passed iterator is met and returns its key / value pair as an object:
 		 * { key: ... , value: ... }
 		 */
-		findEntry: iterate(function(iter, bind, that) {
+		findEntry: iterate(function(iter, bind, self) {
 			return this.each(function(val, key) {
-				if (bind.__find(val, key, that)) {
+				if (ITERATOR_CALL(bind,iter,val,key,self,__find)) {
 					this.found = { key: key, value: val };
 					throw $break;
 				}
 			}, {}).found;
-		}, "__find"),
+		}ITERATOR_PARAM('__find')),
 
 		/**
 		 * Searches the list for the first element where the condition of the
@@ -171,15 +208,15 @@ Enumerable = (function() {
 		 * This is compatible with JS 1.5's .every, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
 		 */
-		every: iterate(function(iter, bind, that) {
+		every: iterate(function(iter, bind, self) {
 			// Just like in .some, use .every if it's there
 			return this.$super ? this.$super(iter, bind) : this.findEntry(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
-				return this.__every(val, i, that);
+				return ITERATOR_CALL(this,iter,val,i,self,__every);
 			}, bind) === undefined;
-		}, "__every"),
+		}ITERATOR_PARAM('__every')),
 
 		/**
 		 * Collects the result of the given iterator applied to each of the
@@ -188,12 +225,12 @@ Enumerable = (function() {
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
 		 */
-		map: iterate(function(iter, bind, that) {
+		map: iterate(function(iter, bind, self) {
 			// Just like in .some, use .map if it's there
 			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
-				this.push(bind.__map(val, i, that));
+				this.push(ITERATOR_CALL(bind,iter,val,i,self,__map));
 			}, []);
-		}, "__map"),
+		}ITERATOR_PARAM('__map')),
 
 		/**
 		 * Collects all elements for which the condition of the passed iterator
@@ -201,36 +238,36 @@ Enumerable = (function() {
 		 * This is compatible with JS 1.5's .filter, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
 		 */
-		filter: iterate(function(iter, bind, that) {
+		filter: iterate(function(iter, bind, self) {
 			// Just like in .some, use .map if it's there
 			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
-				if (bind.__filter(val, i, that)) this.push(val);
+				if (ITERATOR_CALL(bind,iter,val,i,self,__filter)) this.push(val);
 			}, []);
-		}, "__filter"),
+		}ITERATOR_PARAM('__filter')),
 
 		/**
 		 * Returns the maximum value of the result of the passed iterator
 		 * applied to each element.
 		 * If no iterator is passed, the value is used directly.
 		 */
-		max: iterate(function(iter, bind, that) {
+		max: iterate(function(iter, bind, self) {
 			return this.each(function(val, i) {
-				val = bind.__max(val, i, that);
+				val = ITERATOR_CALL(bind,iter,val,i,self,__max);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
-		}, "__max"),
+		}ITERATOR_PARAM('__max')),
 
 		/**
 		 * Returns the minimum value of the result of the passed iterator
 		 * applied to each element. 
 		 * If no iterator is passed, the value is used directly.
 		 */
-		min: iterate(function(iter, bind, that) {
+		min: iterate(function(iter, bind, self) {
 			return this.each(function(val, i) {
-				val = bind.__min(val, i, that);
+				val = ITERATOR_CALL(bind,iter,val,i,self,__min);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
-		}, "__min"),
+		}ITERATOR_PARAM('__min')),
 
 		/**
 		 * Collects the values of the given property of each of the elements
@@ -247,14 +284,14 @@ Enumerable = (function() {
 		 * and returns the sorted list in an array.
 		 * Inspired by Prototype.js
 		 */
-		sortBy: iterate(function(iter, bind, that) {
+		sortBy: iterate(function(iter, bind, self) {
 			return this.map(function(val, i) {
-				return { value: val, compare: this.__sortBy(val, i, that) };
+				return { value: val, compare: ITERATOR_CALL(bind,iter,val,i,self,__sortBy) };
 			}, bind).sort(function(left, right) {
 				var a = left.compare, b = right.compare;
 				return a < b ? -1 : a > b ? 1 : 0;
 			}).pluck('value');
-		}, "__sortBy"),
+		}ITERATOR_PARAM('__sortBy')),
 
 		/**
 		 * Swaps two elements of the object at the given indices, and returns
