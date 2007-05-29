@@ -1,13 +1,8 @@
-#if defined(DONT_ENUM) || defined(HELMA)
-#define HIDE , true
-#else
-#define HIDE
-#endif
-
+#include "macros.js"
 #include "lang/Core.js"
 #include "lang/Function.js"
 #include "lang/Enumerable.js"
-#include "lang/Object.js"
+#include "lang/Base.js"
 #include "lang/Array.js"
 #include "lang/String.js"
 #include "lang/Number.js"

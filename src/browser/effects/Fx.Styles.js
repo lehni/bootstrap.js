@@ -24,7 +24,7 @@ Fx.Styles = Fx.Base.extend({
 
 	get: function() {
 		var self = this;
-		return this.from.each(function(val, i) {
+		return EACH(this.from, function(val, i) {
 			this[i] = self.css[i].compute(self.from[i], self.to[i], self);
 		}, {});
 	},
@@ -32,7 +32,7 @@ Fx.Styles = Fx.Base.extend({
 	set: function(to) {
 		var parsed = {};
 		this.css = {};
-		to.each(function(val, i) {
+		EACH(to, function(val, i) {
 			this.css[i] = Fx.CSS.select(i, val);
 			parsed[i] = this.css[i].parse(val);
 		}, this);
@@ -44,7 +44,7 @@ Fx.Styles = Fx.Base.extend({
 		this.now = {};
 		this.css = {};
 		var from = {}, to = {};
-		obj.each(function(val, i) {
+		EACH(obj, function(val, i) {
 			var parsed = Fx.CSS.parse(this.element, i, val);
 			from[i] = parsed.from;
 			to[i] = parsed.to;
@@ -54,7 +54,7 @@ Fx.Styles = Fx.Base.extend({
 	},
 
 	update: function(val) {
-		val.each(function(val, i) {
+		EACH(val, function(val, i) {
 			this.element.setStyle(i, this.css[i].get(val, this.options.unit));
 		}, this);
 	}

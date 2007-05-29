@@ -28,7 +28,9 @@ Garbage = (function() {
 			if (obj.dispose) obj.dispose();
 			if (obj._type == 'element') { // Element
 				for (var p in Element.prototype) obj[p] = null;
+				// Clean functions added for certain tags
 				for (var p in obj.data.tags) obj[p] = null;
+				// Clean data
 				obj.data = null;
 			} else { // Normal object
 				for (var p in obj) delete obj[p];

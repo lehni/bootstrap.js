@@ -11,7 +11,8 @@
  * Warning: Does not create a new instance if it is a hash already!
  */
 function $H(obj) {
-	return $typeof(obj) == 'hash' ? obj : new Hash(obj);
+	return arguments.length == 1 && $typeof(obj) == 'hash' ? obj
+			: Hash.prototype.$constructor.apply(new Hash(), arguments);
 }
 
 /**
@@ -25,14 +26,18 @@ function $H(obj) {
  * element. This is much simpler and faster, and I have not yet found out the
  * advantage of how Prototype handles it. 
  */
-Hash = Object.extend({
-	_type: "hash",
+Hash = Base.extend({
+	_type: 'hash',
 
 	/**
-	 * Constructs a new Hash.
+	 * Constructs a new Hash. The constructor takes a variable amount of
+	 * argument objects of which the fields are all merged into the hash.
 	 */
-	$constructor: function(obj) {
-		if (obj) this.merge(obj);
+	$constructor: function() {
+		// Explicitly return here as it is used in $H's return statement above
+		return EACH(arguments, function(obj) {
+			this.merge(obj);
+		}, this);
 	},
 
 	/**
@@ -43,12 +48,15 @@ Hash = Object.extend({
 	},
 
 	/**
-	 * Merges with the given enumerable object and returns the modifed hash.
-	 * Calls merge on value pairs if they are dictionaries.
+	 * Deep merges with the given enumerable object and returns the modifed hash.
+	 * Recursively calls merge on value pairs if they are dictionaries.
 	 */
 	merge: function(obj) {
-		return obj ? obj.each(function(val, i) {
-			this[i] = $typeof(this[i]) != 'object' ? val : arguments.callee.call(this[i], val);
+		// Allways use $each() as we don't know wether the passed object
+		// really inherits from Base.
+		return obj ? $each(obj, function(val, key) {
+			this[key] = /^(object|hash)$/.test($typeof(this[key]))
+					? Hash.prototype.merge.call(this[key], val) : val;
 		}, this) : this;
 	},
 
@@ -56,8 +64,8 @@ Hash = Object.extend({
 	 * Collects the keys of each element and returns them in an array.
 	 */
 	keys: function() {
-		return this.map(function(val, i) {
-			return i;
+		return this.map(function(val, key) {
+			return key;
 		});
 	},
 
@@ -65,9 +73,9 @@ Hash = Object.extend({
 	 * Does the same as toArray(), but renamed to go together with keys()
 	 */
 	values: Enumerable.toArray
-}, true);
+}HIDE);
 
 // inject Enumerable into Hash.
-Hash.inject(Enumerable, true);
+Hash.inject(EnumerableHIDE);
 
 #endif // __lang_Hash__

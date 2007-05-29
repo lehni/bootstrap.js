@@ -19,6 +19,7 @@ try { document.execCommand('BackgroundImageCache', false, true); }
 catch (e) {}
 @*/
 
+// TODO: Transition
 window.inject({
 	/**
 	 * Overrides window.open to allow more options in the third parameter.
@@ -46,7 +47,7 @@ window.inject({
 			}
 			focus = params.focus;
 			// Now convert paramets to string.
-			params = params.each(function(p, n) {
+			params = EACH(params, function(p, n) {
 				if (!/^(focus|confirm)$/.test(n))
 					this.push(n + '=' + p);
 			}, []).join(',');

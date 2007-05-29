@@ -22,17 +22,10 @@ function $A(list, start, end) {
 	return res;
 }
 
-// Use a container to mix the functions together, as we're referencing
-// Array.prototype.* bellow, which would get overridden otherwise
-Array.methods = {};
-
-// Inherit the full Enumerable interface
-Array.methods.inject(Enumerable);
-
-// Add some more:
-Array.methods.inject({
+Array.inject(EnumerableHIDE);
+Array.inject({
 	// tell $typeof what to return for arrays.
-	_type: "array",
+	_type: 'array',
 
 	/**
 	 * Returns the index of the given object if found, -1 otherwise.
@@ -54,17 +47,17 @@ Array.methods.inject({
 		return -1;
 	},
 
-	findEntry: function(iter) {
+	find: function(iter) {
 		// use the faster indexOf in case we're not using iterator functions.
 		if (iter && !/^(function|regexp)$/.test($typeof(iter))) {
 			var i = this.indexOf(iter);
-			return { key: i, value: this[i] };
+			return i == -1 ? null : { key: i, value: this[i] };
 		}
-		return Enumerable.findEntry.call(this, iter);
+		return Enumerable.find.call(this, iter);
 	},
 
 	remove: function(iter) {
-		var entry = this.findEntry(iter);
+		var entry = this.find(iter);
 		if (entry) return this.splice(entry.key, 1)[0];
 	},
 
@@ -175,10 +168,7 @@ Array.methods.inject({
 		while (i--) res.swap(i, $random(0, i));
 		return res;
 	}
-});
-
-// now inject the mix
-Array.inject(Array.methods, true);
+}HIDE);
 
 #ifdef BROWSER_LEGACY
 
@@ -244,7 +234,7 @@ if (!Array.prototype.push) {
 				res[i - start] = this[i];
 			return res;
 		}
-	}, true);
+	}HIDE);
 }
 
 #endif // BROWSER_LEGACY
