@@ -114,7 +114,7 @@ Element.inject(function() {
 		
 		$static: {
 			getAt: function(pos, exclude) {
-				var el = $E('body');
+				var el = $('body');
 				while (true) {
 					var max = -1;
 					var ch = el.getFirst();

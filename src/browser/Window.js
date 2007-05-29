@@ -76,7 +76,7 @@ Element.Events.domready = {
 				document.write('<script id=ie_ready defer src="'
 					+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
 					+ '"><\/script>');
-				$('ie_ready').onreadystatechange = function() {
+				$('#ie_ready').onreadystatechange = function() {
 					if (window.readyState == 'complete') domReady();
 				};
 			} else { // Others

@@ -319,7 +319,7 @@ undefined = this.undefined;
 		ctor.dont = {};
 		// Inject all the definitions in src
 		// Use the new inject instead of the one in ctor, in case it was overriden.
-		// Needed in Elements.js.
+		// Needed when overriding static inject as in Elements.js.
 #ifdef BROWSER_LEGACY
 		// Do not rely on this.inject.call, as this might not yet be defined
 		// on legacy browsers yet.
@@ -417,8 +417,8 @@ undefined = this.undefined;
 		}
 	});
 #ifndef EXTEND_OBJECT
-	// As we do not extend Object, add Base methods to Array, where they are needed
-	// too.
+	// As we do not extend Object, add Base methods to Array, before the Base
+	// fields are hidden through dontEnum.
 	Array.inject(Base.prototype);
 #endif // !EXTEND_OBJECT
 #ifdef DONT_ENUM
