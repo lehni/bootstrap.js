@@ -6,7 +6,7 @@
 
 RegExp.inject({
 	// Tell $typeof what to return for regexps.
-	_type: "regexp"
+	_type: 'regexp'
 });
 
 #ifdef BROWSER_LEGACY

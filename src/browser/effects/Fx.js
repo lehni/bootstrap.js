@@ -27,7 +27,7 @@ Fx.Transitions = {
 	}
 };
 
-Fx.Base = Object.extend({
+Fx.Base = Base.extend({
 	options: {
 		transition: Fx.Transitions.sineInOut,
 		duration: 500,

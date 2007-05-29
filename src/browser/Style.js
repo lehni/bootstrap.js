@@ -58,7 +58,7 @@ Element.inject(function() {
 				if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
 				if (Browser.IE) this.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
 				this.style.opacity = this.data.opacity = value;
-				this.setStyle('visibility', value.toInt());
+				this.setStyle('visibility', !!value);
 				break;
 			case 'clip':
 				this.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
@@ -70,7 +70,7 @@ Element.inject(function() {
 		},
 
 		getStyles: function() {
-			return arguments.each(function(name) {
+			return EACH(arguments, function(name) {
 				this[name] = that.getStyle(name);
 			}, {});
 		},
@@ -78,7 +78,7 @@ Element.inject(function() {
 		setStyles: function(styles) {
 			switch ($typeof(styles)) {
 			case 'object':
-				styles.each(function(style, name) {
+				EACH(styles, function(style, name) {
 					// only set styles that have a defined value (null !== undefined)
 					if (style !== undefined)
 						this.setStyle(name, style);

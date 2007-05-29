@@ -54,7 +54,7 @@ Element.inject(function() {
 		} : null, true),
 
 		getRelativeOffset: cumulate('offset', 'offsetParent', function(el) {
-	        return Element.prototype.getTag.call(el) != 'body' &&
+			return Element.prototype.getTag.call(el) != 'body' &&
 				!/^(relative|absolute)$/.test(Element.prototype.getStyle.call(el, 'position'))
 		}),
 
@@ -84,15 +84,15 @@ Element.inject(function() {
 
 		setBounds: function(bounds) {
 			// convert (left, top, width, height, clip) or ([left, top, width, height, clip]) to ({ left: , top: , width: , height: , clip: })
-			if (!bounds || $typeof(bounds) != 'object')
-				bounds = (bounds && bounds.assign ? bounds : $A(arguments)).assign(
+			if (arguments.length > 1 || !bounds || bounds.push)
+				bounds = (bounds && bounds.push ? bounds : $A(arguments)).assign(
 						['left', 'top', 'width', 'height', 'clip']);
 			// clip: if specified as an array, set directly, otherwise set to
 			// native bounds afterwards
 			var clip = bounds.clip && !bounds.clip.push;
 			if (clip) delete bounds.clip;
 			// apply:
-			this.setStyles(bounds.each(function(val, i) {
+			this.setStyles(EACH(bounds, function(val, i) {
 				if (val || val == 0) this[i] = val + 'px';
 			}, { position: 'absolute' }));
 			// for clipping, do not rely on #width and #height to be set.
@@ -101,7 +101,6 @@ Element.inject(function() {
 			return this;
 		},
 
-		// TODO: maybe confusing name? something with 'within'?
 		contains: function(pos) {
 			var bounds = this.getBounds();
 			return pos.x >= bounds.left && pos.x < bounds.right &&

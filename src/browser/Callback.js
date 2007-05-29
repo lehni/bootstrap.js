@@ -59,7 +59,7 @@ Callback = {
 
 	setOptions: function(opts) {
 		// Keep copying this.options, as it might be defined in the prototype
-		return (this.options = $H(this.options)).merge(opts).each(function(val, i) {
+		return (this.options = $H(this.options, opts)).each(function(val, i) {
 			if (typeof val == 'function' && (i = i.match(/^on([A-Z]\w*)/)))
 				this.addEvent(i[1].toLowerCase(), val);
 		}, this);

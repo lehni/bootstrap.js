@@ -20,9 +20,9 @@ Function.inject(function() {
 		var f = "Function.timers[" + id + "]", call = f + "();";
 		// directly erase non-periodic timers
 		if (type[0] == 'T') call += " delete " + f;
-		var timer = window['set' + type](call, ms);
+		var timer = global['set' + type](call, ms);
 #else // !BROWSER_LEGACY
-		var timer = window['set' + type](fn, ms);
+		var timer = global['set' + type](fn, ms);
 #endif // !BROWSER_LEGACY
 		fn.clear = function() {
 			clearTimeout(timer);
@@ -52,11 +52,11 @@ Function.inject(function() {
 
 #ifdef BROWSER
 		delay: function(ms) {
-			return timer(this, "Timeout", arguments, ms);
+			return timer(this, 'Timeout', arguments, ms);
 		},
 
 		periodic: function(ms) {
-			return timer(this, "Interval", arguments, ms);
+			return timer(this, 'Interval', arguments, ms);
 		},
 #endif // !BROWSER
 
@@ -75,8 +75,8 @@ Function.inject(function() {
 			}
 		}
 	}
-}, true);
-// dontEnum these properties, as we iterate through Function.prototype in
+}HIDE);
+// dontEnum these fields, as we iterate through Function.prototype in
 // Function.prototype.inject
 
 #ifdef BROWSER_LEGACY
@@ -89,7 +89,7 @@ Function.inject(function() {
 if (!Function.prototype.apply) {
 #ifdef DONT_ENUM
 	// Never enum __f, the helper property introduced bellow
-	Object.prototype.dontEnum(true, '__f');
+	Base.prototype.dontEnum(true, '__f');
 #endif // DONT_ENUM
 	var cache = {};
 
@@ -133,7 +133,7 @@ if (!Function.prototype.apply) {
 		call: function(obj) {
 			return this.apply(obj, arguments, 1);
 		}
-	}, true);
+	}HIDE);
 }
 
 #endif // BROWSER_LEGACY

@@ -24,16 +24,16 @@
 
 case $4 in
 	stripped)
-		cpp -P -CC $3 $1 | ./jsstrip.py -w -q | sed -n '/^[ 	][ 	]*$/d
+		./filepp.pl $3 $1 | ./jsstrip.pl -w -q | sed -n '/^[ 	][ 	]*$/d
 			/./,/^$/!d
 			p' > $2
 		;;
 	compressed)
-		cpp -P -CC $3 $1 | ./jsstrip.py -q > $2
+		./filepp.pl $3 $1 | ./jsstrip.pl -q > $2
 		;;
 	commented)
-		cpp -P -CC $3 $1 | sed -n '/^[ 	][ 	]*$/d
+		./filepp.pl $3 $1 | sed -n '/^[ 	][ 	]*$/d
 			/./,/^$/!d
-			p' > $2 > $2
+			p' > $2
 		;;
 esac

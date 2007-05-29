@@ -15,7 +15,10 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
-Element.EventMethods = {
+// TODO: Transition
+[Element, window, document].each(function(obj) {
+	obj.inject(this);
+}, {
 	addEvent: function(type, func) {
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
@@ -106,7 +109,7 @@ Element.EventMethods = {
 	},
 
 	addEvents: function(src) {
-		return (src || []).each(function(fn, type) {
+		return EACH((src || []), function(fn, type) {
 			this.addEvent(type, fn);
 		}, this);
 	},
@@ -119,7 +122,7 @@ Element.EventMethods = {
 				}, this);
 				delete this.events[type];
 			} else {
-				this.events.each(function(ev, type) {
+				EACH(this.events, function(ev, type) {
 					this.removeEvents(type);
 				}, this);
 				this.events = null;
@@ -144,11 +147,7 @@ Element.EventMethods = {
 	dispose: function() {
 		this.removeEvents();
 	}
-};
-
-window.inject(Element.EventMethods);
-document.inject(Element.EventMethods);
-Element.inject(Element.EventMethods);
+});
 
 Element.Events = (function() {
 	function hover(type, real) {
@@ -160,18 +159,18 @@ Element.Events = (function() {
 			}
 		}
 	}
-	return {
+	return $H({
 		mouseenter: hover('mouseenter', 'mouseover'),
 		mouseleave: hover('mouseleave', 'mouseout'),
 		mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' }
-	};
+	});
 })();
 
 
 // Opera 7 does not let us override Event. But after deleting it,
 // overriding is possible
 delete Event;
-Event = Object.extend(function() {
+Event = Base.extend(function() {
 	// MACIE does not accept numbers for keys, so use strings:
 	var keys = {
 		 '8': 'backspace',

@@ -19,9 +19,10 @@
  * returned values are collected in an array and converted to a Elements
  * array again, if it contains only html elements.
  */
-Elements = Object.extend({
+Elements = Base.extend({
 	$constructor: function(els, convert) {
 		// [].inject(this.__proto__) creates the enriched collection array.
+		// TODO: Transition
 		return (convert && els ? els : $A(els)).inject(this.__proto__);
 	},
 
@@ -31,7 +32,7 @@ Elements = Object.extend({
 			// function that iterates that calls the function on each of the
 			// collection's elements.
 			// src can either be a function to be called, or a object literal.
-			return this.$super((typeof src == 'function' ? src() : src).each(function(val, key) {
+			return this.$super(EACH((typeof src == 'function' ? src() : src), function(val, key) {
 				this[key] = typeof val != 'function' ? val : function() {
 					var args = arguments, values = [], els = true;
 					this.each(function(obj) {
@@ -62,6 +63,7 @@ function $(el, filter) {
 		if ($typeof(el) == 'element' && el.tagName) {
 			Garbage.collect(el);
 #ifdef BROWSER_LEGACY
+			// TODO: Transition
 			if (!el.inject)
 				el.inject = Object.prototype.inject;
 #endif
@@ -106,7 +108,7 @@ function $E(sel, filter) {
 	return $$(sel, filter)[0];
 };
 
-Element = Object.extend(function() {
+Element = Base.extend(function() {
 	return {
 		$constructor: function(el, props) {
 			if (typeof(el) == 'string') {
@@ -148,6 +150,15 @@ Element.inject(function() {
 
 	var cache = {};
 
+	// Html to JS property mappings, as used by getProperty, setProperty
+	// and removeProperty.
+	var properties = {
+		'class': 'className', 'for': 'htmlFor', colspan: 'colSpan',
+		rowspan: 'rowSpan', accesskey: 'accessKey', tabindex: 'tabIndex',
+		maxlength: 'maxLength', readonly: 'readOnly', value: 'value',
+		disabled: 'disabled', checked: 'checked', multiple: 'multiple'
+	};
+
 	return {
 		// tells $typeof the type to return when encountering an element,
 		// and $() to not inject Element functions into elements that already
@@ -155,10 +166,8 @@ Element.inject(function() {
 		_type: 'element',
 
 		set: function(props) {
-			return props.each(function(val, key) {
-				var set = this[({
-					styles: 'setStyles', events: 'addEvents', properties: 'setProperties'
-				})[key]];
+			return EACH(props, function(val, key) {
+				var set = this['set' + key.capitalize()];
 				if (set) set.call(this, val);
 				else this.setProperty(key, val);
 			}, this);
@@ -232,13 +241,18 @@ Element.inject(function() {
 			return $$('*', this);
 		},
 
-		injectBefore: function(el) {
+		append: function(el) {
+			this.appendChild(element(el));
+			return this;
+		},
+
+		appendBefore: function(el) {
 			el = element(el);
 			el.parentNode.insertBefore(this, el);
 			return this;
 		},
 
-		injectAfter: function(el) {
+		appendAfter: function(el) {
 			el = element(el);
 			var next = el.getNext();
 			if (!next) el.parentNode.appendChild(this);
@@ -246,13 +260,25 @@ Element.inject(function() {
 			return this;
 		},
 
-		injectInto: function(el) {
+		appendTop: function(el) {
+			if (el.firstChild)
+				el.insertBefore(this, el.firstChild);
+			return this;
+		},
+
+		appendInside: function(el) {
 			element(el).appendChild(this);
 			return this;
 		},
 
-		append: function(el) {
-			this.appendChild(element(el));
+		appendText: function(text) {
+			if (Browser.IE) {
+				switch (this.getTag()) {
+				case 'style': this.styleSheet.cssText = text; return this;
+				case 'script': this.setProperty('text', text); return this;
+				}
+			}
+			this.appendChild(document.createTextNode(text));
 			return this;
 		},
 
@@ -269,17 +295,6 @@ Element.inject(function() {
 			el = element(el);
 			this.parentNode.replaceChild(el, this);
 			return el;
-		},
-
-		appendText: function(text) {
-			if (Browser.IE) {
-				switch (this.getTag()) {
-				case 'style': this.styleSheet.cssText = text; return this;
-				case 'script': this.setProperty('text', text); return this;
-				}
-			}
-			this.appendChild(document.createTextNode(text));
-			return this;
 		},
 
 		hasClass: function(name) {
@@ -338,26 +353,26 @@ Element.inject(function() {
 		},
 
 		getProperty: function(name) {
-			var index = Element.Properties[name];
+			var index = properties[name];
 			return (index) ? this[index] : this.getAttribute(name);
 		},
 
 		removeProperty: function(name) {
-			var index = Element.Properties[name];
+			var index = properties[name];
 			if (index) this[index] = '';
 			else this.removeAttribute(name);
 			return this;
 		},
 
 		setProperty: function(name, value) {
-			var index = Element.Properties[name];
+			var index = properties[name];
 			if (index) this[index] = value;
 			else this.setAttribute(name, value);
 			return this;
 		},
 
 		setProperties: function(src) {
-			return src.each(function(val, name) {
+			return EACH(src, function(val, name) {
 				this.setAttribute(name, val);
 			}, this);
 		},
@@ -373,14 +388,9 @@ Element.inject(function() {
 	}
 });
 
-Element.Properties = {
-	'class': 'className', 'for': 'htmlFor', colspan: 'colSpan',
-	rowspan: 'rowSpan', accesskey: 'accessKey', tabindex: 'tabIndex',
-	maxlength: 'maxLength', readonly: 'readOnly', value: 'value',
-	disabled: 'disabled', checked: 'checked', multiple: 'multiple'
-};
+document.getElementsBySelector = Element.prototype.getElementsBySelector;
 
-// Define functions for additional tags (form elements).
+// Define functions for additional tag types (form elements).
 // $() injects these into the given elements based on their tagNames:
 Element.Tags = (function() {
 	// Methods common in input, select and textarea:
@@ -411,22 +421,22 @@ Element.Tags = (function() {
 			}
 		},
 
-		input: {
+		input: $H({
 			getValue: function() {
 				if (this.checked && /checkbox|radio/.test(this.type) ||
 					/^(hidden|text|password)$/.test(this.type))
 					return this.value;
 			}
-		}.inject(formElement),
+		}, formElement),
 
-		select: {
+		select: $H({
 			getValue: function() {
 				if (this.selectedIndex != -1)
 					return this.options[this.selectedIndex].value;
 			},
 
 			add: function(opt) {
-				this.options[this.options.length] = opt instanceof Option ? opt
+				this.options[this.options.length] = $typeof(obj) == 'object' ? opt
 						: new Option(opt);
 			},
 
@@ -434,16 +444,14 @@ Element.Tags = (function() {
 				this.selectedIndex = -1;
 				this.options.length = 0;
 			}
-		}.inject(formElement),
+		}, formElement),
 
-		textarea: {
+		textarea: $H({
 			getValue: function() {
 				return this.value;
 			}
-		}.inject(formElement)
+		}, formElement)
 	};
 })();
-
-document.getElementsBySelector = Element.prototype.getElementsBySelector;
 
 #endif // __browser_Element__

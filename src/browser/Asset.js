@@ -22,13 +22,13 @@ Asset = {
 			}
 		});
 		delete props.onload;
-		return script.setProperties(props).inject(document.head);
+		return script.setProperties(props).appendInside(document.head);
 	},
 
 	css: function(src, props) {
 		return new Element('link', $H({
 			rel: 'stylesheet', media: 'screen', type: 'text/css', href: src
-		}).merge(props)).inject(document.head);
+		}, props)).appendInside(document.head);
 	},
 
 	image: function(src, props) {
