@@ -41,7 +41,7 @@ Elements = Base.extend({
 						// sets it
 						var ret = (obj[key] || val).apply(obj, args);
 						values.push(ret);
-						if ($typeof(ret) != 'element') els = false;
+						els = els && $typeof(ret) == 'element';
 					});
 					return els ? new Elements(values, true) : values;
 				}
@@ -58,14 +58,16 @@ function $(el, filter) {
 	if (el) {
 		if (el.data || el == window || el == document)
 			return el;
-		if (typeof(el) == 'string')
-			el = ($(filter) || document).getElementById(el);
+		if (typeof(el) == 'string') {
+			if (el.charAt[0] == '#')
+				el = ($(filter) || document).getElementById(el.substring(1));
+			else
+				return $$(el, filter)[0];
+		}
 		if ($typeof(el) == 'element' && el.tagName) {
 			Garbage.collect(el);
-#ifdef BROWSER_LEGACY
-			// TODO: Transition
-			if (!el.inject)
-				el.inject = Object.prototype.inject;
+#if !defined(EXTEND_OBJECT) || defined(BROWSER_LEGACY)
+			el.inject = Base.prototype.inject;
 #endif
 			// This is pretty nifty: We do not even need to know how all the
 			// different browsers call their HTML Elements (DOMElement on
@@ -103,24 +105,14 @@ function $$(sel, filter) {
 	}, new Elements());
 };
 
-// Short-cut to getElementsBySelector, return first element
-function $E(sel, filter) {
-	return $$(sel, filter)[0];
-};
-
 Element = Base.extend(function() {
 	return {
 		$constructor: function(el, props) {
-			if (typeof(el) == 'string') {
-				if (Browser.IE && props && (props.name || props.type)) {
+			if (typeof(el) == 'string')
+				if (Browser.IE && props && (props.name || props.type))
 					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
-					// TODO: needed?
-					delete props.name;
-					delete props.type;
-				}
 				el = document.createElement(el);
-			}
 			el = $(el);
 			return (!props || !el) ? el : el.set(props);
 		},
@@ -187,7 +179,7 @@ Element.inject(function() {
 						//                  1         3           4               6      8             9
 						//                  tag       id          class           a.name attr.operator attr.value
 						param = sel.match(/^(\w*|\*)(#([\w_-]+)|\.([\*\w_-]+))?(\[(\w+)(([!*^$]?=)["']?([^"'\]]*)["']?)?\])?$/);
-						param[1] = param[1] || '*';
+						if (param) param[1] = param[1] || '*';
 						cache[sel] = { param: param };
 					}
 					if (!param) return;
@@ -231,10 +223,7 @@ Element.inject(function() {
 
 		getElementById: function(id) {
 			var el = document.getElementById(id);
-			if (el)
-				for (var par = el.parentNode; el && par != this; par = par.parentNode)
-					if (!par) el = null;
-			return el;
+			return el && el.hasParent(this) ? el : null;
 		},
 
 		getElements: function() {
@@ -342,6 +331,12 @@ Element.inject(function() {
 
 		getChildren: function() {
 			return $$(this.childNodes);
+		},
+
+		hasParent: function(el) {
+			for (var par = this.parentNode; par != el; par = par.parentNode)
+				if (!par) return false;
+			return true;
 		},
 
 		hasChild: function(el) {

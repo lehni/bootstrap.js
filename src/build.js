@@ -22,5 +22,4 @@
 
 #include "browser/effects/Fx.Style.js"
 #include "browser/effects/Fx.Styles.js"
-
 #endif // BROWSER
