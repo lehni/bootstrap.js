@@ -24,12 +24,12 @@ Element.inject(function() {
 #endif // !BROWSER_LEGACY
 		var left = name + 'Left', top = name + 'Top';
 		return function() {
-			var el, next = this, x = 0, y = 0;
+			var cur, next = this, x = 0, y = 0;
 			do {
-				el = next;
-				x += el[left] || 0;
-				y += el[top] || 0;
-			} while((next = el[parent]) && (!iter || iter(el)))
+				cur = next;
+				x += cur[left] || 0;
+				y += cur[top] || 0;
+			} while((next = $(cur[parent])) && (!iter || iter(cur, next)))
 #ifdef BROWSER_LEGACY
 			// fix body on mac ie
 			if (fix) ['margin', 'padding'].each(function(val) {
@@ -41,30 +41,49 @@ Element.inject(function() {
 		}
 	}
 
+	function bounds(fields, offset) {
+		// Pass one of these:
+		// (left, top, width, height, clip)
+		// ([left, top, width, height, clip])
+		// ({ left: , top: , width: , height: , clip: })
+		// Do not set bounds, as arguments would then be modified, which we're
+		// referencing here:
+		fields = $A(fields);
+		return function(values) {
+			var vals = /^(object|hash|array)$/.test($typeof(values)) ? values : arguments;
+			if (offset) {
+				this.setStyle('position', 'absolute');
+				if (vals.x) vals.left = vals.x;
+				if (vals.y) vals.top = vals.y;
+			}
+			var i = 0;
+			return fields.each(function(name) {
+				var val = vals.length ? vals[i++] : vals[name];
+				if (val != null) this.setStyle(name, (name == 'clip') ? val : val + 'px');
+			}, this);
+		}
+	}
+
+	var getCumulative = cumulate('offset', 'offsetParent', Browser.WEBKIT ? function(cur, next) {
+		// Safari returns margins on body which is incorrect if the
+		// child is absolutely positioned.
+		return next != document.body || cur.getStyle('position') != 'absolute';
+	} : null, true);
+
+	var getPositioned = cumulate('offset', 'offsetParent', function(cur, next) {
+		return next != document.body && !/^(relative|absolute)$/.test(next.getStyle('position'));
+	});
+
 	var fields = {
 		getSize: function() {
 			return { width: this.offsetWidth, height: this.offsetHeight };
 		},
 
-		getOffset: cumulate('offset', 'offsetParent', Browser.KHTML ? function(el) {
-			// Safari returns margins on body which is incorrect if the
-			// child is absolutely positioned.
-			return el.offsetParent != document.body ||
-				$(el).getStyle('position') != 'absolute';
-		} : null, true),
-
-		getRelativeOffset: cumulate('offset', 'offsetParent', function(el) {
-			return Element.prototype.getTag.call(el) != 'body' &&
-				!/^(relative|absolute)$/.test(Element.prototype.getStyle.call(el, 'position'))
-		}),
-
-		// TODO: Needed?
-		getScrollOffset: cumulate('scroll', 'parentNode'),
-
-		// TODO: Consider rename:
-		getScrollPos: function() {
-			return { x: this.scrollLeft, y: this.scrollTop };
+		getOffset: function(positioned) {
+			return (positioned ? getPositioned : getCumulative).apply(this);
 		},
+
+		getScrollOffset: cumulate('scroll', 'parentNode'),
 
 		getScrollSize: function() {
 			return { width: this.scrollWidth, height: this.scrollHeight };
@@ -82,24 +101,11 @@ Element.inject(function() {
 			};
 		},
 
-		setBounds: function(bounds) {
-			// convert (left, top, width, height, clip) or ([left, top, width, height, clip]) to ({ left: , top: , width: , height: , clip: })
-			if (arguments.length > 1 || !bounds || bounds.push)
-				bounds = (bounds && bounds.push ? bounds : $A(arguments)).assign(
-						['left', 'top', 'width', 'height', 'clip']);
-			// clip: if specified as an array, set directly, otherwise set to
-			// native bounds afterwards
-			var clip = bounds.clip && !bounds.clip.push;
-			if (clip) delete bounds.clip;
-			// apply:
-			this.setStyles(EACH(bounds, function(val, i) {
-				if (val || val == 0) this[i] = val + 'px';
-			}, { position: 'absolute' }));
-			// for clipping, do not rely on #width and #height to be set.
-			// setBounds might be called with only #width, #height, #right or #bottom set.
-			if (clip) this.setClip(0, this.getWidth(), this.getHeight(), 0);
-			return this;
-		},
+		setBounds: bounds('left top width height clip', true),
+
+		setOffset: bounds('left top', true),
+
+		setSize: bounds('width height clip'),
 
 		contains: function(pos) {
 			var bounds = this.getBounds();
@@ -107,6 +113,7 @@ Element.inject(function() {
 				pos.y >= bounds.top && pos.y < bounds.bottom;
 		},
 
+		// TODO: rename? (e.g. setScroll?)
 		scrollTo: function(x, y) {
 			this.scrollLeft = x;
 			this.scrollTop = y;

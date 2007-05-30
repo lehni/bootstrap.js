@@ -203,11 +203,11 @@ undefined = this.undefined;
 		// lists it.
 #ifdef BROWSER_LEGACY
 		var val = obj[name], entry;
-		return val !== undefined && (!(entry = obj._dontEnum[name]) ||
+		return val !== undefined && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
 				entry.allow && entry.object[name] !== val);
 #else // !BROWSER_LEGACY
 		var entry;
-		return name in obj && (!(entry = obj._dontEnum[name]) ||
+		return name in obj && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
 				entry.allow && entry.object[name] !== obj[name]);
 #endif // !BROWSER_LEGACY
 #else // !DONT_ENUM
@@ -379,7 +379,15 @@ undefined = this.undefined;
 			d._object = this;
 			for (var i = force == true ? 1 : 0; i < arguments.length; i++)
 				d[arguments[i]] = { object: this, allow: force != true };
-		},
+		}
+	});
+	// Now that dontEnum is defined, use it to hide some fields:
+	// First hide the fields that cannot be overridden (wether they change
+	// value or not, they're allways hidden, by setting the first argument to true)
+	Base.prototype.dontEnum(true, 'dontEnum', '_dontEnum', '__proto__',
+		'prototype', 'constructor', '$static');
+	// Now add some new fields, and hide these too.
+	Base.inject({
 #endif // DONT_ENUM
 		/**
 		 * Returns true if the object contains a property with the given name,
@@ -415,22 +423,38 @@ undefined = this.undefined;
 			// set and is garbage collected right after.
 			return (new (extend(this))).inject(src, hide);
 		}
-	});
+
+/* TODO: Try this out:
+#ifndef EXTEND_OBJECT
+		$static: {
+			inject: function(src, hide, base) {
+				// Inject anything added to Base into Array as well.
+				Array.inject(src, hide, base);
+				return this.$super(src, hide, base);
+			},
+
+			extend: function(src, hide) {
+				var res = this.$super(src, hide);
+				// Set proper versions of inject and extend on constructors
+				// extending Base, not the overriden ones in Base...
+				res.extend = this.$super;
+				res.inject = Function.prototype.inject;
+			}
+		}
+#endif
+*/
+	}HIDE);
 #ifndef EXTEND_OBJECT
 	// As we do not extend Object, add Base methods to Array, before the Base
 	// fields are hidden through dontEnum.
 	Array.inject(Base.prototype);
 #endif // !EXTEND_OBJECT
-#ifdef DONT_ENUM
-	// First dontEnum the fields that cannot be overridden (wether they change
-	// value or not, they're allways hidden, by setting the first argument to true)
-	Base.prototype.dontEnum(true, 'dontEnum', 'has', 'inject', 'extend',
-			'_dontEnum', '__proto__', 'prototype', 'constructor', '$static');
-#endif // DONT_ENUM
 })();
 
+#ifndef HELMA
 // Retrieve a reference to the global scope, usually window.
 global = this;
+#endif // !HELMA
 
 function $typeof(obj) {
 #ifdef BROWSER

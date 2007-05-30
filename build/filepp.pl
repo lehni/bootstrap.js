@@ -1206,22 +1206,20 @@ sub ParseArgs
 sub FindDefineArgs
 {
     my $substring = shift;
+    my $macro = shift;
 
 ## Modification by Juerg Lehni:
 ## Dected multiline code blocks as parameters to macros.
     use Text::Balanced qw(extract_bracketed);
-    my $extracted;
-    my $remainder;
+    my ($extracted, $remainder);
     while(1) {
         ($extracted, $remainder) = extract_bracketed($substring, '(){}[]');
         if($extracted) { last; }
-		#if nothing could be extracted, use more lines.
+        #if nothing could be extracted, use more lines.
         $substring .= GetNextLine();
     }
 ## Modification end
 
-    my $macro = shift;
-    
     # get definition list for this macro
     my @Argnames = split(/\,/, $DefinesArgs{$macro});
 

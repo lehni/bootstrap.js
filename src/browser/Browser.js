@@ -10,7 +10,7 @@ Browser = (function() {
 		WIN: /Win/.test(ua),
 		MAC: mac,
 		UNIX: /X11/.test(ua),
-		KHTML: document.childNodes && !document.all && !navigator.taintEnabled,
+		WEBKIT: document.childNodes && !document.all && !navigator.taintEnabled,
 		OPERA: !!window.opera,
 		GECKO: !!document.getBoxObjectFor,
 		IE: !!js,
