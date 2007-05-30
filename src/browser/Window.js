@@ -68,7 +68,7 @@ Element.Events.domready = {
 				if (window.timer)  window.timer = window.timer.clear();
 				this.fireEvent('domready');
 			}.bind(this);
-			if (document.readyState && (Browser.KHTML || Browser.MACIE)) { // Safari and Konqueror
+			if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
 				window.timer = (function() {
 					if (/^(loaded|complete)$/.test(document.readyState)) domReady();
 				}).periodic(50);

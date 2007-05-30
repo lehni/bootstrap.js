@@ -61,6 +61,8 @@ Element.inject(function() {
 				this.setStyle('visibility', !!value);
 				break;
 			case 'clip':
+				// TODO: Calculate only if Dimension.js is defined? add conditional macro?
+				if (value == true) value = [0, this.offsetWidth, this.offsetHeight, 0];
 				this.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
 				break;
 			default:

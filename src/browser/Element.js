@@ -58,12 +58,9 @@ function $(el, filter) {
 	if (el) {
 		if (el.data || el == window || el == document)
 			return el;
-		if (typeof(el) == 'string') {
-			if (el.charAt[0] == '#')
-				el = ($(filter) || document).getElementById(el.substring(1));
-			else
-				return $$(el, filter)[0];
-		}
+		// If element is a string, pass it as selector to getElement
+		if (typeof(el) == 'string')
+			el = ($(filter) || document).getElement(el);
 		if ($typeof(el) == 'element' && el.tagName) {
 			Garbage.collect(el);
 #if !defined(EXTEND_OBJECT) || defined(BROWSER_LEGACY)
@@ -92,12 +89,12 @@ function $(el, filter) {
 	}
 };
 
-// Short-cut to getElementsBySelector
+// Short-cut to getElements
 // TODO: Right now, filter is only applied when el is a string.
 function $$(sel, filter) {
 	switch ($typeof(sel)) {
 	case 'element': return new Elements($(sel));
-	case 'string': sel = ($(filter) || document).getElementsBySelector(sel);
+	case 'string': return ($(filter) || document).getElements(sel);
 	}
 	// use $each as sel might be array-like (ElementList)
 	return $each(sel || [], function(el) {
@@ -134,10 +131,16 @@ Element.inject(function() {
 		return el ? $(el) || new Element(el) : null;
 	}
 
-	function walk(that, name, start) {
-		var el = that[start ? start : name];
+	function walk(self, name, start) {
+		var el = self[start ? start : name];
 		while (el && $typeof(el) != 'element') el = el[name];
 		return $(el);
+	}
+
+	function hasParent(self, parent) {
+		for (var obj = self.parentNode; obj != parent; obj = obj.parentNode)
+			if (!obj) return false;
+		return true;
 	}
 
 	var cache = {};
@@ -159,13 +162,16 @@ Element.inject(function() {
 
 		set: function(props) {
 			return EACH(props, function(val, key) {
-				var set = this['set' + key.capitalize()];
-				if (set) set.call(this, val);
+				// First see if there is a setter for the given property
+				var set = (key == 'events') ? this.addEvents : this['set' + key.capitalize()];
+				// If the passed value is an array, use it as the argument
+				// list for the call.
+				if (set) set[val.push ? 'apply' : 'call'](this, val);
 				else this.setProperty(key, val);
 			}, this);
 		},
 
-		getElementsBySelector: function(selector) {
+		getElements: function(selector) {
 			var res = new Elements();
 			(typeof selector == 'string' ? selector.split(',') : selector).each(function(sel) {
 				var els = null;
@@ -192,15 +198,14 @@ Element.inject(function() {
 							els = $A(this.getElementsByTagName(param[1]));
 						}
 					} else { // Filter
-						els = els.each(function(val) {
-							this.append(val.getElementsByTagName(param[1]))
+						els = els.each(function(el) {
+							this.append(el.getElementsByTagName(param[1]))
 						}, []);
 						if (param[3]) els = els.filter(function(el) {
 							return (el.id == param[3]);
 						});
 					}
 					if (param[4]) els = els.filter(function(el) {
-						//return el.className.test('(^|\\s*)' + param[4] + '(\\s*|$)');
 						return Element.prototype.hasClass.call(el, param[4]);
 					});
 					if (param[6]) els = els.filter(function(name, value, operator) {
@@ -221,13 +226,15 @@ Element.inject(function() {
 			return res;
 		},
 
-		getElementById: function(id) {
-			var el = document.getElementById(id);
-			return el && el.hasParent(this) ? el : null;
+		getElement: function(selector) {
+			return (selector.charAt[0] == '#')
+				? $(this.getElementById(selector.substring(1)))
+				: this.getElements(selector)[0];
 		},
 
-		getElements: function() {
-			return $$('*', this);
+		getElementById: function(id) {
+			var el = document.getElementById(id);
+			return el && hasParent(el, this) ? el : null;
 		},
 
 		append: function(el) {
@@ -334,9 +341,7 @@ Element.inject(function() {
 		},
 
 		hasParent: function(el) {
-			for (var par = this.parentNode; par != el; par = par.parentNode)
-				if (!par) return false;
-			return true;
+			return hasParent(this, el);
 		},
 
 		hasChild: function(el) {
@@ -383,7 +388,8 @@ Element.inject(function() {
 	}
 });
 
-document.getElementsBySelector = Element.prototype.getElementsBySelector;
+document.getElement = Element.prototype.getElement;
+document.getElements = Element.prototype.getElements;
 
 // Define functions for additional tag types (form elements).
 // $() injects these into the given elements based on their tagNames:
@@ -399,18 +405,18 @@ Element.Tags = (function() {
 
 	return {
 		form: {
-			getElements: function() {
+			getFormElements: function() {
 				return $$('input, select, textarea', this);
 			},
 
 			blur: function() {
-				this.getElements().each(function(el) {
+				this.getFormElements().each(function(el) {
 					el.blur();
 				});
 			},
 
 			enable: function(enable) {
-				this.getElements().each(function(el) {
+				this.getFormElements().each(function(el) {
 					el.enable(enable);
 				});
 			}

@@ -188,9 +188,9 @@ Event = Base.extend(function() {
 		$constructor: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = event.target || event.srcElement;
+			this.target = $(event.target || event.srcElement);
 			if (this.target.nodeType == 3)
-				this.target = this.target.parentNode; // Safari
+				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
 			this.control = event.ctrlKey;
 			this.alt = event.altKey;
@@ -211,9 +211,15 @@ Event = Base.extend(function() {
 					x: event.pageX ? event.pageX - window.pageXOffset : event.clientX,
 					y: event.pageY ? event.pageY - window.pageYOffset : event.clientY
 				};
+				// TODO: Calculate only if Dimension.js is defined! add conditional macro
+				var offset = this.target.getOffset();
+				this.offset = {
+					x: this.page.x - offset.x,
+					y: this.page.y - offset.y
+				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = event.relatedTarget || this.type == 'mouseout' ? event.toElement : event.fromElement;
+					this.relatedTarget = $(event.relatedTarget || this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
 
