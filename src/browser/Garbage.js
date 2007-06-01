@@ -27,11 +27,13 @@ Garbage = (function() {
 			var obj = objects[i];
 			if (obj.dispose) obj.dispose();
 			if (obj._type == 'element') { // Element
-				for (var p in Element.prototype) obj[p] = null;
-				// Clean functions added for certain tags
-				for (var p in obj.data.tags) obj[p] = null;
-				// Clean data
+				// Clear functions added for certain tags
+				if (obj.data)
+					for (var p in obj.data.tags) obj[p] = null;
+				// Clear data
 				obj.data = null;
+				// Clear element functions
+				for (var p in Element.prototype) obj[p] = null;
 			} else { // Normal object
 				for (var p in obj) delete obj[p];
 			}
