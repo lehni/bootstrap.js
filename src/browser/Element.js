@@ -34,16 +34,20 @@ Elements = Base.extend({
 			// src can either be a function to be called, or a object literal.
 			return this.$super(EACH((typeof src == 'function' ? src() : src), function(val, key) {
 				this[key] = typeof val != 'function' ? val : function() {
-					var args = arguments, values = [], els = true;
+					// Only collect values if calling a getter function, otherwise
+					// return this
+					var args = arguments, values = /^get/.test(key) && [], els = true;
 					this.each(function(obj) {
 						// Try to use original method if it's there, in order
 						// to support $super, as this will be the wrapper that
 						// sets it
 						var ret = (obj[key] || val).apply(obj, args);
-						values.push(ret);
-						els = els && $typeof(ret) == 'element';
+						if (values) {
+							values.push(ret);
+							els = els && $typeof(ret) == 'element';
+						}
 					});
-					return els ? new Elements(values, true) : values;
+					return values ? (els ? new Elements(values, true) : values) : this;
 				}
 			}, {}));
 		}
@@ -143,8 +147,6 @@ Element.inject(function() {
 		return true;
 	}
 
-	var cache = {};
-
 	// Html to JS property mappings, as used by getProperty, setProperty
 	// and removeProperty.
 	var properties = {
@@ -153,6 +155,9 @@ Element.inject(function() {
 		maxlength: 'maxLength', readonly: 'readOnly', value: 'value',
 		disabled: 'disabled', checked: 'checked', multiple: 'multiple'
 	};
+
+	var cacheSelector = {};
+	var cacheSetter = {};
 
 	return {
 		// tells $typeof the type to return when encountering an element,
@@ -163,10 +168,14 @@ Element.inject(function() {
 		set: function(props) {
 			return EACH(props, function(val, key) {
 				// First see if there is a setter for the given property
-				var set = (key == 'events') ? this.addEvents : this['set' + key.capitalize()];
+				var set = (key == 'events') ? this.addEvents : cacheSetter[key];
+				// Do not call capitalize, as this is time critical and executes faster.
+				// (we only need to capitalize the first char here).
+				if (set === undefined)
+					set = cacheSetter[key] = this['set' + key.charAt(0).toUpperCase() + key.substring(1)] || null;
 				// If the passed value is an array, use it as the argument
 				// list for the call.
-				if (set) set[val.push ? 'apply' : 'call'](this, val);
+				if (set) set[val && val.push ? 'apply' : 'call'](this, val);
 				else this.setProperty(key, val);
 			}, this);
 		},
@@ -178,7 +187,7 @@ Element.inject(function() {
 				sel.clean().split(' ').each(function(sel, i) {
 					// Cache selector parsing results:
 					var param;
-					if (cache[sel]) param = cache[sel].param;
+					if (cacheSelector[sel]) param = cacheSelector[sel].param;
 					else {
 						// Mac IE does not support (?:), so live without it here:
 						// Allow * in classnames, as a wildcard which is later replaced by .*
@@ -186,7 +195,7 @@ Element.inject(function() {
 						//                  tag       id          class           a.name attr.operator attr.value
 						param = sel.match(/^(\w*|\*)(#([\w_-]+)|\.([\*\w_-]+))?(\[(\w+)(([!*^$]?=)["']?([^"'\]]*)["']?)?\])?$/);
 						if (param) param[1] = param[1] || '*';
-						cache[sel] = { param: param };
+						cacheSelector[sel] = { param: param };
 					}
 					if (!param) return;
 					if (i == 0) { // Fill in els accordingly
@@ -353,20 +362,20 @@ Element.inject(function() {
 		},
 
 		getProperty: function(name) {
-			var index = properties[name];
-			return (index) ? this[index] : this.getAttribute(name);
+			var key = properties[name];
+			return (key) ? this[key] : this.getAttribute(name);
 		},
 
 		removeProperty: function(name) {
-			var index = properties[name];
-			if (index) this[index] = '';
+			var key = properties[name];
+			if (key) this[key] = '';
 			else this.removeAttribute(name);
 			return this;
 		},
 
 		setProperty: function(name, value) {
-			var index = properties[name];
-			if (index) this[index] = value;
+			var key = properties[name];
+			if (key) this[key] = value;
 			else this.setAttribute(name, value);
 			return this;
 		},
