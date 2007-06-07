@@ -52,7 +52,7 @@ Element.inject(function() {
 		return function(values) {
 			var vals = /^(object|hash|array)$/.test($typeof(values)) ? values : arguments;
 			if (offset) {
-				this.setStyle('position', 'absolute');
+//				this.setStyle('position', 'absolute');
 				if (vals.x) vals.left = vals.x;
 				if (vals.y) vals.top = vals.y;
 			}
