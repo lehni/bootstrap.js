@@ -41,9 +41,15 @@ Element.inject(function() {
 				else if (style == 'auto' && /^(width|height)$/.test(name))
 					return this['offset' + name.capitalize()] + 'px';
 			}
-			// TODO: ? if (name == 'zIndex') return style.toInt() || 0;
+			switch(name) {
+			case 'visibility':
+				return /^(visible|inherit(|ed))$/.test(style);
+			// TODO:
 			// case 'clip': if (name == 'clip') // TODO: split clip rect!
-			// TODO: color! return (style && /color/i.test(name) && /rgb/.test(style)) ? style.rgbToHex() : style;
+			// case 'zIndex': return style.toInt() || 0;
+			}
+			// TODO:
+			// return (style && /color/i.test(name) && /rgb/.test(style)) ? style.rgbToHex() : style;
 			return style;
 		},
 
