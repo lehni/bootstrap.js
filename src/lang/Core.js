@@ -61,8 +61,11 @@ undefined = this.undefined;
 		 */
 		function field(name) {
 #ifdef BROWSER_LEGACY
-			// TODO: Transition
-			var val = src[name], res = val, baseVal = base && base != window && base != document && base[name];
+			// Accessing toString or valueOf on document / window fails on
+			// legacy browsers like Mac IE.
+			try {
+				var val = src[name], res = val, baseVal = base && base[name];
+			} catch (e) {}
 #else
 			var val = src[name], res = val, baseVal = base && base[name];
 #endif
