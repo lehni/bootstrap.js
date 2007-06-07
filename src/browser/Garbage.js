@@ -22,7 +22,7 @@ Garbage = (function() {
 	// Add the unload handler which walks through objects and cleans each of
 	// them:
 	window.addEvent('unload', function() {
-		objects.append(window, document);
+		objects.push(window, document);
 		for (var i = 0; i < objects.length; i++) {
 			var obj = objects[i];
 			if (obj.dispose) obj.dispose();
