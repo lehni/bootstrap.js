@@ -40,7 +40,8 @@ Function.inject(function() {
 		 * Returns the function's parameter names as an array
 		 */
 		parameters: function() {
-			return this.toString().match(/^\s*function[^\(]*\(([^\)]*)/)[1].split(/\s*,\s*/);
+			var str = this.toString().match(/^\s*function[^\(]*\(([^\)]*)/)[1];
+			return str ? str.split(/\s*,\s*/) : [];
 		},
 
 		/**
