@@ -1,17 +1,8 @@
 #ifndef __browser_Window__
 #define __browser_Window__
 
-#ifdef HIDDEN
-/**
- * Some code in this file is based on Mootools.net and adapted to the
- * architecture of Bootstrap, with added changes in design and architecture
- * where deemeded necessary.
- * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
- */
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
-// window
+// Window
 
 // Fix background flickering on IE.
 /*@cc_on
@@ -19,8 +10,9 @@ try { document.execCommand('BackgroundImageCache', false, true); }
 catch (e) {}
 @*/
 
-// TODO: Transition
-window.inject({
+Window = {
+	$: window, // Used for the Event methods
+
 	/**
 	 * Overrides window.open to allow more options in the third parameter.
 	 * If params is a string, the standard window.open is executed.
@@ -52,40 +44,10 @@ window.inject({
 					this.push(n + '=' + p);
 			}, []).join(',');
 		}
-		var win = this.$super(url, title.replace(/\s+|\.+|-+/gi, ''), params);
+		var win = window.open(url, title.replace(/\s+|\.+|-+/gi, ''), params);
 		if (win && focus) win.focus();
 		return win;
 	}
-});
-
-Element.Events.domready = {
-	add: function(fn) {
-		if (window.loaded) fn.call(this);
-		else {
-			var domReady = function() {
-				if (window.loaded) return;
-				window.loaded = true;
-				if (window.timer)  window.timer = window.timer.clear();
-				this.fireEvent('domready');
-			}.bind(this);
-			if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
-				window.timer = (function() {
-					if (/^(loaded|complete)$/.test(document.readyState)) domReady();
-				}).periodic(50);
-			} else if (document.readyState && Browser.IE) { // IE
-				document.write('<script id=ie_ready defer src="'
-					+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
-					+ '"><\/script>');
-				$('#ie_ready').onreadystatechange = function() {
-					if (window.readyState == 'complete') domReady();
-				};
-			} else { // Others
-				window.addEvent('load', domReady);
-				document.addEvent('DOMContentLoaded', domReady);
-			}
-		}
-	}
 };
-
 
 #endif // __browser_Window__

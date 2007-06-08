@@ -15,8 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
-// TODO: Transition
-[Element, window, document].each(function(obj) {
+[Element, Window, Document].each(function(obj) {
 	obj.inject(this);
 }, {
 	addEvent: function(type, func) {
@@ -46,19 +45,19 @@
 					bound = function(event) { // wants event param
 						return func.call(self, new Event(event));
 					};
-				if (this.addEventListener) {
-					this.addEventListener(type, bound, false);
-				} else if (this.attachEvent) {
+				if (this.$.addEventListener) {
+					this.$.addEventListener(type, bound, false);
+				} else if (this.$.attachEvent) {
 					// On IE, the handler allways needs to be bound.
 					// But if the function recieves an event in the parameter list,
 					// it was already wrapped above.
 					if (bound == func) bound = func.bind(this);
-					this.attachEvent('on' + type, bound);
+					this.$.attachEvent('on' + type, bound);
 #ifdef BROWSER_LEGACY
 				} else {
 					// Simulate multiple callbacks, with support for
 					// stopPropagation and preventDefault
-					this['on' + type] = function(event) {
+					this.$['on' + type] = function(event) {
 						event = new Event(event);
 						entries.each(function(entry) {
 							entry.func.call(self, event);
@@ -93,13 +92,13 @@
 					type = fake.type;
 				}
 				if (type) {
-					if (this.removeEventListener) {
-						this.removeEventListener(type, entry.bound, false);
-					} else if (this.detachEvent) {
-						this.detachEvent('on' + type, entry.bound);
+					if (this.$.removeEventListener) {
+						this.$.removeEventListener(type, entry.bound, false);
+					} else if (this.$.detachEvent) {
+						this.$.detachEvent('on' + type, entry.bound);
 #ifdef BROWSER_LEGACY
 					} else if (!entries.length) {
-						this['on' + type] = null;
+						this.$['on' + type] = null;
 #endif // !BROWSER_LEGACY
 					}
 				}
@@ -142,6 +141,7 @@
 	},
 
 	/**
+	 * TODO: Call at the end!? (garbage collection?)
 	 * For Garbage Collection
 	 */
 	dispose: function() {
@@ -150,22 +150,50 @@
 });
 
 Element.Events = (function() {
-	function hover(type, real) {
+	function hover(name, type) {
 		return {
-			type: real,
+			type: type,
 			listener: function(event) {
 				if (event.relatedTarget != this && !this.hasChild(event.relatedTarget))
-					this.fireEvent(type, event);
+					this.fireEvent(name, event);
 			}
 		}
 	}
+
 	return $H({
 		mouseenter: hover('mouseenter', 'mouseover'),
 		mouseleave: hover('mouseleave', 'mouseout'),
-		mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' }
+		mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
+		domready: { // only used by Window.
+			add: function(func) {
+				if (window.loaded) func.call(this);
+				else {
+					var domReady = function() {
+						if (this.loaded) return;
+						this.loaded = true;
+						if (this.timer) this.timer = this.timer.clear();
+						this.fireEvent('domready');
+					}.bind(this);
+					if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
+						this.timer = (function() {
+							if (/^(loaded|complete)$/.test(document.readyState)) domReady();
+						}).periodic(50);
+					} else if (document.readyState && Browser.IE) { // IE
+						document.write('<script id=ie_ready defer src="'
+							+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
+							+ '"><\/script>');
+						document.getElementById('ie_ready').onreadystatechange = function() {
+							if (window.readyState == 'complete') domReady();
+						};
+					} else { // Others
+						Window.addEvent('load', domReady);
+						Document.addEvent('DOMContentLoaded', domReady);
+					}
+				}
+			}
+		}
 	});
 })();
-
 
 // Opera 7 does not let us override Event. But after deleting it,
 // overriding is possible
@@ -188,7 +216,7 @@ Event = Base.extend(function() {
 		$constructor: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = $(event.target || event.srcElement);
+			this.target = Element.get(event.target || event.srcElement);
 			if (this.target.nodeType == 3)
 				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
@@ -219,7 +247,7 @@ Event = Base.extend(function() {
 				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = $(event.relatedTarget || this.type == 'mouseout' ? event.toElement : event.fromElement);
+					this.relatedTarget = Element.get(event.relatedTarget || this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
 

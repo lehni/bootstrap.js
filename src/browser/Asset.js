@@ -52,14 +52,14 @@ Asset = {
 		opts = opts || {};
 		if (!src.push) srcs = [srcs];
 		var imgs = [], count = 0;
-		return $$(srcs.each(function(src) {
+		return srcs.each(function(src) {
 			this.push(Asset.image(src, {
 				onLoad: function() {
 					if (opts.onProgress) opts.onProgress(src);
 					if (++count == srcs.length && opts.onComplete) opts.onComplete();
 				}
 			}));
-		}, []));
+		}, new Elements());
 	}
 };
 

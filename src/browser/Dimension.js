@@ -27,15 +27,15 @@ Element.inject(function() {
 			var cur, next = this, x = 0, y = 0;
 			do {
 				cur = next;
-				x += cur[left] || 0;
-				y += cur[top] || 0;
-			} while((next = $(cur[parent])) && (!iter || iter(cur, next)))
+				x += cur.$[left] || 0;
+				y += cur.$[top] || 0;
+			} while((next = Element.get(cur.$[parent])) && (!iter || iter(cur, next)))
 #ifdef BROWSER_LEGACY
-			// fix body on mac ie
+			// Fix body on mac ie
 			if (fix) ['margin', 'padding'].each(function(val) {
 				x += this.getStyle(val + '-left').toInt() || 0;
 				y += this.getStyle(val + '-top').toInt() || 0;
-			}, $(el));
+			}, cur); // TODO: is it correct to pass cur here??? Verify on Mac IE
 #endif // BROWSER_LEGACY
 			return { x: x, y: y };
 		}
@@ -52,7 +52,6 @@ Element.inject(function() {
 		return function(values) {
 			var vals = /^(object|hash|array)$/.test($typeof(values)) ? values : arguments;
 			if (offset) {
-//				this.setStyle('position', 'absolute');
 				if (vals.x) vals.left = vals.x;
 				if (vals.y) vals.top = vals.y;
 			}
@@ -76,7 +75,7 @@ Element.inject(function() {
 
 	var fields = {
 		getSize: function() {
-			return { width: this.offsetWidth, height: this.offsetHeight };
+			return { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
 
 		getOffset: function(positioned) {
@@ -86,18 +85,18 @@ Element.inject(function() {
 		getScrollOffset: cumulate('scroll', 'parentNode'),
 
 		getScrollSize: function() {
-			return { width: this.scrollWidth, height: this.scrollHeight };
+			return { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
 		getBounds: function() {
-			var off = this.getOffset();
+			var off = this.getOffset(), el = this.$;
 			return {
-				width: this.offsetWidth,
-				height: this.offsetHeight,
+				width: el.offsetWidth,
+				height: el.offsetHeight,
 				left: off.x,
 				top: off.y,
-				right: off.x + this.offsetWidth,
-				bottom: off.y + this.offsetHeight
+				right: off.x + el.offsetWidth,
+				bottom: off.y + el.offsetHeight
 			};
 		},
 
@@ -121,7 +120,7 @@ Element.inject(function() {
 		
 		$static: {
 			getAt: function(pos, exclude) {
-				var el = $('body');
+				var el = Element.get(document.body);
 				while (true) {
 					var max = -1;
 					var ch = el.getFirst();
@@ -146,10 +145,10 @@ Element.inject(function() {
 	$A('left top right bottom width height').each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
-			return this['offset' + part];
+			return this.$['offset' + part];
 		};
 		fields['set' + part] = function(value) {
-			this.style[name] = value + 'px';
+			this.$.style[name] = value + 'px';
 		};
 	});
 
