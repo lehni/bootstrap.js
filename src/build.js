@@ -11,14 +11,15 @@
 #ifdef BROWSER
 #include "browser/Browser.js"
 #include "browser/Element.js"
+#include "browser/DomQuery.js"
 #include "browser/Style.js"
 #include "browser/Dimension.js"
+#include "browser/Window.js"
+#include "browser/Document.js"
 #include "browser/Event.js"
 #include "browser/Drag.js"
-#include "browser/Window.js"
 #include "browser/Cookie.js"
 #include "browser/Asset.js"
-#include "browser/Garbage.js"
 
 #include "browser/effects/Fx.Style.js"
 #include "browser/effects/Fx.Styles.js"

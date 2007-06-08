@@ -18,11 +18,12 @@
 Element.inject(function() {
 	var fields = {
 		getStyle: function(name, dontCompute) {
+			var el = this.$;
 			name = name.camelize();
-			var style = this.style[name];
+			var style = el.style[name];
 			if (!style) switch (name) {
 				case 'opacity':
-					var op = this.data.opacity;
+					var op = this.opacity;
 					return op || op == 0 ? op : this.getVisible() ? 1 : 0;
 				case 'margin':
 				case 'padding':
@@ -35,11 +36,11 @@ Element.inject(function() {
 					}) ? res[0] : res;
 			}
 			if (!dontCompute) {
-				// this.currentStyle: IE, document.defaultView: everything else
-				if (!style) style = document.defaultView && document.defaultView.getComputedStyle(this, '').getPropertyValue(name.hyphenate())
-					|| this.currentStyle && this.currentStyle[name];
+				// el.currentStyle: IE, document.defaultView: everything else
+				if (!style) style = document.defaultView && document.defaultView.getComputedStyle(el, '').getPropertyValue(name.hyphenate())
+					|| el.currentStyle && el.currentStyle[name];
 				else if (style == 'auto' && /^(width|height)$/.test(name))
-					return this['offset' + name.capitalize()] + 'px';
+					return el['offset' + name.capitalize()] + 'px';
 			}
 			switch(name) {
 			case 'visibility':
@@ -54,25 +55,26 @@ Element.inject(function() {
 		},
 
 		setStyle: function(name, value) {
-			// convert multi params to array:
+			// Convert multi params to array:
 			if (arguments.length > 2) value = $A(arguments, 1);
+			var el = this.$;
 			switch (name) {
 			case 'visibility':
-				this.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
+				el.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
 				break;
 			case 'opacity':
-				if (!this.currentStyle || !this.currentStyle.hasLayout) this.style.zoom = 1;
-				if (Browser.IE) this.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
-				this.style.opacity = this.data.opacity = value;
+				if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
+				if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
+				el.style.opacity = this.opacity = value;
 				this.setStyle('visibility', !!value);
 				break;
 			case 'clip':
 				// TODO: Calculate only if Dimension.js is defined? add conditional macro?
-				if (value == true) value = [0, this.offsetWidth, this.offsetHeight, 0];
-				this.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
+				if (value == true) value = [0, el.offsetWidth, el.offsetHeight, 0];
+				el.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
 				break;
 			default:
-				this.style[name.camelize()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
+				el.style[name.camelize()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
 			}
 			return this;
 		},
@@ -93,7 +95,7 @@ Element.inject(function() {
 				}, this);
 				break;
 			case 'string':
-				this.cssText = styles;
+				this.$.cssText = styles;
 			}
 			return this;
 		}

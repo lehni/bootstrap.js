@@ -18,7 +18,7 @@
 
 Fx.Styles = Fx.Base.extend({
 	$constructor: function(el, options) {
-		this.element = $(el);
+		this.element = Element.get(el);
 		this.$super(options);
 	},
 

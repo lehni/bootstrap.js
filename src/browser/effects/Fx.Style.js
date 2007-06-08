@@ -18,7 +18,7 @@
 
 Fx.Style = Fx.Base.extend({
 	$constructor: function(el, prop, opts) {
-		this.element = $(el);
+		this.element = Element.get(el);
 		this.property = prop;
 		this.$super(opts);
 	},
@@ -49,8 +49,6 @@ Fx.Style = Fx.Base.extend({
 });
 
 Element.inject({
-	// var effect = $('#id').effect('height', { duration: 1000, transition: Fx.Transitions.linear });
-	// effect.start(10, 100);
 	effect: function(prop, opts) {
 		return new Fx.Style(this, prop, opts);
 	}

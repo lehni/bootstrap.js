@@ -22,8 +22,4 @@ Browser = (function() {
 	};
 })();
 
-#if !defined(EXTEND_OBJECT) || defined(BROWSER_LEGACY)
-window.inject = document.inject = Base.prototype.inject;
-#endif // BROWSER_LEGACY
-
 #endif // __browser_Browser__

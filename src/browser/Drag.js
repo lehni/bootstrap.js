@@ -7,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Drag
 
-// Fake dragstart, drag and dragend events, all in a self contained injectd scope.
+// Fake dragstart, drag and dragend events, all in a self contained inject scope.
 
 Element.Events.inject(function() {
 	var object, last;
@@ -19,8 +19,8 @@ Element.Events.inject(function() {
 		// onDragStart might stop the event, check here
 		if (!event.stopped) {
 			event.stop();
-			document.addEvent('mousemove', drag);
-			document.addEvent('mouseup', dragEnd);
+			Document.addEvent('mousemove', drag);
+			Document.addEvent('mouseup', dragEnd);
 			object = this;
 		}
 	}
@@ -40,8 +40,8 @@ Element.Events.inject(function() {
 		event.type = 'dragend';
 		if (object.onDragEnd) object.onDragEnd(event);
 		event.preventDefault();
-		document.removeEvent('mousemove', drag);
-		document.removeEvent('mouseup', dragEnd);
+		Document.removeEvent('mousemove', drag);
+		Document.removeEvent('mouseup', dragEnd);
 		object = null;
 	}
 

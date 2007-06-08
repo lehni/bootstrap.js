@@ -57,94 +57,104 @@ Elements = Base.extend({
 ////////////////////////////////////////////////////////////////////////////////
 // Element
 
-// TODO: Right now, filter is only applied when el is a string.
-function $(el, filter) {
-	if (el) {
-		if (el.data || el == window || el == document)
-			return el;
-		// If element is a string, pass it as selector to getElement
-		if (typeof(el) == 'string')
-			el = ($(filter) || document).getElement(el);
-		if ($typeof(el) == 'element' && el.tagName) {
-			Garbage.collect(el);
-#if !defined(EXTEND_OBJECT) || defined(BROWSER_LEGACY)
-			el.inject = Base.prototype.inject;
-#endif
-			// This is pretty nifty: We do not even need to know how all the
-			// different browsers call their HTML Elements (DOMElement on
-			// Safari, HTMLElement on Firefox, etc), just look at __proto__
-			// here and try to inject in it. if _type is set the next time,
-			// the prototype is inhanced. as a fallback, we enhance each
-			// single object.
-			// Use el.inject as a shortcut to Object.prototype.inject;
-			// On Opera, el.__proto__ == Object.prototype, so check against that
-			// too:
-			if (!el._type) el.inject.call(el.__proto__ && el.__proto__ != Object.prototype ? el.__proto__ : el, Element.prototype);
-			// Now we inject additional methods depending on the tag of the element
-			// as defined above. If nothing is defined, this does not do anything.
-			// el.data is where we store all the additional values, to be cleared
-			// for garbage collection in the end. It is also used as an indicator
-			// for wether the object was already wrapped before or not.
-			// We need to keep a reference to the injected tag fields for garbage
-			// collection in the end.
-			el.data = { tags: Element.Tags[el.getTag()] };
-			return el.inject(el.data.tags);
-		}
-	}
-};
-
-// Short-cut to getElements
-// TODO: Right now, filter is only applied when el is a string.
-function $$(sel, filter) {
-	switch ($typeof(sel)) {
-	case 'element': return new Elements($(sel));
-	case 'string': return ($(filter) || document).getElements(sel);
-	}
-	// use $each as sel might be array-like (ElementList)
-	return $each(sel || [], function(el) {
-		if (el = $(el)) this.push(el);
-	}, new Elements());
-};
-
 Element = Base.extend(function() {
+	var cache = {}, tags = {}, uniqueId = 0;
+
 	return {
 		$constructor: function(el, props) {
-			if (typeof(el) == 'string')
+			// Support element creating constructors on subclasses of Element
+			// that define prototype.tag and can take one argument, which 
+			// defines the properties to be set:
+			if (this.tag && /^(object|hash)$/.test($typeof(el))) {
+				props = el;
+				el = this.tag;
+			}
+			if (typeof(el) == 'string') {
 				if (Browser.IE && props && (props.name || props.type))
 					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
 				el = document.createElement(el);
-			el = $(el);
-			return (!props || !el) ? el : el.set(props);
+			}
+			var id = el.id;
+			// Cache wrappers by their ids
+			if(id && cache[id]) return cache[id]; // Element object already exists
+			// Make sure we're using the right constructor for this tag
+			var ctor = tags[el.tagName.toLowerCase()] || Element;
+			if (!(this instanceof ctor)) return new ctor(el, props);
+			this.$ = el;
+			// Generate ids if the element does not define one
+			if (!id) id = el.id = 'bootstrap-' + (++uniqueId);
+			this.id = id;
+			this.style = el.style;
+			if (props) this.set(props);
+			// Cache it
+			cache[id] = this;
 		},
 
 		$static: {
-			inject: function(src) {
-				// inject not only into this, but also into the Elements collection
+			inject: function(src, hide, base) {
+				// Inject not only into this, but also into the Elements collection
 				// where the functions are "multiplied" for each of the elements
 				// of the collection.
-				Elements.inject(src);
-				return this.$super(src);
+				Elements.inject(src, hide, base);
+				return this.$super(src, hide, base);
+			},
+
+			extend: function(src, hide) {
+				// Do not pass src to $super, as we weed to fix #inject first.
+				var ret = this.$super({}, hide);
+				// Undo overriding of the inject above for subclasses, as only
+				// injecting into Element (not subclasses) shall also inject
+				// into Elements!
+				ret.inject = Function.inject;
+				ret.inject(src, hide, this);
+				// When extending Element with a tag field specified, this 
+				// prototype will be used when wrapping elements of that type.
+				// If this is a prototype for a certain tag, store it in the LUT.
+				if (src.tag) tags[src.tag] = ret;
+				return ret;
+			},
+
+			get: function(el, root) {
+				if (typeof(el) == 'string') {
+					root = root && Element.unwrap(root);
+					if (el.charAt(0) == '#') {
+						el = document.getElementById(el.substring(1));
+						if (root && !Element.isAncestor(el, root)) el = null;
+					} else {
+						el = Element.select(el, root, 1)[0];
+					}
+				}
+				return el ? el.id && cache[el.id] || new Element(el) : null;
+			},
+
+			unwrap: function(el) {
+				return el.nodeType ? el : el.$;
+			},
+
+			// TODO: move further down?
+			isAncestor: function(el, parent) {
+				// TODO: See Ext for a faster implementation
+				parent = Element.unwrap(parent);
+				if (parent != document)
+					for (el = Element.unwrap(el).parentNode; el != parent; el = el.parentNode)
+						if (!el) return false;
+				return true;
 			}
 		}
 	}
 });
 
+// Short-cut to Element.get
+$ = Element.get;
+
+// Use the modified inject function from above which injects both into Element
+// and Elements.
 Element.inject(function() {
-	function element(el) {
-		return el ? $(el) || new Element(el) : null;
-	}
-
-	function walk(self, name, start) {
-		var el = self[start ? start : name];
+	function walk(el, name, start) {
+		el = el[start ? start : name];
 		while (el && $typeof(el) != 'element') el = el[name];
-		return $(el);
-	}
-
-	function hasParent(self, parent) {
-		for (var obj = self.parentNode; obj != parent; obj = obj.parentNode)
-			if (!obj) return false;
-		return true;
+		return Element.get(el);
 	}
 
 	// Html to JS property mappings, as used by getProperty, setProperty
@@ -156,23 +166,20 @@ Element.inject(function() {
 		disabled: 'disabled', checked: 'checked', multiple: 'multiple'
 	};
 
-	var cacheSelector = {};
-	var cacheSetter = {};
+	var setterCache = {};
 
 	return {
-		// tells $typeof the type to return when encountering an element,
-		// and $() to not inject Element functions into elements that already
-		// have them:
+		// Tells $typeof the type to return when encountering an element.
 		_type: 'element',
 
 		set: function(props) {
 			return EACH(props, function(val, key) {
 				// First see if there is a setter for the given property
-				var set = (key == 'events') ? this.addEvents : cacheSetter[key];
+				var set = (key == 'events') ? this.addEvents : setterCache[key];
 				// Do not call capitalize, as this is time critical and executes faster.
 				// (we only need to capitalize the first char here).
 				if (set === undefined)
-					set = cacheSetter[key] = this['set' + key.charAt(0).toUpperCase() + key.substring(1)] || null;
+					set = setterCache[key] = this['set' + key.charAt(0).toUpperCase() + key.substring(1)] || null;
 				// If the passed value is an array, use it as the argument
 				// list for the call.
 				if (set) set[val && val.push ? 'apply' : 'call'](this, val);
@@ -180,136 +187,91 @@ Element.inject(function() {
 			}, this);
 		},
 
-		getElements: function(selector) {
-			var res = new Elements();
-			(typeof selector == 'string' ? selector.split(',') : selector).each(function(sel) {
-				var els = null;
-				sel.clean().split(' ').each(function(sel, i) {
-					// Cache selector parsing results:
-					var param;
-					if (cacheSelector[sel]) param = cacheSelector[sel].param;
-					else {
-						// Mac IE does not support (?:), so live without it here:
-						// Allow * in classnames, as a wildcard which is later replaced by .*
-						//                  1         3           4               6      8             9
-						//                  tag       id          class           a.name attr.operator attr.value
-						param = sel.match(/^(\w*|\*)(#([\w_-]+)|\.([\*\w_-]+))?(\[(\w+)(([!*^$]?=)["']?([^"'\]]*)["']?)?\])?$/);
-						if (param) param[1] = param[1] || '*';
-						cacheSelector[sel] = { param: param };
-					}
-					if (!param) return;
-					if (i == 0) { // Fill in els accordingly
-						if (param[3]) {
-							var el = this.getElementById(param[3]);
-							if (!el || param[1] != '*' && Element.prototype.getTag.call(el) != param[1]) throw $break;
-							els = [el];
-						} else {
-							els = $A(this.getElementsByTagName(param[1]));
-						}
-					} else { // Filter
-						els = els.each(function(el) {
-							this.append(el.getElementsByTagName(param[1]))
-						}, []);
-						if (param[3]) els = els.filter(function(el) {
-							return (el.id == param[3]);
-						});
-					}
-					if (param[4]) els = els.filter(function(el) {
-						return Element.prototype.hasClass.call(el, param[4]);
-					});
-					if (param[6]) els = els.filter(function(name, value, operator) {
-						var att = this.getProperty(param[6]), value = param[9], operator = param[8];
-						if (att) return !operator ||
-					 		operator == '=' && att == value ||
-							operator == '*=' && att.test(value) ||
-							operator == '^=' && att.test('^' + value) ||
-							operator == '$=' && att.test(value + '$') ||
-							operator == '!=' && att != value;
-					});
-				}, this);
-				// Wrap the elements and add them, but only if they were not aded already
-				$each(els, function(el) {
-					if (this.indexOf(el = $(el)) == -1) this.push(el);
-				}, res);
-			}, this);
-			return res;
+		getElements: function(selectors) {
+			return Element.select(selectors || '*', this);
 		},
 
 		getElement: function(selector) {
-			return (selector.charAt[0] == '#')
-				? $(this.getElementById(selector.substring(1)))
-				: this.getElements(selector)[0];
+			return Element.get(selector || '*', this);
 		},
 
-		getElementById: function(id) {
-			var el = document.getElementById(id);
-			return el && hasParent(el, this) ? el : null;
+		getParents: function(selector) {
+			var parents = [];
+			for (var el = this.$.parentNode; el; el = el.parentNode)
+				parents.push(el);
+			return selector && selector != '*'
+				? Element.filter(parents, selector, this)
+				: parents;
 		},
 
-		append: function(el) {
-			this.appendChild(element(el));
-			return this;
-		},
-
-		appendBefore: function(el) {
-			el = element(el);
-			el.parentNode.insertBefore(this, el);
-			return this;
-		},
-
-		appendAfter: function(el) {
-			el = element(el);
-			var next = el.getNext();
-			if (!next) el.parentNode.appendChild(this);
-			else el.parentNode.insertBefore(this, next);
-			return this;
-		},
-
-		appendTop: function(el) {
-			if (el.firstChild)
-				el.insertBefore(this, el.firstChild);
-			return this;
-		},
-
-		appendInside: function(el) {
-			element(el).appendChild(this);
+		appendChild: function(el) {
+			this.$.appendChild(Element.get(el).$);
 			return this;
 		},
 
 		appendText: function(text) {
 			if (Browser.IE) {
 				switch (this.getTag()) {
-				case 'style': this.styleSheet.cssText = text; return this;
-				case 'script': this.setProperty('text', text); return this;
+				case 'style': this.$.styleSheet.cssText = text; return this;
+				case 'script': this.$.setProperty('text', text); return this;
 				}
 			}
 			this.appendChild(document.createTextNode(text));
 			return this;
 		},
 
+		insertBefore: function(el) {
+			el = Element.get(el);
+			el.$.parentNode.insertBefore(this.$, el.$);
+			return this;
+		},
+
+		insertAfter: function(el) {
+			el = Element.get(el);
+			var next = el.getNext();
+			if (!next) el.$.parentNode.appendChild(this.$);
+			else el.$.parentNode.insertBefore(this.$, next.$);
+			return this;
+		},
+
+		insertFirst: function(el) {
+			// TODO: See Ext's insertFirst, add support for createChild, return
+			// added element instead of this?!
+			el = Element.get(el);
+			el.$.insertBefore(this.$, el.$.firstChild);
+			return this;
+		},
+
+		insertInside: function(el) {
+			Element.get(el).appendChild(this);
+			return this;
+		},
+
 		remove: function() {
-			this.parentNode.removeChild(this);
+			this.$.parentNode.removeChild(this.$);
 			return this;
 		},
 
 		clone: function(contents) {
-			return $(this.cloneNode(contents !== false));
+			return Element.get(this.$.cloneNode(!!contents));
 		},
 
 		replaceWith: function(el) {
-			el = element(el);
-			this.parentNode.replaceChild(el, this);
+			el = Element.get(el);
+			this.$.parentNode.replaceChild(el.$, this.$);
 			return el;
 		},
 
 		hasClass: function(name) {
-			return this.className.test('(^|\\s*)' + name + '(\\s*|$)');
+			return (' ' + this.$.className + ' ').indexOf(' ' + name + ' ') != -1;
+			// The above performs faster than this:
+			// return new RegExp('(^|\\s*)' + name + '(\\s*|$)').test(this.className);
 		},
 
 		modifyClass: function(name, add) {
 			if (!this.hasClass(name) ^ !add) // xor
-				this.className = (add ? this.className + ' ' + name : 
-					this.className.replace(name, '')).clean();
+				this.$.className = (add ? this.$.className + ' ' + name : 
+					this.$.className.replace(name, '')).clean();
 			return this;
 		},
 
@@ -326,142 +288,179 @@ Element.inject(function() {
 		},
 
 		getPrevious: function() {
-			return walk(this, 'previousSibling');
+			return walk(this.$, 'previousSibling');
 		},
 
 		getNext: function() {
-			return walk(this, 'nextSibling');
+			return walk(this.$, 'nextSibling');
 		},
 
 		getFirst: function() {
-			return walk(this, 'nextSibling', 'firstChild');
+			return walk(this.$, 'nextSibling', 'firstChild');
 		},
 
 		getLast: function() {
-			return walk(this, 'previousSibling', 'lastChild');
+			return walk(this.$, 'previousSibling', 'lastChild');
 		},
 
 		getParent: function() {
-			return $(this.parentNode);
+			return Element.get(this.$.parentNode);
 		},
 
 		getChildren: function() {
-			return $$(this.childNodes);
+			return new Elements(this.$.childNodes);
 		},
 
 		hasParent: function(el) {
-			return hasParent(this, el);
+			return Element.isAncestor(this.$, el);
 		},
 
 		hasChild: function(el) {
-			return $A(this.getElementsByTagName('*')).indexOf(el) != -1;
+			return Element.isAncestor(el, this.$);
 		},
 
 		getTag: function() {
-			return this.tagName.toLowerCase();
+			return this.$.tagName.toLowerCase();
 		},
 
 		getProperty: function(name) {
 			var key = properties[name];
-			return (key) ? this[key] : this.getAttribute(name);
+			return (key) ? this.$[key] : this.$.getAttribute(name);
 		},
 
 		removeProperty: function(name) {
 			var key = properties[name];
-			if (key) this[key] = '';
-			else this.removeAttribute(name);
+			if (key) this.$[key] = '';
+			else this.$.removeAttribute(name);
 			return this;
 		},
 
 		setProperty: function(name, value) {
 			var key = properties[name];
-			if (key) this[key] = value;
-			else this.setAttribute(name, value);
+			if (key) this.$[key] = value;
+			else this.$.setAttribute(name, value);
 			return this;
 		},
 
 		setProperties: function(src) {
 			return EACH(src, function(val, name) {
-				this.setAttribute(name, val);
+				this.$.setAttribute(name, val);
 			}, this);
 		},
 
 		getHtml: function() {
-			return this.innerHTML;
+			return this.$.innerHTML;
 		},
 
 		setHtml: function(html) {
-			this.innerHTML = html;
+			this.$.innerHTML = html;
 			return this;
 		}
 	}
 });
 
-document.getElement = Element.prototype.getElement;
-document.getElements = Element.prototype.getElements;
+Form = Element.extend({
+	tag: 'form',
 
-// Define functions for additional tag types (form elements).
-// $() injects these into the given elements based on their tagNames:
-Element.Tags = (function() {
-	// Methods common in input, select and textarea:
-	var formElement = {
-		enable: function(enable) {
-			var disable = !enable && enable !== undefined;
-			if (disable) this.blur();
-			this.disabled = disable;
-		}
-	};
+	/**
+	 * Overrides getElements to only return form elements by default.
+	 * Explicitely call with '*' to return all elements contained in this form.
+	 */
+	getElements: function(selectors) {
+		return this.$super(selectors || ['input', 'select', 'textarea']);
+	},
 
-	return {
-		form: {
-			getFormElements: function() {
-				return $$('input, select, textarea', this);
-			},
+	blur: function() {
+		this.getElements().each(function(el) {
+			el.blur();
+		});
+		return this;
+	},
 
-			blur: function() {
-				this.getFormElements().each(function(el) {
-					el.blur();
-				});
-			},
+	enable: function(enable) {
+		this.getElements().each(function(el) {
+			el.enable(enable);
+		});
+		return this;
+	}
+});
 
-			enable: function(enable) {
-				this.getFormElements().each(function(el) {
-					el.enable(enable);
-				});
-			}
-		},
+FormElement = Element.extend({
+	enable: function(enable) {
+		var disable = !enable && enable !== undefined;
+		if (disable) this.$.blur();
+		this.$.disabled = disable;
+	},
 
-		input: $H({
-			getValue: function() {
-				if (this.checked && /checkbox|radio/.test(this.type) ||
-					/^(hidden|text|password)$/.test(this.type))
-					return this.value;
-			}
-		}, formElement),
+	focus: function() {
+		this.$.focus();
+		return this;
+	},
 
-		select: $H({
-			getValue: function() {
-				if (this.selectedIndex != -1)
-					return this.options[this.selectedIndex].value;
-			},
+	blur: function() {
+		this.$.blur();
+		return this;
+	}
+});
 
-			add: function(opt) {
-				this.options[this.options.length] = $typeof(obj) == 'object' ? opt
-						: new Option(opt);
-			},
+Input = FormElement.extend({
+	tag: 'input',
 
-			clear: function() {
-				this.selectedIndex = -1;
-				this.options.length = 0;
-			}
-		}, formElement),
+	getValue: function() {
+		if (this.$.checked && /checkbox|radio/.test(this.$.type) ||
+			/^(hidden|text|password)$/.test(this.$.type))
+			return this.$.value;
+	}
+});
 
-		textarea: $H({
-			getValue: function() {
-				return this.value;
-			}
-		}, formElement)
-	};
-})();
+Select = FormElement.extend({
+	tag: 'select',
+
+	/**
+	 * Form Element constructors work in two ways:
+	 * - Thew wrap an existing element, in which facse first is the elment
+	 *   and second point to the properties to set.
+	 * - They create a new element, in which case first point to the properties to set
+	 *   and second might be something else, e.g. an array of options for Select.
+	 */
+	$constructor: function(first, second) {
+		var wrapping = $typeof(first) == 'element';
+		this.$super(wrapping ? first : second, wrapping ? second : null);
+		if (second && !wrapping) this.add.apply(this, second);
+		// TODO: redundant? Make native options available just like this.$.style
+		this.options = this.$.options;
+	},
+
+	getValue: function() {
+		if (this.$.selectedIndex != -1)
+			return this.$.options[this.$.selectedIndex].value;
+	},
+
+	getOptions: function() {
+		return this.$.options;
+	},
+
+	add: function() {
+		EACH(arguments, function(opt) {
+			this.$.options[this.$.options.length] = $typeof(opt) == 'object' ? opt
+					: new Option(opt);
+		}, this);
+		return this;
+	},
+
+	clear: function() {
+		this.$.selectedIndex = -1;
+		this.$.options.length = 0;
+		return this;
+	}
+});
+
+TextArea = FormElement.extend({
+	tag: 'textarea',
+
+	getValue: function() {
+		return this.$.value;
+	}
+});
 
 #endif // __browser_Element__
