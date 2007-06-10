@@ -97,7 +97,7 @@ DomElement = Base.extend(function() {
 		// Forward method calls. Returns result if any, otherwise reference
 		// to this.
 		(src._methods || []).each(function(name) {
-			src[name] = function() {
+			src[name] = function(arg) {
 				// .apply seems to not be present on native dom functions on
 				// Safari. Just pass on the first argument and call directly.
 				var ret = this.$[name] && this.$[name](arg);
