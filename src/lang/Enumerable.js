@@ -43,7 +43,7 @@ function $each(obj, iter, bind) {
  *
  * Inspired by Prototype.js.
  */
-Enumerable = (function() {
+Enumerable = new function() {
 	/**
 	 * Converts the argument to an iterator function. If none is specified,
 	 * the identity function is returned. 
@@ -96,7 +96,7 @@ Enumerable = (function() {
 			// Interesting benchmark observation: The loops seem execute 
 			// faster when called on the object (this), so outsource to
 			// the above functions each_Array / each_Object here.
-			// pass this twice, so it can be recieved as 'self' in the iterating
+			// pass this twice, so it can be recieved as 'that' in the iterating
 			// functions, to be passed to the iterator (and being able to use 
 			// 'this' in .each differently)
 #ifdef SET_ITERATOR
@@ -145,6 +145,7 @@ Enumerable = (function() {
 	};
 
 	return {
+		HIDE
 		/**
 		 * The core of all Enumerable functions. TODO: document
 		 */
@@ -159,9 +160,9 @@ Enumerable = (function() {
 		 * passed iterator is met and returns its key / value pair as an object:
 		 * { key: ... , value: ... }
 		 */
-		find: ITERATE(function(iter, bind, self) {
+		find: ITERATE(function(iter, bind, that) {
 			return this.each(function(val, key) {
-				if (ITERATOR(iter, bind, val, key, self, __find)) {
+				if (ITERATOR(iter, bind, val, key, that, __find)) {
 					this.found = { key: key, value: val };
 					throw $break;
 				}
@@ -180,7 +181,7 @@ Enumerable = (function() {
 			// .some() (Firefox JS 1.5+), so use it as it's faster and does the
 			// same, except for the iterator conversion which is handled by
 			// iterator() here:
-			return this.$super ? this.$super(iterator(iter), bind) :
+			return this.base ? this.base(iterator(iter), bind) :
 				!!this.find(iter, bind);
 		},
 
@@ -191,13 +192,13 @@ Enumerable = (function() {
 		 * This is compatible with JS 1.5's .every, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
 		 */
-		every: ITERATE(function(iter, bind, self) {
+		every: ITERATE(function(iter, bind, that) {
 			// Just like in .some, use .every if it's there
-			return this.$super ? this.$super(iter, bind) : !this.find(function(val, i) {
+			return this.base ? this.base(iter, bind) : !this.find(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
-				return ITERATOR(iter, this, val, i, self, __every);
+				return ITERATOR(iter, this, val, i, that, __every);
 			}, bind);
 		}, '__every'),
 
@@ -208,10 +209,10 @@ Enumerable = (function() {
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
 		 */
-		map: ITERATE(function(iter, bind, self) {
+		map: ITERATE(function(iter, bind, that) {
 			// Just like in .some, use .map if it's there
-			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
-				this.push(ITERATOR(iter, bind, val, i, self, __map));
+			return this.base ? this.base(iter, bind) : this.each(function(val, i) {
+				this.push(ITERATOR(iter, bind, val, i, that, __map));
 			}, []);
 		}, '__map'),
 
@@ -220,11 +221,14 @@ Enumerable = (function() {
 		 * or regular expression is true.
 		 * This is compatible with JS 1.5's .filter, but adds more flexibility
 		 * regarding iterators (as defined in iterator())
+		 * TODO: consider collect: similar to filter, but collects the returned
+		 * elements if they are != null.
+		 * TOOD: See if collect and filter could be joined somehow
 		 */
-		filter: ITERATE(function(iter, bind, self) {
+		filter: ITERATE(function(iter, bind, that) {
 			// Just like in .some, use .map if it's there
-			return this.$super ? this.$super(iter, bind) : this.each(function(val, i) {
-				if (ITERATOR(iter, bind, val, i, self, __filter)) this.push(val);
+			return this.base ? this.base(iter, bind) : this.each(function(val, i) {
+				if (ITERATOR(iter, bind, val, i, that, __filter)) this.push(val);
 			}, []);
 		}, '__filter'),
 
@@ -233,9 +237,9 @@ Enumerable = (function() {
 		 * applied to each element.
 		 * If no iterator is passed, the value is used directly.
 		 */
-		max: ITERATE(function(iter, bind, self) {
+		max: ITERATE(function(iter, bind, that) {
 			return this.each(function(val, i) {
-				val = ITERATOR(iter, bind, val, i, self, __max);
+				val = ITERATOR(iter, bind, val, i, that, __max);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
 		}, '__max'),
@@ -245,9 +249,9 @@ Enumerable = (function() {
 		 * applied to each element. 
 		 * If no iterator is passed, the value is used directly.
 		 */
-		min: ITERATE(function(iter, bind, self) {
+		min: ITERATE(function(iter, bind, that) {
 			return this.each(function(val, i) {
-				val = ITERATOR(iter, bind, val, i, self, __min);
+				val = ITERATOR(iter, bind, val, i, that, __min);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
 		}, '__min'),
@@ -267,25 +271,14 @@ Enumerable = (function() {
 		 * and returns the sorted list in an array.
 		 * Inspired by Prototype.js
 		 */
-		sortBy: ITERATE(function(iter, bind, self) {
+		sortBy: ITERATE(function(iter, bind, that) {
 			return this.map(function(val, i) {
-				return { value: val, compare: ITERATOR(iter, bind, val, i, self, __sortBy) };
+				return { value: val, compare: ITERATOR(iter, bind, val, i, that, __sortBy) };
 			}, bind).sort(function(left, right) {
 				var a = left.compare, b = right.compare;
 				return a < b ? -1 : a > b ? 1 : 0;
 			}).pluck('value');
 		}, '__sortBy'),
-
-		/**
-		 * Swaps two elements of the object at the given indices, and returns
-		 * the value that is placed at the first index.
-		 */
-		swap: function(i, j) {
-			var tmp = this[j];
-			this[j] = this[i];
-			this[i] = tmp;
-			return tmp;
-		},
 
 		/**
 		 * Converts the Enumerable to a normal array.
@@ -294,6 +287,6 @@ Enumerable = (function() {
 			return this.map();
 		}
 	}
-})();
+};
 
 #endif // __lang_Enumerable__

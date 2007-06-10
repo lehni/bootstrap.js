@@ -10,12 +10,12 @@
  */
 #endif
 
-#include "Element.js"
+#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Style
 
-Element.inject(function() {
+HtmlElement.inject(function() {
 	var fields = {
 		getStyle: function(name, dontCompute) {
 			var el = this.$;
@@ -56,7 +56,7 @@ Element.inject(function() {
 
 		setStyle: function(name, value) {
 			// Convert multi params to array:
-			if (arguments.length > 2) value = $A(arguments, 1);
+			if (arguments.length > 2) value = Array.create(arguments, 1);
 			var el = this.$;
 			switch (name) {
 			case 'visibility':
@@ -104,14 +104,15 @@ Element.inject(function() {
 	// Create getters and setters for some often used css properties:
 	// TODO: add more? e.g. border margin padding display
 	// TODO: do clip and zIndex belong to Dimension.js?
-	$A('opacity color background visibility clip zIndex').each(function(name) {
+	['opacity', 'color', 'background', 'visibility', 'clip', 'zIndex'].each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
 			return this.getStyle(name);
 		};
 		fields['set' + part] = function(value) {
 			// pass mutliple params as array
-			return this.setStyle(name, arguments.length > 1 ? $A(arguments) : value);
+			return this.setStyle(name, arguments.length > 1
+				? Array.create(arguments) : value);
 		};
 	});
 

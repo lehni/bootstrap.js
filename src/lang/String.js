@@ -79,7 +79,7 @@ if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
 		replace: function(search, replace) {
 			// If no function is specified, use the internal implementation
 			if (typeof replace != 'function')
-				return this.$super(search, replace);
+				return this.base(search, replace);
 			var parts = [], pos = 0, a;
 			while (a = search.exec(this)) {
 			    a.push(a.index, a.input);

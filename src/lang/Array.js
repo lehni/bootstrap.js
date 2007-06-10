@@ -6,24 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Array
 
-/**
- * Converts the list to an array. various types are supported. 
- * Inspired by Prototype.js
- */
-function $A(list, start, end) {
-	if (!list) return [];
-	if (end == null) end = list.length;
-	if (list.toArray && !start && end == list.length)
-		return list.toArray();
-	if (!start) start = 0;
-	var res = [];
-	for (var i = start; i < end; i++)
-		res[i - start] = list[i];
-	return res;
-}
-
-Array.inject(EnumerableHIDE);
-Array.inject({
+Array.inject(Enumerable).inject({
 	// tell $typeof what to return for arrays.
 	_type: 'array',
 
@@ -129,10 +112,10 @@ Array.inject({
 	 * given keys assigned.
 	 */
 	assign: function(keys) {
-		var self = this, index = 0;
+		var that = this, index = 0;
 		return keys.each(function(key) {
-			this[key] = self[index++];
-			if (index == self.length) throw $break;
+			this[key] = that[index++];
+			if (index == that.length) throw $break;
 		}, {});
 	},
 
@@ -160,15 +143,66 @@ Array.inject({
 	},
 
 	/**
+	 * Swaps two elements of the object at the given indices, and returns
+	 * the value that is placed at the first index.
+	 */
+	swap: function(i, j) {
+		var tmp = this[j];
+		this[j] = this[i];
+		this[i] = tmp;
+		return tmp;
+	},
+
+	/**
 	 * Returns a copy of the array containing the elements in shuffled sequence.
 	 */
 	shuffle: function() {
 		var res = this.clone();
 		var i = this.length;
-		while (i--) res.swap(i, $random(0, i));
+		while (i--) res.swap(i, Math.rand(0, i));
 		return res;
+	},
+
+	statics: {
+		/**
+		 * Converts the list to an array. Various types are supported. 
+		 */
+		create: function(list, start, end) {
+			if (!list) return [];
+			if (end == null) end = list.length;
+			if (list.toArray && !start && end == list.length)
+				return list.toArray();
+			if (!start) start = 0;
+			var res = [];
+			for (var i = start; i < end; i++)
+				res[i - start] = list[i];
+			return res;
+		},
+
+		extend: function(src) {
+			// On IE browsers, we cannot directly inherit from Array
+			// by setting ctor.prototype = new Array(), as setting of #length
+			// on such instances is ignored.
+			// Simulate extending of Array, by actually extending Base and
+			// injecting from Array.
+			// Fields that are hidden in Array.prototype need to be explicitely
+			// injected.
+			// Subclasses need to define length = 0 in their constructors.
+			// Not supported: concat (Safari breaks it)
+			// Explicitely inject Enumerable as it defines dontEnum. and 
+			// its fields wont found when iterating through Array.prototype.
+			// This is only really needed when dontEnum is used.
+			return ['push','pop','shift','unshift','sort','reverse',
+				'join','slice','splice','some','every','map','filter',
+				'indexOf','lastIndexOf'].each(function(name) {
+				this.prototype[name] = Array.prototype[name];
+			}, Base.extend(Array.prototype)).inject(Enumerable).inject(src, Array);
+		}
 	}
-}HIDE);
+});
+
+// Short-cut to Array.create
+$A = Array.create;
 
 #ifdef BROWSER_LEGACY
 
@@ -176,10 +210,15 @@ Array.inject({
 // Array Legacy
 
 if (!Array.prototype.push) {
+	/**
+	 * Simulate stanadard Array methods on legacy browsers.
+	 * All these methods explicitely alter length, as they might be used for
+	 * array-like objects (e.g. the HtmlElements array).
+	 */
 	Array.inject({
 		push: function() {
 			for (var i = 0; i < arguments.length; i++)
-				this[this.length] = arguments[i];
+				this[this.length++] = arguments[i];
 			return this.length;
 		},
 
@@ -193,48 +232,70 @@ if (!Array.prototype.push) {
 
 		shift: function() {
 			var old = this[0];
-			for (var i = 0;i < this.length - 1; i++)
-				this[i]=this[i + 1];
+			for (var i = 0; i < this.length - 1; i++)
+				this[i] = this[i + 1];
 			delete this[this.length - 1];
 			this.length--;
 			return old;
 		},
 
 		unshift: function() {
-			for (var i = this.length - 1;i >= 0; i--)
-				this[i + arguments.length] = this[i];
-			for (i = 0; i < arguments.length; i++)
+			var len = this.length, num = arguments.length;
+			this.length += num;
+			for (var i = len - 1; i >= 0; i--)
+				this[i + num] = this[i];
+			for (i = 0; i < num; i++)
 				this[i] = arguments[i];
 			return this.length;
 		},
 
-		splice: function(start, del, items) {
-			var res = [];
+		splice: function(start, del) {
+			var res = new Array(del), len = this.length;
+			// Collect all the removed elements.
 			for (var i = 0; i < del; i++)
 				res[i] = this[i + start];
-			for (i = start; i < this.length - del; i ++)
-				this[i] = this[i + del];
-			this.length -= del;
-			if(arguments.length > 2) {
-				var len = arguments.length - 2;
-				for (i = this.length - 1; i >= start; i--)
-					this[i + len] = this[i];
-				for (i = 0; i < len; i++)
-					this[i + start] = arguments[i + 2];
+			var num = arguments.length - 2;
+			if (num > 0) del -= num;
+			if (del > 0) {
+				// Move the entries up by the amount of entries to remove.
+				for (i = start; i < len - del; i ++)
+					this[i] = this[i + del];
+				// Delete the entries that are not used any more.
+				// This is needed for pseudo arrays.
+				for (i = len - del; i < len; i++)
+					delete this[i];
+				this.length = len - del;
+			} else {
+				// Negative del means there are more new entries than old
+				// entries to remove.
+				// Adjust length first for speed up on native arrays,
+				// by forcing reallocation to the righ sice.
+				this.length = len - del;
+				// Move the entries down by the emount of new entries - the 
+				// amount of entries to remove. 
+				for (i = len - 1; i >= start; i--)
+					this[i - del] = this[i];
 			}
+			// Add the new entries
+			if (num > 0)
+				for (i = 0; i < num; i++)
+					this[i + start] = arguments[i + 2];
 			return res;
 		},
 
+		/**
+		 * On legacy IE, slice does not work correctly with negative indices.
+		 */
 		slice: function(start, end) {
 			if (start < 0) start += this.length;
 			if (end < 0) end += this.length;
 			else if (end == null) end = this.length;
-			var res = [];
+			var res = new Array(end - start);
 			for (var i = start; i < end; i++)
 				res[i - start] = this[i];
 			return res;
 		}
-	}HIDE);
+	});
 }
 
 #endif // BROWSER_LEGACY

@@ -48,18 +48,19 @@ Callback = {
 
 	fireEvent: function(type) {
 		return (this.events && this.events[type] || []).each(function(fn) {
-			fn.apply(this, $A(arguments, 1));
+			fn.apply(this, Array.create(arguments, 1));
 		}, this);
 	},
 
 	removeEvent: function(type, fn) {
-		if (this.events && this.events[type]) this.events[type].remove(fn);
+		if (this.events && this.events[type])
+			this.events[type].remove(fn);
 		return this;
 	},
 
 	setOptions: function(opts) {
 		// Keep copying this.options, as it might be defined in the prototype
-		return (this.options = $H(this.options, opts)).each(function(val, i) {
+		return (this.options = Hash.create(this.options, opts)).each(function(val, i) {
 			if (typeof val == 'function' && (i = i.match(/^on([A-Z]\w*)/)))
 				this.addEvent(i[1].toLowerCase(), val);
 		}, this);

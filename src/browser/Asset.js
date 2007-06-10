@@ -15,7 +15,7 @@
 
 Asset = {
 	javascript: function(src, props) {
-		var script = new Element('script', { src: src }).addEvents({
+		var script = new HtmlElement('script', { src: src }).addEvents({
 			load: props.onLoad, // can be null
 			readystatechange: function(){
 				if (this.readyState == 'complete') this.fireEvent('load');
@@ -26,7 +26,7 @@ Asset = {
 	},
 
 	css: function(src, props) {
-		return new Element('link', $H({
+		return new HtmlElement('link', Hash.create({
 			rel: 'stylesheet', media: 'screen', type: 'text/css', href: src
 		}, props)).appendInside(document.head);
 	},
@@ -35,7 +35,7 @@ Asset = {
 		props = props || {};
 		var image = new Image();
 		image.src = src;
-		var element = new Element('img', { src: src });
+		var element = new HtmlElement('img', { src: src });
 		['load', 'abort', 'error'].each(function(type) {
 			var event = props['on' + type];
 			delete props['on' + type];
@@ -59,7 +59,7 @@ Asset = {
 					if (++count == srcs.length && opts.onComplete) opts.onComplete();
 				}
 			}));
-		}, new Elements());
+		}, new HtmlElements());
 	}
 };
 

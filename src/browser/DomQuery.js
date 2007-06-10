@@ -1,5 +1,5 @@
-#ifndef __browser_Element_DomQuery__
-#define __browser_Element_DomQuery__
+#ifndef __browser_DomQuery__
+#define __browser_DomQuery__
 
 #ifdef HIDDEN
 /**
@@ -11,15 +11,15 @@
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-// Element DomQuery
+// DomQuery
 
-Element.inject(function() {
+HtmlElement.inject(function() {
 	var cache = {}, unique = 0;
 
 	function query(selectors, root, filter, unique, max) {
-		root = root ? Element.unwrap(root) : document;
+		root = root ? HtmlElement.unwrap(root) : document;
 		// TODO: if root is a string, select it first!
-		var res = new Elements(), els = filter;
+		var res = new HtmlElements(), els = filter;
 		// selectors can be an array or a coma separated string.
 		// If it is an array, it can contain elements and selector strings.
 		// The elements are wrapped and added.
@@ -27,7 +27,7 @@ Element.inject(function() {
 			if (!filter) els = null; // Restart collecting for each selector
 			if (!filter && typeof selector != 'string') {
 				// Probably a element. Just try to add it.
-				res.push(Element.get(selector));
+				res.push(HtmlElement.get(selector));
 			} else {
 				selector.clean().split(' ').each(function(part) {
 					// Cache selector parsing results:
@@ -47,11 +47,11 @@ Element.inject(function() {
 					if (!els) { // Fill in els accordingly
 						if (id) {
 							var el = document.getElementById(id);
-							if (!el || !Element.isAncestor(el, root) || tag != '*'
+							if (!el || !HtmlElement.isAncestor(el, root) || tag != '*'
 								&& el.tagName.toLowerCase() != tag) throw $break;
 							els = [el];
 						} else {
-							els = $A(root.getElementsByTagName(tag));
+							els = Array.create(root.getElementsByTagName(tag));
 						}
 					} else { // Filter
 						els = els.each(function(el) {
@@ -69,15 +69,16 @@ Element.inject(function() {
 						});
 					}
 					if (param[6]) {
-						var name = param[6], value = param[9], operator = Element.operators[param[8]];
+						var name = param[6], value = param[9], operator = HtmlElement.operators[param[8]];
 						els = els.filter(function(el) {
-							var att = el.getProperty(name);
-							if (att) return !operator || operator(att, value);
+							var att = HtmlElement.get(el).getProperty(name);
+							// Convert attribute to string
+							return att && (!operator || operator(att + '', value));
 						});
 					}
 				});
 				if (els) els.each(function(el) {
-					el = Element.get(el);
+					el = HtmlElement.get(el);
 					if (!unique) res.push(el);
 					else if (el._unique != unique) {
 						res.push(el);
@@ -92,7 +93,7 @@ Element.inject(function() {
 	}
 
 	return {
-		$static: {
+		statics: {
 			select: function(selectors, root, max) {
 				return query(selectors, root, null, ++unique, max);
 	  		},
@@ -125,7 +126,7 @@ Element.inject(function() {
 	}
 });
 
-// Short-cut to Element.select
-$$ = Element.select;
+// Short-cut to HtmlElement.select
+$$ = HtmlElement.select;
 
-#endif // __browser_Element_DomQuery__
+#endif // __browser_DomQuery__

@@ -10,12 +10,12 @@
  */
 #endif
 
-#include "Element.js"
+#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Event
 
-[Element, Window, Document].each(function(obj) {
+[HtmlElement, Window, Document].each(function(obj) {
 	obj.inject(this);
 }, {
 	addEvent: function(type, func) {
@@ -28,7 +28,7 @@
 			// both the original function and the bound function are needed
 			// for removal of the event listener.
 			// See if we need to fake an event here.
-			var orig = func, fake = Element.Events[type];
+			var orig = func, fake = HtmlElement.Events[type];
 			if (fake) {
 				if (fake.add) func = fake.add.call(this, func) || func;
 				if (fake.property) this[fake.property] = orig;
@@ -36,14 +36,14 @@
 				type = fake.type;
 			}
 			if (type) {
-				var bound = func, self = this;
+				var bound = func, that = this;
 				// Check if the function takes a parameter. If so, it must
 				// want an event. Wrap it so it recieves a wrapped event, and
 				// bind it to that at the same time, as on PC IE, event listeners
 				// are not called bound to their objects.
 				if (func.parameters().length > 0)
 					bound = function(event) { // wants event param
-						return func.call(self, new Event(event));
+						return func.call(that, new Event(event));
 					};
 				if (this.$.addEventListener) {
 					this.$.addEventListener(type, bound, false);
@@ -60,7 +60,7 @@
 					this.$['on' + type] = function(event) {
 						event = new Event(event);
 						entries.each(function(entry) {
-							entry.func.call(self, event);
+							entry.func.call(that, event);
 							if (event.event.cancelBubble) throw $break;
 						});
 						// passing "this" for bind above breaks throw $break on
@@ -82,10 +82,11 @@
 #ifdef BROWSER_LEGACY
 			// When shutting down, added functions seem to disappear here on
 			// Mac IE. Fix it the easy way.
-			entries = this.events[type] = $A(entries);
+			// TODO: Check if still needed?
+			entries = this.events[type] = Array.create(entries);
 #endif // !BROWSER_LEGACY
 			if (entry = entries.remove(function(entry) { return entry.func == func })) {
-				var fake = Element.Events[type];
+				var fake = HtmlElement.Events[type];
 				if (fake) {
 					if (fake.remove) fake.remove.call(this, func);
 					if (fake.property) delete this[fake.property];
@@ -133,23 +134,19 @@
 	fireEvent: function(type) {
 		var entries = (this.events || {})[type];
 		if (entries) {
-			var args = $A(arguments, 1);
+			var args = Array.create(arguments, 1);
 			entries.each(function(entry) {
 				entry.func.apply(this, args);
 			}, this);
 		}
 	},
 
-	/**
-	 * TODO: Call at the end!? (garbage collection?)
-	 * For Garbage Collection
-	 */
 	dispose: function() {
 		this.removeEvents();
 	}
 });
 
-Element.Events = (function() {
+HtmlElement.Events = new function() {
 	function hover(name, type) {
 		return {
 			type: type,
@@ -160,7 +157,7 @@ Element.Events = (function() {
 		}
 	}
 
-	return $H({
+	return new Hash({
 		mouseenter: hover('mouseenter', 'mouseover'),
 		mouseleave: hover('mouseleave', 'mouseout'),
 		mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
@@ -193,7 +190,7 @@ Element.Events = (function() {
 			}
 		}
 	});
-})();
+};
 
 // Opera 7 does not let us override Event. But after deleting it,
 // overriding is possible
@@ -213,10 +210,10 @@ Event = Base.extend(function() {
 	};
 
 	return {
-		$constructor: function(event) {
+		initialize: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = Element.get(event.target || event.srcElement);
+			this.target = HtmlElement.get(event.target || event.srcElement);
 			if (this.target.nodeType == 3)
 				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
@@ -247,7 +244,8 @@ Event = Base.extend(function() {
 				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = Element.get(event.relatedTarget || this.type == 'mouseout' ? event.toElement : event.fromElement);
+					this.relatedTarget = HtmlElement.get(event.relatedTarget ||
+						this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
 

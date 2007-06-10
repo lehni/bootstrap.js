@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Fx.CSS
 
-Fx.CSS = (function() {
+Fx.CSS = new function() {
 	var single = {
 		parse: function(value) {
 			return value.toFloat();
@@ -82,6 +82,6 @@ Fx.CSS = (function() {
 			return { from: css.parse(from), to: css.parse(to), css: css };
 		}
 	}
-})();
+};
 
 #endif // __browser_Fx_CSS__

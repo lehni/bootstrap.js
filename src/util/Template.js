@@ -1062,7 +1062,7 @@ HopObject.prototype.template_macro = function(param, name) {
  * A dictionary with methods that can be injected into any prototype to 
  * get templating functionality.
  */
-Template.methods = (function() {
+Template.methods = new function() {
 	var templates = {};
 
 	return {
@@ -1116,6 +1116,6 @@ Template.methods = (function() {
 			}
 		}
 	};
-})();
+};
 
 #endif // !HELMA

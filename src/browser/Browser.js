@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Browser
 
-Browser = (function() {
+Browser = new function() {
 	var ua = navigator.userAgent, mac = /Mac/.test(ua), js/*@cc_on=@_jscript_version@*/;
 	return {
 		WIN: /Win/.test(ua),
@@ -20,6 +20,6 @@ Browser = (function() {
 		IE7: js == 5.7,
 		MACIE: js && mac
 	};
-})();
+};
 
 #endif // __browser_Browser__

@@ -12,8 +12,8 @@ Function.inject(function() {
 	var timerId = 0;
 
 #endif // BROWSER_LEGACY
-	function timer(self, type, args, ms) {
-		var fn = self.bind.apply(self, $A(args, 1));
+	function timer(that, type, args, ms) {
+		var fn = that.bind.apply(that, Array.create(args, 1));
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
 		Function.timers[id] = fn;
@@ -36,6 +36,7 @@ Function.inject(function() {
 #endif // BROWSER
 
 	return {
+		HIDE
 		/**
 		 * Returns the function's parameter names as an array
 		 */
@@ -62,21 +63,24 @@ Function.inject(function() {
 #endif // !BROWSER
 
 		bind: function(obj) {
-			var self = this, args = $A(arguments, 1);
+			var that = this, args = Array.create(arguments, 1);
 			return function() {
-				return self.apply(obj, args.concat($A(arguments)));
+				return that.apply(obj, args.concat(Array.create(arguments)));
 			}
 		},
 
 		attempt: function(obj) {
-			var self = this, args = $A(arguments, 1);
+			var that = this, args = Array.create(arguments, 1);
 			return function() {
-				try { return self.apply(obj, args.concat($A(arguments))); }
-				catch(e) { return e; }
+				try {
+					return that.apply(obj, args.concat(Array.create(arguments)));
+				} catch(e) {
+					return e;
+				}
 			}
 		}
 	}
-}HIDE);
+});
 // dontEnum these fields, as we iterate through Function.prototype in
 // Function.prototype.inject
 
@@ -95,6 +99,7 @@ if (!Function.prototype.apply) {
 	var cache = {};
 
 	Function.inject({
+		HIDE
 		// = Ecma 1.5 apply/call at native speed, with variable argument count,
 		// through caching of caller functions
 		apply: function(obj, args, start) {
@@ -134,7 +139,7 @@ if (!Function.prototype.apply) {
 		call: function(obj) {
 			return this.apply(obj, arguments, 1);
 		}
-	}HIDE);
+	});
 }
 
 #endif // BROWSER_LEGACY
