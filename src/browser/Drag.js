@@ -1,15 +1,15 @@
 #ifndef __browser_Drag__
 #define __browser_Drag__
 
-#include "HtmlElement.js"
-#include "Event.js"
+#include "DomEvent.js"
+#include "Document.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Drag
 
 // Fake dragstart, drag and dragend events, all in a self contained inject scope.
 
-HtmlElement.Events.inject(function() {
+DomEvent.add(function() {
 	var object, last;
 
 	function dragStart(event) {

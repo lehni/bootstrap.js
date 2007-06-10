@@ -5,6 +5,7 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Form
+
 Form = HtmlElement.extend({
 	_tag: 'form',
 
@@ -30,13 +31,13 @@ Form = HtmlElement.extend({
 });
 
 FormElement = HtmlElement.extend({
+	_methods: ['focus', 'blur'],
+
 	enable: function(enable) {
 		var disabled = !enable && enable !== undefined;
 		if (disabled) this.$.blur();
 		this.$.disabled = disabled;
-	},
-
-	methods: ['focus', 'blur']
+	}
 });
 
 Input = FormElement.extend({
@@ -92,6 +93,7 @@ Select = FormElement.extend({
 	}
 });
 
+// Name it SelectOption instead of Option, as Option is the native prototype.
 SelectOption = FormElement.extend({
 	_tag: 'option',
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
