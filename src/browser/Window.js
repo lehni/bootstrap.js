@@ -48,4 +48,6 @@ Window = DomElement.get(window).inject({
 	}
 });
 
+Window.addEvent('unload', DomElement.dispose);
+
 #endif // __browser_Window__

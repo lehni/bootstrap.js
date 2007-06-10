@@ -78,7 +78,7 @@ DomElement = Base.extend(new function() {
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them
-	(function() {
+	function dispose() {
 		cache.each(function(obj, id) {
 			var el = obj.$;
 	        if(!el || !el.parentNode || (!el.offsetParent && !document.getElementById(id))) {
@@ -86,7 +86,8 @@ DomElement = Base.extend(new function() {
 	            delete cache[id];
 	        }
 		});
-	}).periodic(30000);
+	}
+	dispose.periodic(30000);
 
 	// Private inject function for DomElement. It adds support for
 	// _methods and _properties declarations, which forward calls and define
@@ -202,7 +203,9 @@ DomElement = Base.extend(new function() {
 
 			unwrap: function(el) {
 				return !el || el.nodeType ? el : el.$;
-			}
+			},
+
+			dispose: dispose
 		}
 	}
 });
