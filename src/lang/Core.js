@@ -72,10 +72,10 @@ new function() { // bootstrap
 			if (val !== Object.prototype[name]) {
 #ifdef GETTER_SETTER
 				var func = typeof val == 'function', match;
-				if (func && baseVal && val !== baseVal && /\bbase\s*[(.]/.test(val)) {
+				if (func && baseVal && val !== baseVal && /\bthis\.base\b/.test(val)) {
 #else // !GETTER_SETTER
 				if (typeof val == 'function' && baseVal && val !== baseVal &&
-						/\bbase\s*[(.]/.test(val)) {
+						/\bthis\.base\b/.test(val)) {
 #endif // !GETTER_SETTER
 #ifdef HELMA
 					// If there is a realBase to read from, and the base
