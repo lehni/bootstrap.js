@@ -72,9 +72,9 @@ HtmlElement.inject({
 });
 
 // Short-cut to HtmlElement.get and HtmlElement.select
-$ = HtmlElement.get;
 // Bind to HtmlElement, as HtmlElement.prototype._elements is looked up
 // in select!
+$ = HtmlElement.get.bind(HtmlElement);
 $$ = HtmlElement.select.bind(HtmlElement);
 
 #endif // __browser_HtmlElement__

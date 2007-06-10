@@ -9,7 +9,7 @@
 
 // Fake dragstart, drag and dragend events, all in a self contained inject scope.
 
-DomEvent.add(function() {
+DomEvent.add(new function() {
 	var object, last;
 
 	function dragStart(event) {
