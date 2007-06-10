@@ -13,13 +13,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // DomQuery
 
-HtmlElement.inject(function() {
+DomElement.inject(function() {
 	var cache = {}, unique = 0;
 
-	function query(selectors, root, filter, unique, max) {
-		root = root ? HtmlElement.unwrap(root) : document;
+	function query(selectors, root, res, filter, collection, unique, max) {
+		root = root ? DomElement.unwrap(root) : document;
 		// TODO: if root is a string, select it first!
-		var res = new HtmlElements(), els = filter;
+		var els = filter;
 		// selectors can be an array or a coma separated string.
 		// If it is an array, it can contain elements and selector strings.
 		// The elements are wrapped and added.
@@ -27,7 +27,7 @@ HtmlElement.inject(function() {
 			if (!filter) els = null; // Restart collecting for each selector
 			if (!filter && typeof selector != 'string') {
 				// Probably a element. Just try to add it.
-				res.push(HtmlElement.get(selector));
+				res.push(selector);
 			} else {
 				selector.clean().split(' ').each(function(part) {
 					// Cache selector parsing results:
@@ -47,7 +47,7 @@ HtmlElement.inject(function() {
 					if (!els) { // Fill in els accordingly
 						if (id) {
 							var el = document.getElementById(id);
-							if (!el || !HtmlElement.isAncestor(el, root) || tag != '*'
+							if (!el || !DomElement.isAncestor(el, root) || tag != '*'
 								&& el.tagName.toLowerCase() != tag) throw $break;
 							els = [el];
 						} else {
@@ -69,16 +69,16 @@ HtmlElement.inject(function() {
 						});
 					}
 					if (param[6]) {
-						var name = param[6], value = param[9], operator = HtmlElement.operators[param[8]];
+						var name = param[6], value = param[9], operator = DomElement.operators[param[8]];
 						els = els.filter(function(el) {
-							var att = HtmlElement.get(el).getProperty(name);
+							var att = DomElement.get(el).getProperty(name);
 							// Convert attribute to string
 							return att && (!operator || operator(att + '', value));
 						});
 					}
 				});
 				if (els) els.each(function(el) {
-					el = HtmlElement.get(el);
+					el = DomElement.get(el);
 					if (!unique) res.push(el);
 					else if (el._unique != unique) {
 						res.push(el);
@@ -95,11 +95,11 @@ HtmlElement.inject(function() {
 	return {
 		statics: {
 			select: function(selectors, root, max) {
-				return query(selectors, root, null, ++unique, max);
+				return query(selectors, root, new this.prototype._elements(), null, ++unique, max);
 	  		},
 
 			filter: function(els, selectors, root) {
-				return query(selectors, root, els);
+				return query(selectors, root, new this.prototype._elements(), els);
 	  		},
 
 	        operators : {
@@ -125,8 +125,5 @@ HtmlElement.inject(function() {
 		}
 	}
 });
-
-// Short-cut to HtmlElement.select
-$$ = HtmlElement.select;
 
 #endif // __browser_DomQuery__

@@ -189,14 +189,19 @@ Array.inject(Enumerable).inject({
 			// injected.
 			// Subclasses need to define length = 0 in their constructors.
 			// Not supported: concat (Safari breaks it)
-			// Explicitely inject Enumerable as it defines dontEnum. and 
-			// its fields wont found when iterating through Array.prototype.
-			// This is only really needed when dontEnum is used.
-			return ['push','pop','shift','unshift','sort','reverse',
+			var ret = Base.extend(Array.prototype).inject(src, Array);
+			['push','pop','shift','unshift','sort','reverse',
 				'join','slice','splice','some','every','map','filter',
 				'indexOf','lastIndexOf'].each(function(name) {
-				this.prototype[name] = Array.prototype[name];
-			}, Base.extend(Array.prototype)).inject(Enumerable).inject(src, Array);
+				ret.prototype[name] = Array.prototype[name];
+			});
+#if defined(DONT_ENUM) || defined(HELMA)
+			// Explicitely inject Enumerable as it defines dontEnum. and 
+			// its fields wont found when iterating through Array.prototype.
+			ret.inject(Enumerable);
+#endif
+			ret.extend = Function.extend;
+			return ret;
 		}
 	}
 });
