@@ -142,9 +142,9 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifdef DONT_ENUM
-				if (has(src, name))
+				if (visible(src, name))
 #elif !defined(HELMA)
-				if (has(src, name) && name != 'prototype' && name != 'statics')
+				if (visible(src, name) && name != 'prototype' && name != 'statics')
 #else // HELMA
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
@@ -183,8 +183,11 @@ new function() { // bootstrap
 
 	/**
 	 * Private function that checks if an object contains a given property.
+	 * Naming it 'has' causes problems on Opera when defining
+	 * Object.prototype.has, as the local version then seems to be overriden
+	 * by that. Giving it a idfferent name fixes it.
 	 */
-	function has(obj, name) {
+	function visible(obj, name) {
 #ifdef DONT_ENUM
 		// This is tricky: as described in Object.prototype.dontEnum, the
 		// _dontEnum  objects form a inheritance sequence between prototypes.
@@ -392,7 +395,7 @@ new function() { // bootstrap
 		 * filtered.
 		 */
 		has: function(name) {
-			return has(this, name);
+			return visible(this, name);
 		},
 
 		/**

@@ -343,6 +343,10 @@ DomElement.inject(function() {
 			this.getChildren().remove();
 		},
 
+		hasChildren: function() {
+			return this.$.childNodes.length > 0;
+		},
+
 		hasParent: function(el) {
 			return DomElement.isAncestor(this.$, DomElement.unwrap(el));
 		},

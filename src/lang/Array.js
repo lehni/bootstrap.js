@@ -52,7 +52,8 @@ Array.inject(Enumerable).inject({
 #ifdef BROWSER
 		var res = this.concat([]);
 		// fix Opoera bug where arguments are arrays but do not concatenate correctly
-		return res.length == this.length ? res : Enumerable.toArray.call(this);
+		// (a new array is returned with [0] == this).
+		return res[0] == this ? Enumerable.toArray.call(this) : res;
 #else
 		return this.concat([]);
 #endif
