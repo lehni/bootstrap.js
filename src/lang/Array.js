@@ -200,6 +200,7 @@ Array.inject(Enumerable).inject({
 			// its fields wont found when iterating through Array.prototype.
 			ret.inject(Enumerable);
 #endif
+			// The subclass can use the normal extend again:
 			ret.extend = Function.extend;
 			return ret;
 		}
