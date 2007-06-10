@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // DomQuery
 
-DomElement.inject(function() {
+DomElement.inject(new function() {
 	var cache = {}, unique = 0;
 
 	function query(that, selectors, root, filter, unique, max) {

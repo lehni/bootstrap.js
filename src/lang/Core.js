@@ -247,8 +247,6 @@ new function() { // bootstrap
 		// If versioning is used, retrieve the real base through __proto__:
 		var realBase = version && proto.__proto__ && proto.__proto__.constructor;
 #endif // HELMA
-		// src can either be a function to be called, or a object literal.
-		src = typeof src == 'function' ? new src() : src || {};
 		// Define new instance fields, and inherit from base, if available.
 		// Otherwise inherit from ourself this works for also for functions in the
 		// base class, as they are available through this.prototype. But if base
@@ -403,7 +401,7 @@ new function() { // bootstrap
 		 */
 		inject: function(src) {
 			// src can either be a function to be called, or an object literal.
-			return inject(this, typeof src == 'function' ? new src() : src, this);
+			return inject(this, src, this);
 		},
 
 		/**

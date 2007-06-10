@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Function
 
-Function.inject(function() {
+Function.inject(new function() {
 
 #ifdef BROWSER
 #ifdef BROWSER_LEGACY
