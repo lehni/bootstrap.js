@@ -18,7 +18,9 @@ DomElement.inject(new function() {
 
 	function query(that, selectors, root, filter, unique, max) {
 		// TODO: if root is a string, select it first!
-		root = root ? DomElement.unwrap(root) : document;
+		// Instead of DomElement, 'that' is used bellow, to be sure we use the 
+		// right _elements type (when using HtmlElement).
+		root = root ? that.unwrap(root) : document;
 		// Create a elements collection. Depending on 'that', this is either
 		// a DomElements or a HtmlElements object.
 		var res = new that.prototype._elements(), els = filter;
@@ -71,7 +73,7 @@ DomElement.inject(new function() {
 						});
 					}
 					if (param[6]) {
-						var name = param[6], value = param[9], operator = DomElement.operators[param[8]];
+						var name = param[6], value = param[9], operator = that.operators[param[8]];
 						els = els.filter(function(el) {
 							var att = that.get(el).getProperty(name);
 							// Convert attribute to string
@@ -80,7 +82,8 @@ DomElement.inject(new function() {
 					}
 				});
 				if (els) els.each(function(el) {
-					// call DomElement.get / HtmlElement.get through that
+					// call DomElement.get / HtmlElement.get through that, in order
+					// to get the right _elements type.
 					el = that.get(el);
 					if (!unique) res.push(el);
 					else if (el._unique != unique) {
@@ -113,6 +116,10 @@ DomElement.inject(new function() {
 				return true;
 			},
 
+			/**
+			 * New operators can be registered by setting
+			 * DomElement.operators['operator'] = function(a, v) { ... }
+			 */
 	        operators : {
 	            '=': function(a, v) {
 		            return a == v;
