@@ -142,9 +142,7 @@ DomEvent = Base.extend(function() {
 	};
 });
 
-[DomElement, Window, Document].each(function(obj) {
-	obj.inject(this);
-}, {
+DomElement.inject({
 	addEvent: function(type, func) {
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
