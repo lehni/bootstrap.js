@@ -4,8 +4,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Document
 
-Document = {
-	$: document // Used for the Event methods
-};
+Document = DomElement.get(document);
 
 #endif // __browser_Document__

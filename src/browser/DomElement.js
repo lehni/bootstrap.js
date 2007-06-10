@@ -138,7 +138,8 @@ DomElement = Base.extend(function() {
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
 				el = document.createElement(el);
 			}
-			var id = el.id;
+			// Generate special ids for document and window, so they can be found too.
+			var id = el.id || el == document && 'doc' || el == window && 'win';
 			// Cache wrappers by their ids
 			if(id && cache[id]) return cache[id]; // DomElement object already exists
 			// Store a reference to the native element.
@@ -195,7 +196,7 @@ DomElement = Base.extend(function() {
 				}
 				// Make sure we're using the right constructor for this tag
 				return el ? el.id && cache[el.id] ||
-					new (constructors[el.tagName.toLowerCase()] ||
+					new (el.tagName && constructors[el.tagName.toLowerCase()] ||
 						(el.className === undefined
 							? DomElement : HtmlElement))(el) : null;
 			},

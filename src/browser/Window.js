@@ -10,9 +10,7 @@ try { document.execCommand('BackgroundImageCache', false, true); }
 catch (e) {}
 @*/
 
-Window = {
-	$: window, // Used for the Event methods
-
+Window = DomElement.get(window).inject({
 	/**
 	 * Overrides window.open to allow more options in the third parameter.
 	 * If params is a string, the standard window.open is executed.
@@ -48,6 +46,6 @@ Window = {
 		if (win && focus) win.focus();
 		return win;
 	}
-};
+});
 
 #endif // __browser_Window__
