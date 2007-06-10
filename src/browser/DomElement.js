@@ -29,7 +29,7 @@ DomElements = Array.extend({
 		// Do not use els.push do detect arrays, as we're passing pseudo arrays
 		// here too (e.g. childNodes). But Option defines .length too, so rule
 		// that out by checking nodeType as well.
-		this.append(els && els.length && !els.nodeType ? els : arguments);
+		this.append(els && els.length != null && !els.nodeType ? els : arguments);
 	},
 
 	/**
@@ -42,7 +42,7 @@ DomElements = Array.extend({
 
 	statics: {
 		inject: function(src) {
-			src = typeof src == 'function' ? new src() : src || [];
+			src = typeof src == 'function' ? new src() : src || {};
 			var collection = this;
 			// For each function that is injected into DomElements, create a
 			// new function that iterates that calls the function on each of the
@@ -93,12 +93,14 @@ DomElement = Base.extend(function() {
 	// _methods and _properties declarations, which forward calls and define
 	// getter / setters for fields of the native DOM node.
 	function inject(src, base) {
-		src = typeof src == 'function' ? new src() : src || []; 
+		src = typeof src == 'function' ? new src() : src || {}; 
 		// Forward method calls. Returns result if any, otherwise reference
 		// to this.
 		(src._methods || []).each(function(name) {
 			src[name] = function() {
-				var ret = this.$[name].apply(this.$, arguments);
+				// .apply seems to not be present on native dom functions on
+				// Safari. Just pass on the first argument and call directly.
+				var ret = this.$[name] && this.$[name](arg);
 				return ret === undefined ? this : ret;
 			}
 		});
@@ -182,10 +184,13 @@ DomElement = Base.extend(function() {
 					root = DomElement.unwrap(root);
 					if (el.charAt(0) == '#') {
 						el = document.getElementById(el.substring(1));
-						if (el && root && !DomQuery.isAncestor(el, root))
+						if (el && root && !this.isAncestor(el, root))
 							el = null;
 					} else {
-						el = DomElement.select(el, root, 1)[0];
+						// call dom select through this, as we want the right
+						// _elements value to be used (depending on how get is
+						// called, this is DomElements or HtmlElements).
+						el = this.select(el, root, 1)[0];
 					}
 				}
 				// Make sure we're using the right constructor for this tag
@@ -339,11 +344,11 @@ DomElement.inject(function() {
 		},
 
 		hasParent: function(el) {
-			return DomQuery.isAncestor(this.$, DomElement.unwrap(el));
+			return DomElement.isAncestor(this.$, DomElement.unwrap(el));
 		},
 
 		hasChild: function(el) {
-			return DomQuery.isAncestor(DomElement.unwrap(el), this.$);
+			return DomElement.isAncestor(DomElement.unwrap(el), this.$);
 		},
 
 		getTag: function() {

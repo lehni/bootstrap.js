@@ -189,12 +189,13 @@ Array.inject(Enumerable).inject({
 			// injected.
 			// Subclasses need to define length = 0 in their constructors.
 			// Not supported: concat (Safari breaks it)
-			var ret = Base.extend(Array.prototype).inject(src, Array);
+			var ret = Base.extend(Array.prototype);
 			['push','pop','shift','unshift','sort','reverse',
 				'join','slice','splice','some','every','map','filter',
 				'indexOf','lastIndexOf'].each(function(name) {
 				ret.prototype[name] = Array.prototype[name];
 			});
+			ret.inject(src, Array);
 #if defined(DONT_ENUM) || defined(HELMA)
 			// Explicitely inject Enumerable as it defines dontEnum. and 
 			// its fields wont found when iterating through Array.prototype.

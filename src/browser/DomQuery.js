@@ -16,10 +16,12 @@
 DomElement.inject(function() {
 	var cache = {}, unique = 0;
 
-	function query(selectors, root, res, filter, collection, unique, max) {
-		root = root ? DomElement.unwrap(root) : document;
+	function query(that, selectors, root, filter, unique, max) {
 		// TODO: if root is a string, select it first!
-		var els = filter;
+		root = root ? DomElement.unwrap(root) : document;
+		// Create a elements collection. Depending on 'that', this is either
+		// a DomElements or a HtmlElements object.
+		var res = new that.prototype._elements(), els = filter;
 		// selectors can be an array or a coma separated string.
 		// If it is an array, it can contain elements and selector strings.
 		// The elements are wrapped and added.
@@ -47,7 +49,7 @@ DomElement.inject(function() {
 					if (!els) { // Fill in els accordingly
 						if (id) {
 							var el = document.getElementById(id);
-							if (!el || !DomElement.isAncestor(el, root) || tag != '*'
+							if (!el || !that.isAncestor(el, root) || tag != '*'
 								&& el.tagName.toLowerCase() != tag) throw $break;
 							els = [el];
 						} else {
@@ -71,14 +73,15 @@ DomElement.inject(function() {
 					if (param[6]) {
 						var name = param[6], value = param[9], operator = DomElement.operators[param[8]];
 						els = els.filter(function(el) {
-							var att = DomElement.get(el).getProperty(name);
+							var att = that.get(el).getProperty(name);
 							// Convert attribute to string
 							return att && (!operator || operator(att + '', value));
 						});
 					}
 				});
 				if (els) els.each(function(el) {
-					el = DomElement.get(el);
+					// call DomElement.get / HtmlElement.get through that
+					el = that.get(el);
 					if (!unique) res.push(el);
 					else if (el._unique != unique) {
 						res.push(el);
@@ -95,12 +98,20 @@ DomElement.inject(function() {
 	return {
 		statics: {
 			select: function(selectors, root, max) {
-				return query(selectors, root, new this.prototype._elements(), null, ++unique, max);
+				return query(this, selectors, root, null, ++unique, max);
 	  		},
 
 			filter: function(els, selectors, root) {
-				return query(selectors, root, new this.prototype._elements(), els);
+				return query(this, selectors, root, els);
 	  		},
+
+			isAncestor: function(el, parent) {
+				// TODO: See Ext for a faster implementation
+				if (parent != document)
+					for (el = el.parentNode; el != parent; el = el.parentNode)
+						if (!el) return false;
+				return true;
+			},
 
 	        operators : {
 	            '=': function(a, v) {
