@@ -25,7 +25,7 @@ if (!/ /g.global) {
 				this.ignoreCase = /\/[^\/]*i[^\/]*$/.test(this);
 			    this.lastIndex = 0;
 			}
-			var last = this.lastIndex, res = this.$super(str.substring(last));
+			var last = this.lastIndex, res = this.base(str.substring(last));
 			if (!res) {
 			    this.lastIndex = 0;
 			    return res;

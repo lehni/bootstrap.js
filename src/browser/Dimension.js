@@ -10,12 +10,12 @@
  */
 #endif
 
-#include "Element.js"
+#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension
 
-Element.inject(function() {
+HtmlElement.inject(function() {
 #ifdef BROWSER_LEGACY
 	function cumulate(name, parent, iter, fix) {
 		fix = fix && Browser.MACIE;
@@ -29,7 +29,7 @@ Element.inject(function() {
 				cur = next;
 				x += cur.$[left] || 0;
 				y += cur.$[top] || 0;
-			} while((next = Element.get(cur.$[parent])) && (!iter || iter(cur, next)))
+			} while((next = HtmlElement.get(cur.$[parent])) && (!iter || iter(cur, next)))
 #ifdef BROWSER_LEGACY
 			// Fix body on mac ie
 			if (fix) ['margin', 'padding'].each(function(val) {
@@ -48,7 +48,6 @@ Element.inject(function() {
 		// ({ left: , top: , width: , height: , clip: })
 		// Do not set bounds, as arguments would then be modified, which we're
 		// referencing here:
-		fields = $A(fields);
 		return function(values) {
 			var vals = /^(object|hash|array)$/.test($typeof(values)) ? values : arguments;
 			if (offset) {
@@ -100,11 +99,11 @@ Element.inject(function() {
 			};
 		},
 
-		setBounds: bounds('left top width height clip', true),
+		setBounds: bounds(['left', 'top', 'width', 'height', 'clip'], true),
 
-		setOffset: bounds('left top', true),
+		setOffset: bounds(['left', 'top'], true),
 
-		setSize: bounds('width height clip'),
+		setSize: bounds(['width', 'height', 'clip']),
 
 		contains: function(pos) {
 			var bounds = this.getBounds();
@@ -118,9 +117,9 @@ Element.inject(function() {
 			this.scrollTop = y;
 		},
 		
-		$static: {
+		statics: {
 			getAt: function(pos, exclude) {
-				var el = Element.get(document.body);
+				var el = HtmlElement.get(document.body);
 				while (true) {
 					var max = -1;
 					var ch = el.getFirst();
@@ -142,7 +141,7 @@ Element.inject(function() {
 	};
 
 	// Dimension getters and setters:
-	$A('left top right bottom width height').each(function(name) {
+	['left', 'top', 'right', 'bottom', 'width', 'height'].each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
 			return this.$['offset' + part];

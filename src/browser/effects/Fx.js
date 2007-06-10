@@ -36,11 +36,11 @@ Fx.Base = Base.extend({
 		fps: 50
 	},
 
-	$constructor: function(opts) {
+	initialize: function(opts) {
 		this.element = this.element || null;
 		this.setOptions(opts);
-		if (this.options.$constructor)
-			this.options.$constructor.call(this);
+		if (this.options.initialize)
+			this.options.initialize.call(this);
 	},
 
 	step: function() {

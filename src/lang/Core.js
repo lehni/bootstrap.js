@@ -36,7 +36,7 @@ if (!this.__proto__) {
 undefined = this.undefined;
 #endif // BROWSER_LEGACY
 
-(function() { // bootstrap
+new function() { // bootstrap
 	/**
 	 * Private function that injects functions from src into dest, overriding
 	 * (and inherinting from) base. if allowProto is set, the name "prototype"
@@ -45,9 +45,9 @@ undefined = this.undefined;
 	 */
 #ifdef HELMA
 	// Real base is used for the versioning mechanism as desribed above.
-	function inject(dest, src, base, hide, version, realBase) {
+	function inject(dest, src, base, version, realBase) {
 #else // !HELMA
-	function inject(dest, src, base, hide) {
+	function inject(dest, src, base) {
 #endif // !HELMA
 #ifdef BROWSER_LEGACY
 		// For some very weird reason, ""; fixes a bug on MACIE where .replace
@@ -70,17 +70,12 @@ undefined = this.undefined;
 			var val = src[name], res = val, baseVal = base && base[name];
 #endif
 			if (val !== Object.prototype[name]) {
-				/* TODO: decide what to do with this!
-				if (typeof val == 'function' && /\$super\./.test(val)) {
-					val = new Function(val.parameters(), val.body().replace(/\$super\./, 'this.__proto__.__proto__.'));
-				}
-				*/
 #ifdef GETTER_SETTER
 				var func = typeof val == 'function', match;
-				if (func && baseVal && val !== baseVal && /\$super\b/.test(val)) {
+				if (func && baseVal && val !== baseVal && /\bbase\s*[(.]/.test(val)) {
 #else // !GETTER_SETTER
 				if (typeof val == 'function' && baseVal && val !== baseVal &&
-						/\$super\b/.test(val)) {
+						/\bbase\s*[(.]/.test(val)) {
 #endif // !GETTER_SETTER
 #ifdef HELMA
 					// If there is a realBase to read from, and the base
@@ -88,7 +83,7 @@ undefined = this.undefined;
 					// function previously defined through inject. 
 					// In this case, the value of _version decides what to do:
 					// If we're in the same compilation cicle, AspectJ behavior
-					// is used: $super then points to the function previously
+					// is used: base then points to the function previously
 					// defined in the same compilation cicle.
 					// Otherwise, use the definition from realBase, as the
 					// function points to an invalid version that was defined
@@ -101,14 +96,14 @@ undefined = this.undefined;
 						base = realBase;
 #endif // HELMA
 					res = function() {
-						var prev = this.$super;
-						// Look up the $super function each time if we can,
+						var prev = this.base;
+						// Look up the base function each time if we can,
 						// to reflect changes to the base class after 
 						// inheritance. this only works if inject is called
 						// with the third argument (base), see code bellow.
-						this.$super = (base != dest) ? base[name] : baseVal;
+						this.base = base != dest ? base[name] : baseVal;
 						try { return val.apply(this, arguments); }
-						finally { this.$super = prev; }
+						finally { this.base = prev; }
 					};
 					// Redirect toString to the one from the original function
 					// to "hide" the wrapper function
@@ -124,7 +119,7 @@ undefined = this.undefined;
 #ifdef GETTER_SETTER
 				// Check if the function defines a getter or setter by looking
 				// at its name. TODO: measure speed decrease of inject due to this!
-				if (func && (match = name.match(/([^$]*)\$(g|s)et$/)))
+				if (func && (match = name.match(/(.*)_(g|s)et$/)))
 					dest['__define' + match[2].toUpperCase() + 'etter__'](match[1], res);
 				else
 					dest[name] = res;
@@ -132,33 +127,30 @@ undefined = this.undefined;
 				dest[name] = res;
 #endif // !GETTER_SETTER
 #if defined(DONT_ENUM) || defined(HELMA)
-				// Parameter hide was named dontEnum, but this caused 
-				// problems on Opera, where it then seems to point to
-				// Object.prototype.dontEnum, which must be a bug in Opera.
-				if (hide && dest.dontEnum)
+				if (src.dontEnum === true && dest.dontEnum)
 					dest.dontEnum(name);
 #endif // DONT_ENUM || HELMA
 			}
 		}
 		// Iterate through all definitions in src with an iteator function
 		// that checks if the field is a function that needs to be wrapped for
-		// calls of $super. This is only needed if the function in base is
+		// calls of base. This is only needed if the function in base is
 		// different from the one in src, and if the one in src is actually
-		// calling base through $super. the string of the function is parsed
-		// for $super to detect calls.
+		// calling base through base. the string of the function is parsed
+		// for base to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
 			for (var name in src)
 #ifdef DONT_ENUM
 				if (has(src, name))
 #elif !defined(HELMA)
-				if (has(src, name) && name != 'prototype' && name != '$static')
+				if (has(src, name) && name != 'prototype' && name != 'statics')
 #else // HELMA
-				// On normal JS, we can hide $static through our dontEnum().
+				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
 				// that are defined already, as an added attribute. So we need
-				// to check against $static here...
-				if (name != '$static')
+				// to check against statics here...
+				if (name != 'statics')
 #endif // HELMA
 					field(name);
 			field('toString');
@@ -173,7 +165,7 @@ undefined = this.undefined;
 	 * that inherits all from obj.
 	 */
 	function extend(obj) {
-		// Create the constructor for the new prototype that calls $constructor
+		// Create the constructor for the new prototype that calls initialize
 		// if it is defined.
 		function ctor(dont) {
 #ifdef BROWSER_LEGACY
@@ -182,8 +174,8 @@ undefined = this.undefined;
 #endif
 			// Call the constructor function, if defined and we're not inheriting
 			// in which case ctor.dont would be set, see further bellow.
-			if (this.$constructor && dont !== ctor.dont)
-				return this.$constructor.apply(this, arguments);
+			if (this.initialize && dont !== ctor.dont)
+				return this.initialize.apply(this, arguments);
 		}
 		ctor.prototype = obj;
 		return ctor;
@@ -228,17 +220,17 @@ undefined = this.undefined;
 #endif // !DONT_ENUM
 	}
 
-	Function.prototype.inject = function(src, hide, base) {
+	Function.prototype.inject = function(src, base) {
 		// When called from extend, a third argument is passed, pointing
 		// to the base class (the constructor).
 		// this variable is needed for inheriting static fields and proper lookups
-		// of $super on each call (see bellow)
+		// of base on each call (see bellow)
 #ifdef HELMA
 		var proto = this.prototype;
 		// On the server side, we need some kind of version handling for HopObjects
 		// Because every time a prototype gets updated, the js file is evaluated
 		// in the same scope again. Using Prototype.inject in combination with
-		// $super calls would result in a growing chain of calls to previous
+		// base calls would result in a growing chain of calls to previous
 		// versions if no version handling would be involved.
 		// The versions are used further down to determine wether the previously
 		// defined function in the same prototype should be used (AspectJ-like),
@@ -257,15 +249,15 @@ undefined = this.undefined;
 		// Define new instance fields, and inherit from base, if available.
 		// Otherwise inherit from ourself this works for also for functions in the
 		// base class, as they are available through this.prototype. But if base
-		// is not available, $super will not be looked up each time when it's
+		// is not available, base will not be looked up each time when it's
 		// called (as this would result in an endless recursion). In this case,
 		// the super class is "hard-coded" in the wrapper function, and	further
 		// changes to it after inheritance are not reflected.
 #ifndef HELMA // !HELMA
-		inject(this.prototype, src, base ? base.prototype : this.prototype, hide);
+		inject(this.prototype, src, base ? base.prototype : this.prototype);
 #else // HELMA
 		// Pass realBase if defined.
-		inject(proto, src, base ? base.prototype : proto, hide, version,
+		inject(proto, src, base ? base.prototype : proto, version,
 				realBase && realBase.prototype);
 #endif // HELMA
 		// Copy over static fields from base, as prototype-like inheritance is not
@@ -276,10 +268,10 @@ undefined = this.undefined;
 		inject(this, base);
 		// Define new static fields, and inherit from base.
 #ifndef HELMA // !HELMA
-		return inject(this, src.$static, base);
+		return inject(this, src.statics, base);
 #else // HELMA
 		// Again, pass realBase if defined.
-		inject(this, src.$static, base, false, version, realBase);
+		inject(this, src.statics, base, false, version, realBase);
 		// For versioning, define onCodeUpdate to update _version each time:
 		if (version) {
 			// See if it is already defined, and override in a way that allows
@@ -298,23 +290,23 @@ undefined = this.undefined;
 				res._version = true;
 				proto.onCodeUpdate = res;
 			}
-			// Support for $constructor in HopObject: just copy over:
+			// Support for initialize in HopObject: just copy over:
 			// We can do it that way, because the way HopObjects are defined
 			// at the moment, we won't ever call HopObject.extend at the moment
 			// (where proto.constructor is set).
-			if (proto.$constructor)
-				proto.constructor = proto.$constructor;
+			if (proto.initialize)
+				proto.constructor = proto.initialize;
 		}
 		return this;
 #endif // HELMA
 	};
 
-	Function.prototype.extend = function(src, hide) {
+	Function.prototype.extend = function(src) {
 		// The new prototype extends the constructor on which extend is called.
 		// Fix constructor
 		var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
 		// An object to be passed as the first parameter in constructors
-		// when $constructor should not be called. This needs to be a property
+		// when initialize should not be called. This needs to be a property
 		// of the created constructor, so that if .extend is called on native
 		// constructors or constructors not created through .extend, this.dont
 		// will be undefined and no value will be passed to the constructor that
@@ -322,14 +314,14 @@ undefined = this.undefined;
 		ctor.dont = {};
 		// Inject all the definitions in src
 		// Use the new inject instead of the one in ctor, in case it was overriden.
-		// Needed when overriding static inject as in Elements.js.
+		// Needed when overriding static inject as in HtmlElements.js.
 #ifdef BROWSER_LEGACY
 		// Do not rely on this.inject.call, as this might not yet be defined
 		// on legacy browsers yet.
 		ctor.inject = this.inject;
-		return ctor.inject(src, hide, this);
+		return ctor.inject(src, this);
 #else // !BROWSER_LEGACY
-		return this.inject.call(ctor, src, hide, this);
+		return this.inject.call(ctor, src, this);
 #endif // !BROWSER_LEGACY
 	};
 
@@ -388,10 +380,11 @@ undefined = this.undefined;
 	// First hide the fields that cannot be overridden (wether they change
 	// value or not, they're allways hidden, by setting the first argument to true)
 	Base.prototype.dontEnum(true, 'dontEnum', '_dontEnum', '__proto__',
-		'prototype', 'constructor', '$static');
+		'prototype', 'constructor', 'statics');
 	// Now add some new fields, and hide these too.
 	Base.inject({
 #endif // DONT_ENUM
+		HIDE
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
@@ -403,11 +396,11 @@ undefined = this.undefined;
 		},
 
 		/**
-		 * Injects the fields from the given object, adding $super functionality
+		 * Injects the fields from the given object, adding base functionality
 		 */
-		inject: function(src, hide) {
+		inject: function(src) {
 			// src can either be a function to be called, or an object literal.
-			return inject(this, typeof src == 'function' ? new src() : src, this, hide);
+			return inject(this, typeof src == 'function' ? new src() : src, this);
 		},
 
 		/**
@@ -417,42 +410,42 @@ undefined = this.undefined;
 		 * newly created object just like in inject(), to copy the behavior
 		 * of Function.prototype.extend.
 		 */
-		extend: function(src, hide) {
+		extend: function(src) {
 			// notice the "new" here: the private extend returns a constructor
 			// as it's used for Function.prototype.extend as well. But when 
 			// extending objects, we want to return a new object that inherits
 			// from "this". In that case, the constructor is never used again,
 			// its just created to create a new object with the proper inheritance
 			// set and is garbage collected right after.
-			return (new (extend(this))).inject(src, hide);
+			return (new (extend(this))).inject(src);
 		}
 
 /* TODO: Try this out:
 #ifndef EXTEND_OBJECT
-		$static: {
-			inject: function(src, hide, base) {
+		statics: {
+			inject: function(src, base) {
 				// Inject anything added to Base into Array as well.
-				Array.inject(src, hide, base);
-				return this.$super(src, hide, base);
+				Array.inject(src, base);
+				return this.base(src, base);
 			},
 
-			extend: function(src, hide) {
-				var res = this.$super(src, hide);
+			extend: function(src) {
+				var res = this.base(src);
 				// Set proper versions of inject and extend on constructors
 				// extending Base, not the overriden ones in Base...
-				res.extend = this.$super;
+				res.extend = this.base;
 				res.inject = Function.prototype.inject;
 			}
 		}
 #endif
 */
-	}HIDE);
+	});
 #ifndef EXTEND_OBJECT
 	// As we do not extend Object, add Base methods to Array, before the Base
 	// fields are hidden through dontEnum.
 	Array.inject(Base.prototype);
 #endif // !EXTEND_OBJECT
-})();
+}
 
 #ifndef HELMA
 // Retrieve a reference to the global scope, usually window.
@@ -461,16 +454,11 @@ global = this;
 
 function $typeof(obj) {
 #ifdef BROWSER
-	// handle elements, as needed by Element.js
+	// handle elements, as needed by HtmlElement.js
 	return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element') || typeof obj) || undefined;
 #else // !BROWSER
 	return obj && (obj._type || typeof obj) || undefined;
 #endif // !BROWSER
-}
-
-// TODO: consider moving this somewhere more appropriate
-function $random(min, max) {
-	return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
 #endif // __lang_Core__

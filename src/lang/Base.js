@@ -7,6 +7,7 @@
 // Base
 
 Base.inject({
+	HIDE
 	/**
 	 * Copied over from Enumerable.
 	 */
@@ -28,6 +29,6 @@ Base.inject({
 			this[i] = val;
 		}, new this.constructor());
 	}
-}HIDE);
+});
 
 #endif // __lang_Base__

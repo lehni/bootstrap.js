@@ -17,15 +17,15 @@
 // Fx.Style
 
 Fx.Styles = Fx.Base.extend({
-	$constructor: function(el, options) {
-		this.element = Element.get(el);
-		this.$super(options);
+	initialize: function(el, options) {
+		this.element = HtmlElement.get(el);
+		this.base(options);
 	},
 
 	get: function() {
-		var self = this;
+		var that = this;
 		return EACH(this.from, function(val, i) {
-			this[i] = self.css[i].compute(self.from[i], self.to[i], self);
+			this[i] = that.css[i].compute(that.from[i], that.to[i], that);
 		}, {});
 	},
 
@@ -36,7 +36,7 @@ Fx.Styles = Fx.Base.extend({
 			this.css[i] = Fx.CSS.select(i, val);
 			parsed[i] = this.css[i].parse(val);
 		}, this);
-		return this.$super(parsed);
+		return this.base(parsed);
 	},
 
 	start: function(obj) {
@@ -50,7 +50,7 @@ Fx.Styles = Fx.Base.extend({
 			to[i] = parsed.to;
 			this.css[i] = parsed.css;
 		}, this);
-		return this.$super(from, to);
+		return this.base(from, to);
 	},
 
 	update: function(val) {
@@ -61,7 +61,7 @@ Fx.Styles = Fx.Base.extend({
 
 });
 
-Element.inject({
+HtmlElement.inject({
 	effects: function(opts) {
 		return new Fx.Styles(this, opts);
 	}

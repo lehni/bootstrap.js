@@ -7,15 +7,6 @@
 // Hash
 
 /**
- * Converts the passed object to a hash. 
- * Warning: Does not create a new instance if it is a hash already!
- */
-function $H(obj) {
-	return arguments.length == 1 && $typeof(obj) == 'hash' ? obj
-			: Hash.prototype.$constructor.apply(new Hash(), arguments);
-}
-
-/**
  * As Object only defines each and two other basic functions to avoid name
  * clashes in all other prototypes, define a second prototype called Hash,
  * which basically does the same but fully implements Enumberable.
@@ -26,15 +17,15 @@ function $H(obj) {
  * element. This is much simpler and faster, and I have not yet found out the
  * advantage of how Prototype handles it. 
  */
-Hash = Base.extend({
+Hash = Base.extend(Enumerable).inject({
+	HIDE
 	_type: 'hash',
-
 	/**
 	 * Constructs a new Hash. The constructor takes a variable amount of
 	 * argument objects of which the fields are all merged into the hash.
 	 */
-	$constructor: function() {
-		// Explicitly return here as it is used in $H's return statement above
+	initialize: function() {
+		// Explicitly return object as it is used in Hash.create's return statement
 		return EACH(arguments, function(obj) {
 			this.merge(obj);
 		}, this);
@@ -72,10 +63,21 @@ Hash = Base.extend({
 	/**
 	 * Does the same as toArray(), but renamed to go together with keys()
 	 */
-	values: Enumerable.toArray
-}HIDE);
+	values: Enumerable.toArray,
 
-// inject Enumerable into Hash.
-Hash.inject(EnumerableHIDE);
+	statics: {
+		/**
+		 * Converts the passed object to a hash. 
+		 * Warning: Does not create a new instance if it is a hash already!
+		 */
+		create: function(obj) {
+			return arguments.length == 1 && $typeof(obj) == 'hash' ? obj
+				: Hash.prototype.initialize.apply(new Hash(), arguments);
+		}
+	}
+});
+
+// Short-cut to Hash.create
+$H = Hash.create;
 
 #endif // __lang_Hash__
