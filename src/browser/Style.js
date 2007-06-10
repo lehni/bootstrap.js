@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Style
 
-HtmlElement.inject(function() {
+HtmlElement.inject(new function() {
 	var fields = {
 		getStyle: function(name, dontCompute) {
 			var el = this.$;

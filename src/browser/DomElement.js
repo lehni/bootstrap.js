@@ -42,13 +42,12 @@ DomElements = Array.extend({
 
 	statics: {
 		inject: function(src) {
-			src = typeof src == 'function' ? new src() : src || {};
 			var collection = this;
 			// For each function that is injected into DomElements, create a
 			// new function that iterates that calls the function on each of the
 			// collection's elements.
 			// src can either be a function to be called, or a object literal.
-			return this.base(EACH(src, function(val, key) {
+			return this.base(EACH((src || {}), function(val, key) {
 				this[key] = typeof val != 'function' ? val : function() {
 					// Only collect values if calling a getter function, otherwise
 					// return this
@@ -74,7 +73,7 @@ DomElements = Array.extend({
 ////////////////////////////////////////////////////////////////////////////////
 // DomElement
 
-DomElement = Base.extend(function() {
+DomElement = Base.extend(new function() {
 	var cache = {}, constructors = {}, uniqueId = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
@@ -93,9 +92,9 @@ DomElement = Base.extend(function() {
 	// _methods and _properties declarations, which forward calls and define
 	// getter / setters for fields of the native DOM node.
 	function inject(src, base) {
-		src = typeof src == 'function' ? new src() : src || {}; 
 		// Forward method calls. Returns result if any, otherwise reference
 		// to this.
+		src = src || {};
 		(src._methods || []).each(function(name) {
 			src[name] = function(arg) {
 				// .apply seems to not be present on native dom functions on
@@ -210,7 +209,7 @@ DomElement = Base.extend(function() {
 
 // Use the modified inject function from above which injects both into DomElement
 // and DomElements.
-DomElement.inject(function() {
+DomElement.inject(new function() {
 
 	function walk(el, name, start) {
 		el = el[start ? start : name];

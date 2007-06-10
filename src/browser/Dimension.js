@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension
 
-HtmlElement.inject(function() {
+HtmlElement.inject(new function() {
 #ifdef BROWSER_LEGACY
 	function cumulate(name, parent, iter, fix) {
 		fix = fix && Browser.MACIE;
