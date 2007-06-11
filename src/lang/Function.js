@@ -20,9 +20,9 @@ Function.inject(new function() {
 		var f = "Function.timers[" + id + "]", call = f + "();";
 		// directly erase non-periodic timers
 		if (type[0] == 'T') call += " delete " + f;
-		var timer = global['set' + type](call, ms);
+		var timer = window['set' + type](call, ms);
 #else // !BROWSER_LEGACY
-		var timer = global['set' + type](fn, ms);
+		var timer = window['set' + type](fn, ms);
 #endif // !BROWSER_LEGACY
 		fn.clear = function() {
 			clearTimeout(timer);

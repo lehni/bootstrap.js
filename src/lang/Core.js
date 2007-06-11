@@ -448,11 +448,6 @@ new function() { // bootstrap
 #endif // !EXTEND_OBJECT
 }
 
-#ifndef HELMA
-// Retrieve a reference to the global scope, usually window.
-global = this;
-#endif // !HELMA
-
 function $typeof(obj) {
 #ifdef BROWSER
 	// handle elements, as needed by HtmlElement.js
