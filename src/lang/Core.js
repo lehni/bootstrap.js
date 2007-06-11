@@ -431,11 +431,12 @@ new function() { // bootstrap
 			},
 
 			extend: function(src) {
-				var res = this.base(src);
+				var ret = this.base(src);
 				// Set proper versions of inject and extend on constructors
 				// extending Base, not the overriden ones in Base...
-				res.extend = this.base;
-				res.inject = Function.prototype.inject;
+				ret.extend = this.base;
+				ret.inject = Function.inject;
+				return ret;
 			}
 		}
 #endif
@@ -452,7 +453,7 @@ function $typeof(obj) {
 #ifdef BROWSER
 	// Handle elements, as needed by DomElement.js
 	return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element')
-			|| typeof obj) || undefined;
+		|| typeof obj) || undefined;
 #else // !BROWSER
 	return obj && (obj._type || typeof obj) || undefined;
 #endif // !BROWSER
