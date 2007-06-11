@@ -143,9 +143,10 @@ DomElement = Base.extend(new function() {
 			// too. Use # in the ids for these special objects as a hint for the
 			// garbage collector to not touch these objects. '#' cannot be
 			// present in normal Html elements ids.
-			var id = el.id || el == document && '#document' || el == window && '#window';
+			var id = el.id || el == document && '#doc' || el == window && '#win';
 			// Cache wrappers by their ids
-			if(id && cache[id]) return cache[id]; // DomElement object already exists
+			// Does the DomElement object for this id already exist?
+			if(id && cache[id]) return cache[id];
 			// Store a reference to the native element.
 			this.$ = el;
 			// Generate ids if the element does not define one, so it can be 
@@ -245,15 +246,20 @@ DomElement.inject(new function() {
 			return EACH(props, function(val, key) {
 				// First see if there is a setter for the given property
 				var set = (key == 'events') ? this.addEvents : setterCache[key];
-				// Do not call capitalize, as this is time critical and executes faster.
-				// (we only need to capitalize the first char here).
+				// Do not call capitalize, as this is time critical and executes
+				// faster (we only need to capitalize the first char here).
 				if (set === undefined)
-					set = setterCache[key] = this['set' + key.charAt(0).toUpperCase() + key.substring(1)] || null;
+					set = setterCache[key] = this['set' +
+						key.charAt(0).toUpperCase() + key.substring(1)] || null;
 				// If the passed value is an array, use it as the argument
 				// list for the call.
 				if (set) set[val && val.push ? 'apply' : 'call'](this, val);
 				else this.setProperty(key, val);
 			}, this);
+		},
+
+		getTag: function() {
+			return this.$.tagName.toLowerCase();
 		},
 
 		getElements: function(selectors) {
@@ -271,6 +277,42 @@ DomElement.inject(new function() {
 			return selector && selector != '*'
 				? DomElement.filter(parents, selector, this)
 				: parents;
+		},
+
+		getPrevious: function() {
+			return walk(this.$, 'previousSibling');
+		},
+
+		getNext: function() {
+			return walk(this.$, 'nextSibling');
+		},
+
+		getFirst: function() {
+			return walk(this.$, 'nextSibling', 'firstChild');
+		},
+
+		getLast: function() {
+			return walk(this.$, 'previousSibling', 'lastChild');
+		},
+
+		getParent: function() {
+			return DomElement.get(this.$.parentNode);
+		},
+
+		getChildren: function() {
+			return new this._elements(this.$.childNodes);
+		},
+
+		hasChildren: function() {
+			return this.$.childNodes.length > 0;
+		},
+
+		hasParent: function(el) {
+			return DomElement.isAncestor(this.$, DomElement.unwrap(el));
+		},
+
+		hasChild: function(el) {
+			return DomElement.isAncestor(DomElement.unwrap(el), this.$);
 		},
 
 		appendChild: function(el) {
@@ -316,8 +358,8 @@ DomElement.inject(new function() {
 			return el;
 		},
 
-		clone: function(contents) {
-			return DomElement.get(this.$.cloneNode(!!contents));
+		removeChildren: function() {
+			this.getChildren().remove();
 		},
 
 		replaceWith: function(el) {
@@ -326,48 +368,8 @@ DomElement.inject(new function() {
 			return el;
 		},
 
-		getPrevious: function() {
-			return walk(this.$, 'previousSibling');
-		},
-
-		getNext: function() {
-			return walk(this.$, 'nextSibling');
-		},
-
-		getFirst: function() {
-			return walk(this.$, 'nextSibling', 'firstChild');
-		},
-
-		getLast: function() {
-			return walk(this.$, 'previousSibling', 'lastChild');
-		},
-
-		getParent: function() {
-			return DomElement.get(this.$.parentNode);
-		},
-
-		getChildren: function() {
-			return new this._elements(this.$.childNodes);
-		},
-
-		removeChildren: function() {
-			this.getChildren().remove();
-		},
-
-		hasChildren: function() {
-			return this.$.childNodes.length > 0;
-		},
-
-		hasParent: function(el) {
-			return DomElement.isAncestor(this.$, DomElement.unwrap(el));
-		},
-
-		hasChild: function(el) {
-			return DomElement.isAncestor(DomElement.unwrap(el), this.$);
-		},
-
-		getTag: function() {
-			return this.$.tagName.toLowerCase();
+		clone: function(contents) {
+			return DomElement.get(this.$.cloneNode(!!contents));
 		},
 
 		getProperty: function(name) {
@@ -375,17 +377,17 @@ DomElement.inject(new function() {
 			return key ? this.$[key] : this.$.getAttribute(name);
 		},
 
-		removeProperty: function(name) {
-			var key = properties[name];
-			if (key) this.$[key] = '';
-			else this.$.removeAttribute(name);
-			return this;
-		},
-
 		setProperty: function(name, value) {
 			var key = properties[name];
 			if (key) this.$[key] = value;
 			else this.$.setAttribute(name, value);
+			return this;
+		},
+
+		removeProperty: function(name) {
+			var key = properties[name];
+			if (key) this.$[key] = '';
+			else this.$.removeAttribute(name);
 			return this;
 		},
 
