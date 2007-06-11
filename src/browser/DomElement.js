@@ -208,7 +208,7 @@ DomElement = Base.extend(new function() {
 			},
 
 			unwrap: function(el) {
-				return !el || el.nodeType ? el : el.$;
+				return el && el.$ || el;
 			},
 
 			dispose: function() {

@@ -24,6 +24,8 @@ HtmlElement = DomElement.extend({
 	initialize: function(el, props) {
 		var ret = this.base(el, props);
 		if (ret) return ret;
+		// TODO: Do we really need this.style? Otherwise initialize
+		// would not need to be overridden.
 		this.style = this.$.style;
 	}
 });
