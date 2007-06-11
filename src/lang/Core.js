@@ -450,8 +450,9 @@ new function() { // bootstrap
 
 function $typeof(obj) {
 #ifdef BROWSER
-	// handle elements, as needed by HtmlElement.js
-	return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element') || typeof obj) || undefined;
+	// Handle elements, as needed by DomElement.js
+	return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element')
+			|| typeof obj) || undefined;
 #else // !BROWSER
 	return obj && (obj._type || typeof obj) || undefined;
 #endif // !BROWSER
