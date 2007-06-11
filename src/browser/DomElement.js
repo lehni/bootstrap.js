@@ -77,11 +77,12 @@ DomElement = Base.extend(new function() {
 	var cache = {}, constructors = {}, uniqueId = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
-	// so we don't hold a reference and cause the browser to retain them
-	function dispose() {
+	// so we don't hold a reference and cause the browser to retain them.
+	function dispose(force) {
 		cache.each(function(obj, id) {
 			var el = obj.$;
-	        if(!el || !el.parentNode || (!el.offsetParent && !document.getElementById(id))) {
+	        if(force || id.charAt(0) != '#' && (!el || !el.parentNode
+				|| !el.offsetParent && !document.getElementById(id))) {
 	            if(el && obj.dispose) obj.dispose();
 	            delete cache[id];
 	        }
@@ -138,8 +139,11 @@ DomElement = Base.extend(new function() {
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
 				el = document.createElement(el);
 			}
-			// Generate special ids for document and window, so they can be found too.
-			var id = el.id || el == document && 'doc' || el == window && 'win';
+			// Generate special ids for document and window, so they can be found
+			// too. Use # in the ids for these special objects as a hint for the
+			// garbage collector to not touch these objects. '#' cannot be
+			// present in normal Html elements ids.
+			var id = el.id || el == document && '#document' || el == window && '#window';
 			// Cache wrappers by their ids
 			if(id && cache[id]) return cache[id]; // DomElement object already exists
 			// Store a reference to the native element.
@@ -194,7 +198,9 @@ DomElement = Base.extend(new function() {
 						el = this.select(el, root, 1)[0];
 					}
 				}
-				// Make sure we're using the right constructor for this tag
+				// Make sure we're using the right constructor. DomElement as 
+				// the default, HtmlElement for anything with className !== undefined
+				// and special constructors based on tag names.
 				return el ? el.id && cache[el.id] ||
 					new (el.tagName && constructors[el.tagName.toLowerCase()] ||
 						(el.className === undefined
@@ -205,7 +211,9 @@ DomElement = Base.extend(new function() {
 				return !el || el.nodeType ? el : el.$;
 			},
 
-			dispose: dispose
+			dispose: function() {
+				dispose(true);
+			}
 		}
 	}
 });
