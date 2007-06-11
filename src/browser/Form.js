@@ -61,29 +61,16 @@ Select = FormElement.extend({
 	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
 
-	/**
-	 * Form Element constructors work in two ways:
-	 * - Thew wrap an existing element, in which facse first is the elment
-	 *   and second point to the properties to set.
-	 * - They create a new element, in which case first point to the properties
-	 *   to set and second might be something else, e.g. an array of options
-	 *   for Select.
-	 */
-	initialize: function(first, second) {
-		var wrapping = $typeof(first) == 'element';
-		this.base(wrapping ? first : second, wrapping ? second : null);
-		if (second && !wrapping) this.add.apply(this, second);
-	},
-
 	getSelected: function() {
-		return this['getElement' + (this.$.type == 'select-one' ? '' : 's')]('option[selected=true]');
+		return this.getElements('option[selected=true]');
 	},
 
 	getValue: function() {
-		var sel = this.getSelected
+		return this.getSelected().getProperty('value');
 	},
 
 	setSelected: function(value) {
+		value = DomElement.unwrap(value);
 		$each(this.$.options, function(opt, i) {
 			if (opt == value || opt.value == value) {
 				this.$.selectedIndex = i;
