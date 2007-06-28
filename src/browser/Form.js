@@ -72,7 +72,7 @@ Select = FormElement.extend({
 	setSelected: function(value) {
 		// TODO: add support for value == array, for multiple selections
 		value = DomElement.unwrap(value);
-		$each(this.$.options, function(opt, i) {
+		Base.each(this.$.options, function(opt, i) {
 			if (opt == value || opt.value == value) {
 				this.$.selectedIndex = i;
 				throw $break;

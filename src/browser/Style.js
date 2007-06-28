@@ -56,7 +56,7 @@ HtmlElement.inject(new function() {
 
 		setStyle: function(name, value) {
 			// Convert multi params to array:
-			if (arguments.length > 2) value = Array.create(arguments, 1);
+			if (arguments.length > 2) value = Array.slice(arguments, 1);
 			var el = this.$;
 			switch (name) {
 			case 'visibility':

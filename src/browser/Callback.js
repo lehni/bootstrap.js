@@ -48,7 +48,7 @@ Callback = {
 
 	fireEvent: function(type) {
 		return (this.events && this.events[type] || []).each(function(fn) {
-			fn.apply(this, Array.create(arguments, 1));
+			fn.apply(this, Array.slice(arguments, 1));
 		}, this);
 	},
 

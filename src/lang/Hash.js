@@ -19,7 +19,10 @@
  */
 Hash = Base.extend(Enumerable).inject({
 	HIDE
+	generics: true,
+
 	_type: 'hash',
+
 	/**
 	 * Constructs a new Hash. The constructor takes a variable amount of
 	 * argument objects of which the fields are all merged into the hash.
@@ -43,9 +46,9 @@ Hash = Base.extend(Enumerable).inject({
 	 * Recursively calls merge on value pairs if they are dictionaries.
 	 */
 	merge: function(obj) {
-		// Allways use $each() as we don't know wether the passed object
+		// Allways use Base.each() as we don't know wether the passed object
 		// really inherits from Base.
-		return obj ? $each(obj, function(val, key) {
+		return obj ? Base.each(obj, function(val, key) {
 			this[key] = /^(object|hash)$/.test($typeof(this[key]))
 					? Hash.prototype.merge.call(this[key], val) : val;
 		}, this) : this;

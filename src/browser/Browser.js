@@ -5,11 +5,10 @@
 // Browser
 
 Browser = new function() {
-	var ua = navigator.userAgent, mac = /Mac/.test(ua), js/*@cc_on=@_jscript_version@*/;
-	return {
-		WIN: /Win/.test(ua),
-		MAC: mac,
-		UNIX: /X11/.test(ua),
+	var name = (navigator.platform.match(/(MAC)|(WIN)|(LINUX)|(NIX)/i) || ['OTHER'])[0].toUpperCase();
+	var js/*@cc_on=@_jscript_version@*/;
+	var ret = {
+		PLATFORM: name,
 		WEBKIT: document.childNodes && !document.all && !navigator.taintEnabled,
 		OPERA: !!window.opera,
 		GECKO: !!document.getBoxObjectFor,
@@ -18,8 +17,10 @@ Browser = new function() {
 		IE55: js == 5.5,
 		IE6: js == 5.6,
 		IE7: js == 5.7,
-		MACIE: js && mac
+		MACIE: js && name == 'MAC'
 	};
+	ret[name] = true;
+	return ret;
 };
 
 #endif // __browser_Browser__

@@ -63,6 +63,10 @@ String.inject({
 
 	clean: function() {
 		return this.replace(/\s{2,}/g, ' ').trim();
+	},
+
+	contains: function(string, s) {
+		return (s ? (s + this + s).indexOf(s + string + s) : this.indexOf(string)) != -1;
 	}
 });
 

@@ -5,5 +5,7 @@
 // Document
 
 Document = DomElement.get(document);
+$$ = Document.getElements.bind(Document);
+
 
 #endif // __browser_Document__

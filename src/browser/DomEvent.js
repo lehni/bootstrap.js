@@ -188,8 +188,8 @@ DomElement.inject({
 							entry.func.call(that, event);
 							if (event.event.cancelBubble) throw $break;
 						});
-						// passing "this" for bind above breaks throw $break on
-						// MACIE.
+						// passing "this" for bind above breaks throw $break
+						// on MACIE.
 						// The reason is maybe that this is a native element?
 						return event.event.returnValue;
 					};
@@ -259,7 +259,7 @@ DomElement.inject({
 	fireEvent: function(type) {
 		var entries = (this.events || {})[type];
 		if (entries) {
-			var args = Array.create(arguments, 1);
+			var args = Array.slice(arguments, 1);
 			entries.each(function(entry) {
 				entry.func.apply(this, args);
 			}, this);

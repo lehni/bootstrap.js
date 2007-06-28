@@ -19,74 +19,90 @@
  * returned values are collected in an array and converted to a DomElements
  * array again, if it contains only html elements.
  */
-DomElements = Array.extend({
-	initialize: function(els) {
-		// Instances of DomElements are not real arrays, but they inherit from
-		// Array. Setting length to 0 is all that's needed to make all the
-		// native array functions works. Modifying length later will not clear
-		// the fields from the array though.
-		this.length = 0;
-		// Do not use els.push do detect arrays, as we're passing pseudo arrays
-		// here too (e.g. childNodes). But Option defines .length too, so rule
-		// that out by checking nodeType as well.
-		this.append(els && els.length != null && !els.nodeType ? els : arguments);
-	},
+DomElements = Array.extend(new function() {
+	var unique = 0;
+	
+	return {
+		initialize: function(els) {
+			// Define this collections's unique ID. Elements that are added to it
+			// get that field set too, in order to detect multiple additions of
+			// elements in one go. Notice that this does not work when elements
+			// are added to another collection, then again to this one.
+			// But for Dom Query functions, this is enough.
+			this._unique = unique++;
+			// Do not use els.push to detect arrays, as we're passing pseudo
+			// arrays here too (e.g. childNodes). But Option defines .length too,
+			// so rul that out by checking nodeType as well.
+			this.append(els && els.length != null && !els.nodeType ? els : arguments);
+		},
 
-	/**
-	 * Only push wraps the added element in a DomElement. splice and unshift
-	 * are not overridden to do the same.
-	 */
-	push: function(el) {
-		return this.base(DomElement.get(el));
-	},
+		/**
+		 * Only push wraps the added element in a DomElement. splice and unshift
+		 * are not overridden to do the same. Also, it only supports one element.
+		 */
+		push: function(el) {
+			// Try _wrapper first, for faster performance
+			el = el._wrapper || DomElement.get(el);
+			if (el._unique != this._unique) {
+				el._unique = this._unique;
+				this[this.length++] = el;
+			}
+			return this.length;
+		},
 
-	statics: {
-		inject: function(src) {
-			var collection = this;
-			// For each function that is injected into DomElements, create a
-			// new function that iterates that calls the function on each of the
-			// collection's elements.
-			// src can either be a function to be called, or a object literal.
-			return this.base(EACH((src || {}), function(val, key) {
-				this[key] = typeof val != 'function' ? val : function() {
-					// Only collect values if calling a getter function, otherwise
-					// return this
-					var args = arguments, get = /^get/.test(key), values;
-					this.each(function(obj) {
-						// Try to use original method if it's there, in order
-						// to support base, as this will be the wrapper that
-						// sets it
-						var ret = (obj[key] || val).apply(obj, args);
-						if (get) {
-							values = values || ($typeof(ret) == 'element')
-								? new collection() : [];
-							values.push(ret);
-						}
-					});
-					return values || this;
-				}
-			}, {}));
+		statics: {
+			inject: function(src) {
+				var collection = this;
+				// For each function that is injected into DomElements, create a
+				// new function that iterates that calls the function on each of
+				// the collection's elements.
+				// src can either be a function to be called, or a object literal.
+				return this.base(EACH((src || {}), function(val, key) {
+					this[key] = typeof val != 'function' ? val : function() {
+						// Only collect values if calling a getter function,
+						// otherwise return this
+						var args = arguments, get = /^get/.test(key), values;
+						this.each(function(obj) {
+							// Try to use original method if it's there, in order
+							// to support base, as this will be the wrapper that
+							// sets it
+							var ret = (obj[key] || val).apply(obj, args);
+							if (get) {
+								values = values || ($typeof(ret) == 'element')
+									? new collection() : [];
+								values.push(ret);
+							}
+						});
+						return values || this;
+					}
+				}, {}));
+			}
 		}
-	}
+	};
 });
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomElement
 
 DomElement = Base.extend(new function() {
-	var cache = {}, constructors = {}, uniqueId = 0;
+	var elements = [], constructors = {}, uniqueId = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
 	function dispose(force) {
-		cache.each(function(obj, id) {
-			var el = obj.$;
-	        if(force || id.charAt(0) != '#' && (!el || !el.parentNode
-				|| !el.offsetParent && !document.getElementById(id))) {
-	            if(el && obj.dispose) obj.dispose();
-	            delete cache[id];
+		for (var i = elements.length - 1; i >= 0; i--) {
+			var el = elements[i];
+	        if (force || (!el || el != window && el != document &&
+				(!el.parentNode || !el.offsetParent))) {
+	            if (el) {
+					var obj = el._wrapper;
+					if (obj && obj.dispose) obj.dispose();
+					delete el._wrapper;
+					delete el._children;
+				}
+				if (!force) elements.splice(i, 1);
 	        }
-		});
+		}
 	}
 	dispose.periodic(30000);
 
@@ -144,18 +160,16 @@ DomElement = Base.extend(new function() {
 			// garbage collector to not touch these objects. '#' cannot be
 			// present in normal Html elements ids.
 			var id = el.id || el == document && '#doc' || el == window && '#win';
-			// Cache wrappers by their ids
-			// Does the DomElement object for this id already exist?
-			if(id && cache[id]) return cache[id];
+			// Does the DomElement wrapper for this element already exist?
+			if (el._wrapper) return el._wrapper;
 			// Store a reference to the native element.
 			this.$ = el;
-			// Generate ids if the element does not define one, so it can be 
-			// used for later lookup.
-			if (!id) id = el.id = 'bootstrap-' + (++uniqueId);
-			this.id = id;
+			this.id = el.id;
+			// Store a reference in the native element to the wrapper. 
+			// Needs to be cleaned up by garbage collection!
+			el._wrapper = this;
+			elements[elements.length] = el;
 			if (props) this.set(props);
-			// Cache it
-			cache[id] = this;
 		},
 
 		statics: {
@@ -202,14 +216,26 @@ DomElement = Base.extend(new function() {
 				// Make sure we're using the right constructor. DomElement as 
 				// the default, HtmlElement for anything with className !== undefined
 				// and special constructors based on tag names.
-				return el ? el.id && cache[el.id] ||
+				return el ? el._wrapper ||
 					new (el.tagName && constructors[el.tagName.toLowerCase()] ||
-						(el.className === undefined
-							? DomElement : HtmlElement))(el) : null;
+						(el.className === undefined ? DomElement : HtmlElement))(el)
+					: null;
+			},
+
+			collect: function(el) {
+				elements[elements.length] = el;
 			},
 
 			unwrap: function(el) {
 				return el && el.$ || el;
+			},
+
+			isAncestor: function(el, parent) {
+				// TODO: See Ext for a faster implementation
+				if (parent != document)
+					for (el = el.parentNode; el != parent; el = el.parentNode)
+						if (!el) return false;
+				return true;
 			},
 
 			dispose: function() {
@@ -222,7 +248,6 @@ DomElement = Base.extend(new function() {
 // Use the modified inject function from above which injects both into DomElement
 // and DomElements.
 DomElement.inject(new function() {
-
 	function walk(el, name, start) {
 		el = el[start ? start : name];
 		while (el && $typeof(el) != 'element') el = el[name];
@@ -262,23 +287,6 @@ DomElement.inject(new function() {
 			return this.$.tagName.toLowerCase();
 		},
 
-		getElements: function(selectors) {
-			return DomElement.select(selectors || '*', this);
-		},
-
-		getElement: function(selector) {
-			return DomElement.get(selector || '*', this);
-		},
-
-		getParents: function(selector) {
-			var parents = new this._elements();
-			for (var el = this.$.parentNode; el; el = el.parentNode)
-				parents.push(el);
-			return selector && selector != '*'
-				? DomElement.filter(parents, selector, this)
-				: parents;
-		},
-
 		getPrevious: function() {
 			return walk(this.$, 'previousSibling');
 		},
@@ -300,7 +308,9 @@ DomElement.inject(new function() {
 		},
 
 		getChildren: function() {
-			return new this._elements(this.$.childNodes);
+		 	return Array.filter(this.$.childNodes, function(child) {
+				return child.nodeName && child.nodeType == 1;
+			});
 		},
 
 		hasChildren: function() {
@@ -359,7 +369,12 @@ DomElement.inject(new function() {
 		},
 
 		removeChildren: function() {
-			this.getChildren().remove();
+			var child = this.$.firstChild;
+			do {
+				var next = child.nextSibling;
+				child.remove();
+				child = next;
+			} while (child);
 		},
 
 		replaceWith: function(el) {
