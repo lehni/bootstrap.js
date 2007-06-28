@@ -130,7 +130,7 @@ new function() { // bootstrap
 				}
 				dest[name] = res;
 #if defined(DONT_ENUM) || defined(HELMA)
-				if (src.dontEnum === true && dest.dontEnum)
+				if (src._hide && dest.dontEnum)
 					dest.dontEnum(name);
 #endif // DONT_ENUM || HELMA
 			}
@@ -145,15 +145,15 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifdef DONT_ENUM
-				if (visible(src, name) && !/^(statics|generics)$/.test(name))
+				if (visible(src, name) && !/^(statics|_generics|_hide)$/.test(name))
 #elif !defined(HELMA)
-				if (visible(src, name) && !/^(statics|generics|prototype)$/.test(name))
+				if (visible(src, name) && !/^(statics|_generics|prototype)$/.test(name))
 #else // HELMA
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
 				// that are defined already, as an added attribute. So we need
 				// to check against statics here...
-				if (!/^(statics|generics)$/.test(name))
+				if (!/^(statics|_generics|_hide)$/.test(name))
 #endif // HELMA
 					field(name);
 			field('toString');
@@ -262,10 +262,10 @@ new function() { // bootstrap
 			// wrapper function, and further changes to it after inheritance are
 			// not reflected.
 #ifndef HELMA // !HELMA
-			inject(this.prototype, src, base ? base.prototype : this.prototype, src && src.generics && this);
+			inject(this.prototype, src, base ? base.prototype : this.prototype, src && src._generics && this);
 #else // HELMA
 			// Pass realBase if defined.
-			inject(proto, src, base ? base.prototype : proto, this, version,
+			inject(proto, src, base ? base.prototype : proto, src && src._generics && this, version,
 					realBase && realBase.prototype);
 #endif // HELMA
 			// Copy over static fields from base, as prototype-like inheritance

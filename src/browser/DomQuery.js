@@ -375,7 +375,15 @@ new function() {
 		},
 
 		getElement: function(selector) {
-		 	return DomElement.get(this.getElements(selector, true)[0]);
+			var el;
+			if (selector.charAt(0) == '#') {
+				el = document.getElementById(selector.substring(1));
+				if (el && !DomElement.isAncestor(el, this.$))
+					el = null;
+			} else {
+			 	el = this.getElements(selector, true)[0];
+			}
+			return DomElement.get(el);
 		},
 
 		getParents: function(selector) {

@@ -153,7 +153,11 @@ DomElement = Base.extend(new function() {
 				if (Browser.IE && props && (props.name || props.type))
 					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
-				el = document.createElement(el);
+				try {
+					el = document.createElement(el);
+				} catch (e) {
+					var i = 0;
+				}
 			}
 			// Generate special ids for document and window, so they can be found
 			// too. Use # in the ids for these special objects as a hint for the
@@ -199,24 +203,11 @@ DomElement = Base.extend(new function() {
 				return ret;
 			},
 
-			get: function(el, root) {
-				if (typeof(el) == 'string') {
-					root = DomElement.unwrap(root);
-					if (el.charAt(0) == '#') {
-						el = document.getElementById(el.substring(1));
-						if (el && root && !this.isAncestor(el, root))
-							el = null;
-					} else {
-						// call dom select through this, as we want the right
-						// _elements value to be used (depending on how get is
-						// called, this is DomElements or HtmlElements).
-						el = this.select(el, root, 1)[0];
-					}
-				}
+			get: function(el) {
 				// Make sure we're using the right constructor. DomElement as 
 				// the default, HtmlElement for anything with className !== undefined
 				// and special constructors based on tag names.
-				return el ? el._wrapper ||
+				return el ? el._wrapper || el._elements && el ||
 					new (el.tagName && constructors[el.tagName.toLowerCase()] ||
 						(el.className === undefined ? DomElement : HtmlElement))(el)
 					: null;
@@ -370,11 +361,11 @@ DomElement.inject(new function() {
 
 		removeChildren: function() {
 			var child = this.$.firstChild;
-			do {
+			while (child) {
 				var next = child.nextSibling;
-				child.remove();
+				this.removeChild(child);
 				child = next;
-			} while (child);
+			}
 		},
 
 		replaceWith: function(el) {

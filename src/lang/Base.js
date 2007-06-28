@@ -8,7 +8,7 @@
 
 Base.inject({
 	HIDE
-	generics: true,
+	_generics: true,
 
 	/**
 	 * Copied over from Enumerable.
@@ -32,5 +32,7 @@ Base.inject({
 		}, new this.constructor());
 	}
 });
+
+$each = Base.each;
 
 #endif // __lang_Base__
