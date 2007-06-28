@@ -3,12 +3,12 @@
 #include "lang/Function.js"
 #include "lang/Enumerable.js"
 #include "lang/Base.js"
+#include "lang/Hash.js"
 #include "lang/Array.js"
 #include "lang/String.js"
 #include "lang/Number.js"
 #include "lang/RegExp.js"
 #include "lang/Math.js"
-#include "lang/Hash.js"
 #ifdef BROWSER
 #include "browser/Browser.js"
 #include "browser/DomElement.js"

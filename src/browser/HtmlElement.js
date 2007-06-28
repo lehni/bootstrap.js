@@ -58,9 +58,7 @@ HtmlElement.inject({
 	},
 
 	hasClass: function(name) {
-		return (' ' + this.$.className + ' ').indexOf(' ' + name + ' ') != -1;
-		// The above performs faster than this:
-		// return new RegExp('(^|\\s*)' + name + '(\\s*|$)').test(this.className);
+		return this.$.className.contains(name, ' ');
 	},
 
 	getHtml: function() {
@@ -77,6 +75,6 @@ HtmlElement.inject({
 // Bind to HtmlElement, as HtmlElement.prototype._elements is looked up
 // in select!
 $ = HtmlElement.get.bind(HtmlElement);
-$$ = HtmlElement.select.bind(HtmlElement);
+// $$ = HtmlElement.select.bind(HtmlElement);
 
 #endif // __browser_HtmlElement__

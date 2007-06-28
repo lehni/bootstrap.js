@@ -8,6 +8,8 @@
 
 Base.inject({
 	HIDE
+	generics: true,
+
 	/**
 	 * Copied over from Enumerable.
 	 */
@@ -25,7 +27,7 @@ Base.inject({
 	 * name / value pairs from this object.
 	 */
 	clone: function() {
-		return this.each(function(val, i) {
+		return Base.each(this, function(val, i) {
 			this[i] = val;
 		}, new this.constructor());
 	}

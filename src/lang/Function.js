@@ -5,7 +5,6 @@
 // Function
 
 Function.inject(new function() {
-
 #ifdef BROWSER
 #ifdef BROWSER_LEGACY
 	Function.timers = {};
@@ -13,7 +12,7 @@ Function.inject(new function() {
 
 #endif // BROWSER_LEGACY
 	function timer(that, type, args, ms) {
-		var fn = that.bind.apply(that, Array.create(args, 1));
+		var fn = that.bind.apply(that, Array.slice(args, 1));
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
 		Function.timers[id] = fn;
@@ -36,7 +35,8 @@ Function.inject(new function() {
 #endif // BROWSER
 
 	return {
-		HIDE
+		generics: true,
+
 		/**
 		 * Returns the function's parameter names as an array
 		 */
@@ -63,14 +63,14 @@ Function.inject(new function() {
 #endif // !BROWSER
 
 		bind: function(obj) {
-			var that = this, args = Array.create(arguments, 1);
+			var that = this, args = Array.slice(arguments, 1);
 			return function() {
 				return that.apply(obj, args.concat(Array.create(arguments)));
 			}
 		},
 
 		attempt: function(obj) {
-			var that = this, args = Array.create(arguments, 1);
+			var that = this, args = Array.slice(arguments, 1);
 			return function() {
 				try {
 					return that.apply(obj, args.concat(Array.create(arguments)));
@@ -99,7 +99,6 @@ if (!Function.prototype.apply) {
 	var cache = {};
 
 	Function.inject({
-		HIDE
 		// = Ecma 1.5 apply/call at native speed, with variable argument count,
 		// through caching of caller functions
 		apply: function(obj, args, start) {

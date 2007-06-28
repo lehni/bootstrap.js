@@ -7,6 +7,14 @@
 #undef DONT_ENUM
 #endif // HELMA
 
+#if (defined(SET_ITERATOR) || defined(BROWSER_LEGACY)) && defined(DONT_ENUM) && !defined(EXTEND_OBJECT)
+#comment Setting functions on bind objects with using DONT_ENUM is only supported
+#comment when EXTEND_OBJECT is activated. As otherwise dontEnum() cannot be used
+#comment to hide the iterator method on objects not inheriting from Base (e.g. a
+#comment simple object literal). So lets turn off DONT_ENUM.
+#undef DONT_ENUM
+#endif // (SET_ITERATOR || BROWSER_LEGACY) && DONT_ENUM && !EXTEND_OBJECT
+
 #if defined(DONT_ENUM) || defined(HELMA)
 #comment Define the HIDE parameter, to be added to extend() after the object
 #comment that defines the fields to be injected, if dontEnum should be called
@@ -36,5 +44,5 @@
 #ifdef EXTEND_OBJECT
 #define EACH(OBJECT, ARGS...) OBJECT.each(ARGS)
 #else // !EXTEND_OBJECT
-#define EACH(OBJECT, ARGS...) $each(OBJECT, ARGS)
+#define EACH(OBJECT, ARGS...) Base.each(OBJECT, ARGS)
 #endif // !EXTEND_OBJECT

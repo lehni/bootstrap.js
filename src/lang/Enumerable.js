@@ -9,12 +9,12 @@
 #comment This leads to better performance (2x on Firefox), and even more  on
 #comment legacy browsers where we can avoid the emulated Function.call.
 #define ITERATOR(ITER, BIND, VALUE, KEY, SELF, NAME) BIND.NAME(VALUE, KEY, SELF)
-#define ITERATE(ITER, NAME) iterate(ITER, NAME)
+#define ITERATE(ITER, NAME) Base.iterate(ITER, NAME)
 #else // !SET_ITERATOR
 #comment Call the iterator funciton on the bind object through Function.call.
 #comment This is cleanear but slower than the SET_ITERATOR hack.
 #define ITERATOR(ITER, BIND, VALUE, KEY, SELF, NAME) ITER.call(BIND, VALUE, KEY, SELF)
-#define ITERATE(ITER, NAME) iterate(ITER)
+#define ITERATE(ITER, NAME) Base.iterate(ITER)
 #endif // !SET_ITERATOR
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -31,36 +31,13 @@
  */
 $break = {};
 
-function $each(obj, iter, bind) {
-	return obj ? Enumerable.each.call(obj, iter, bind) : bind;
-};
-
 /**
  * The Enumerable interface. To add enumerable functionality to any prototype,
  * just use Constructor.inject(Enumerable);
  * This adds the function .each() that can handle both arrays (detected through
  * .length) and dictionaries (if it's not an array, enumerating with for-in).
- *
- * Inspired by Prototype.js.
  */
 Enumerable = new function() {
-	/**
-	 * Converts the argument to an iterator function. If none is specified,
-	 * the identity function is returned. 
-	 * This supports regular expressions, normal functions, which are
-	 * returned unmodified, and values to compare to.
-	 * Wherever this private function is used in the Enumerable functions
-	 * bellow, a RegExp object, a Function or null may be passed.
-	 */
-	function iterator(iter) {
-		if (!iter) return function(val) { return val };
-		switch ($typeof(iter)) {
-		case 'function': return iter;
-		case 'regexp': return function(val) { return iter.test(val) };
-		}
-		return function(val) { return val == iter };
-	}
-
 	/**
 	 * Converts the passed function to an iterate-function.
 	 * This is part of an optimization that is based on the observation that
@@ -73,16 +50,30 @@ Enumerable = new function() {
 	 * name for the iterate function, so there are no clashes if calls are nested.
 	 */
 #ifdef SET_ITERATOR
-	function iterate(fn, name) {
+	Base.iterate = function(fn, name) {
 #else
-	function iterate(fn) {
+	Base.iterate = function(fn) {
 #endif
 #if defined(SET_ITERATOR) && defined(DONT_ENUM)
 		// dontEnum all set iterators once and for all on browsers:
 		Base.prototype.dontEnum(true, name);
 #endif // APPLY_ITERATOR && DONT_ENUM
 		return function(iter, bind) {
-			iter = iterator(iter);
+			// Convert the argument to an iterator function. If none is specified,
+			// the identity function is returned. 
+			// This supports regular expressions, normal functions, which are
+			// returned unmodified, and values to compare to.
+			// Wherever this private function is used in the Enumerable functions
+			// bellow, a RegExp object, a Function or null may be passed.
+			if (!iter) iter = function(val) { return val };
+			else if (typeof iter != 'function') iter = function(val) { return val == iter };
+			/* FOR RegExp support, used this:
+			else switch ($typeof(iter)) {
+				case 'function': break;
+				case 'regexp': iter = function(val) { return iter.test(val) }; break;
+				default: iter = function(val) { return val == iter };
+			}
+			*/
 			if (!bind) bind = this;
 #ifdef SET_ITERATOR
 			// Backup previous value of the field, and set iterator.
@@ -107,10 +98,10 @@ Enumerable = new function() {
 			return fn.call(this, iter, bind, this);
 #endif// !SET_ITERATOR
 		};
-	}
+	};
 
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
-		for (var i = 0; i < this.length; i++)
+		for (var i = 0, j = this.length; i < j; i++)
 			ITERATOR(iter, bind, this[i], i, this, __each);
 	};
 
@@ -146,6 +137,7 @@ Enumerable = new function() {
 
 	return {
 		HIDE
+
 		/**
 		 * The core of all Enumerable functions. TODO: document
 		 */
@@ -174,27 +166,21 @@ Enumerable = new function() {
 		 * for one or more of the elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
 		 * This is compatible with JS 1.5's .some, but adds more flexibility
-		 * regarding iterators (as defined in iterator())
+		 * regarding iterators (as defined in iterate())
 		 */
-		some: function(iter, bind) {
-			// when injecting into Array, there might already be a definition of
-			// .some() (Firefox JS 1.5+), so use it as it's faster and does the
-			// same, except for the iterator conversion which is handled by
-			// iterator() here:
-			return this.base ? this.base(iterator(iter), bind) :
-				!!this.find(iter, bind);
-		},
+		some: ITERATE(function(iter, bind) {
+			return !!this.find(iter, bind);
+		}, '__some'),
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
 		 * for	all elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
 		 * This is compatible with JS 1.5's .every, but adds more flexibility
-		 * regarding iterators (as defined in iterator())
+		 * regarding iterators (as defined in iterate())
 		 */
 		every: ITERATE(function(iter, bind, that) {
-			// Just like in .some, use .every if it's there
-			return this.base ? this.base(iter, bind) : !this.find(function(val, i) {
+			return !this.find(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
@@ -207,12 +193,11 @@ Enumerable = new function() {
 		 * elements in an array and returns it.
 		 * If no iterator is passed, the value is used directly.
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
-		 * regarding iterators (as defined in iterator())
+		 * regarding iterators (as defined in iterate())
 		 */
 		map: ITERATE(function(iter, bind, that) {
-			// Just like in .some, use .map if it's there
-			return this.base ? this.base(iter, bind) : this.each(function(val, i) {
-				this.push(ITERATOR(iter, bind, val, i, that, __map));
+			return this.each(function(val, i) {
+				this[this.length] = ITERATOR(iter, bind, val, i, that, __map);
 			}, []);
 		}, '__map'),
 
@@ -220,15 +205,15 @@ Enumerable = new function() {
 		 * Collects all elements for which the condition of the passed iterator
 		 * or regular expression is true.
 		 * This is compatible with JS 1.5's .filter, but adds more flexibility
-		 * regarding iterators (as defined in iterator())
+		 * regarding iterators (as defined in iterate())
 		 * TODO: consider collect: similar to filter, but collects the returned
 		 * elements if they are != null.
 		 * TOOD: See if collect and filter could be joined somehow
 		 */
 		filter: ITERATE(function(iter, bind, that) {
-			// Just like in .some, use .map if it's there
-			return this.base ? this.base(iter, bind) : this.each(function(val, i) {
-				if (ITERATOR(iter, bind, val, i, that, __filter)) this.push(val);
+			return this.each(function(val, i) {
+				if (ITERATOR(iter, bind, val, i, that, __filter))
+					this[this.length] = val;
 			}, []);
 		}, '__filter'),
 
@@ -286,7 +271,7 @@ Enumerable = new function() {
 		toArray: function() {
 			return this.map();
 		}
-	}
-};
+	};
+}
 
 #endif // __lang_Enumerable__
