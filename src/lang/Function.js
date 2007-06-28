@@ -35,7 +35,7 @@ Function.inject(new function() {
 #endif // BROWSER
 
 	return {
-		generics: true,
+		_generics: true,
 
 		/**
 		 * Returns the function's parameter names as an array

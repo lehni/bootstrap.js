@@ -103,16 +103,13 @@ if (!Array.prototype.push) {
 ////////////////////////////////////////////////////////////////////////////////
 // Array
 
-// TODO: The native filter is not used for Arrays if it is there.
-// TODO: sort out slow Enumerable.filter / clash between native filter
-
 Array.inject(new function() {
 	var proto = Array.prototype;
 	// Do not use Hash.create, as this produces as Hash that hides all Enumerable
 	// methods from inject()! ( var fields = Hash.create(Enumerable, {...}) ).
 	// Instead, use the generics in Base and Hash.
 	var fields = Hash.merge(Base.clone(Enumerable), {
-		generics: true,
+		_generics: true,
 
 		// tell $typeof what to return for arrays.
 		_type: 'array',

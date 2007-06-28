@@ -19,7 +19,7 @@
 #comment Define the HIDE parameter, to be added to extend() after the object
 #comment that defines the fields to be injected, if dontEnum should be called
 #comment for these fields. This only does something if dontEnum() is there.
-#define HIDE dontEnum: true,
+#define HIDE _hide: true,
 #else // !DONT_ENUM && !HELMA
 #define HIDE
 #endif // !DONT_ENUM && !HELMA

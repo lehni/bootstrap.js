@@ -19,8 +19,7 @@
  */
 Hash = Base.extend(Enumerable).inject({
 	HIDE
-	generics: true,
-
+	_generics: true,
 	_type: 'hash',
 
 	/**
@@ -32,13 +31,6 @@ Hash = Base.extend(Enumerable).inject({
 		return EACH(arguments, function(obj) {
 			this.merge(obj);
 		}, this);
-	},
-
-	/**
-	 * Clones the hash.
-	 */
-	clone: function() {
-		return new Hash(this);
 	},
 
 	/**
