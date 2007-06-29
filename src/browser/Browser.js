@@ -17,7 +17,8 @@ Browser = new function() {
 		IE55: js == 5.5,
 		IE6: js == 5.6,
 		IE7: js == 5.7,
-		MACIE: js && name == 'MAC'
+		MACIE: js && name == 'MAC',
+		XPATH: !!document.evaluate
 	};
 	ret[name] = true;
 	return ret;

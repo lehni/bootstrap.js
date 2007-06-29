@@ -31,6 +31,7 @@ Form = HtmlElement.extend({
 });
 
 FormElement = HtmlElement.extend({
+	_properties: ['name'],
 	_methods: ['focus', 'blur'],
 
 	enable: function(enable) {
@@ -62,7 +63,7 @@ Select = FormElement.extend({
 	_properties: ['type', 'selectedIndex'],
 
 	getSelected: function() {
-		return this.getElements('option[selected=true]');
+		return this.getElements('option[selected]');
 	},
 
 	getValue: function() {

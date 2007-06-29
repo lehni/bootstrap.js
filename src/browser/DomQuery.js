@@ -43,13 +43,13 @@ new function() {
 		return prefix == 'xhtml' ? 'http://www.w3.org/1999/xhtml' : false;
 	}
 
-	var xpath = document.evaluate;
+	var xpath = Browser.XPATH;
 
 	var method = xpath
 		? { // XPath
 			getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
 				var temp = context.namespaceURI ? 'xhtml:' : '';
-				seperator = separator && (separator = DomElements.separators[separator]);
+				seperator = separator && (separator = DomElement.separators[separator]);
 				temp += seperator ? separator(tag) : tag;
 				if (pseudo) {
 					pseudo = parsePseudo(pseudo);
@@ -83,7 +83,7 @@ new function() {
 		}
 		: { // Filter:
 			getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
-				if (separator && (separator = DomElements.separators[separator])) {
+				if (separator && (separator = DomElement.separators[separator])) {
 					items = separator(items, tag);
 					if (id) items = items.filter(function(el) {
 						return el.id == id;
@@ -118,9 +118,9 @@ new function() {
 				if (attribute) {
 					var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
 					items = items.filter(function(el) {
+						// TODO: Find a way to do this without passing through wrapper
 						var att = DomElement.get(el).getProperty(name);
-						// Convert attribute to string
-						return att && (!operator || operator(att + '', value));
+						return att && (!operator || operator(att, value));
 					});
 				}
 				return items;
@@ -248,13 +248,6 @@ new function() {
 				});
 				children.version = version;
 			}
-			/* less code, but slower:
-			var parent = DomElement.get(el.parentNode), children = parent._children;
-			if (!children || children.version != version) {
-				children = parent._children = parent.getChildren();
-				children.version = version;
-			}
-			*/
 			var include = false;
 			switch(argument.special) {
 			case 'n': if (children.indexOf(el) % argument.a == argument.b) include = true; break;
@@ -353,7 +346,7 @@ new function() {
 			// Increase version number for keeping cached elements in sync.
 			version++;
 			var elements = nowrap ? [] : new this._elements();
-			selectors = selectors.split(',');
+			selectors = typeof selectors == 'string' ? selectors.split(',') : selectors || ['*'];
 			for (var i = 0; i < selectors.length; i++) {
 				var items = [], separators = [];
 				var selector = selectors[i].trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {

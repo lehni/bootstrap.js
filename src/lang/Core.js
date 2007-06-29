@@ -45,7 +45,7 @@ new function() { // bootstrap
 	 */
 #ifdef HELMA
 	// Real base is used for the versioning mechanism as desribed above.
-	function inject(dest, src, base, generics, version, realBase) {
+	function inject(dest, src, base, generics, version) {
 #else // !HELMA
 	function inject(dest, src, base, generics) {
 #endif // !HELMA
@@ -55,20 +55,12 @@ new function() { // bootstrap
 		// literal diappears... A theory is that defining an unassigned string
 		// here pulls the extend String prototype into the scope...
 		"";
-#endif
+#endif // BROWSER_LEGACY
 		/**
 		 * Private function that injects one field with given name
 		 */
-		function field(name) {
-#ifdef BROWSER_LEGACY
-			// Accessing toString or valueOf on document / window fails on
-			// legacy browsers like Mac IE.
-			try {
-				var val = src[name], res = val, baseVal = base && base[name];
-			} catch (e) {}
-#else // !BROWSER_LEGACY
-			var val = src[name], res = val, baseVal = base && base[name];
-#endif
+		function field(name, generics) {
+			var val = src[name], res = val, prev = dest[name];
 			if (val !== Object.prototype[name]) {
 				if (typeof val == 'function') {
 #ifdef GETTER_SETTER
@@ -80,52 +72,44 @@ new function() { // bootstrap
 						return;
 					}
 #endif // !GETTER_SETTER
-				 	if (baseVal && val !== baseVal && /\bthis\.base\b/.test(val)) {
-#ifdef HELMA
-						// If there is a realBase to read from, and the base
-						// function has already the _version field set, it is a
-						// function previously defined through inject. 
-						// In this case, the value of _version decides what to do:
-						// If we're in the same compilation cicle, AspectJ behavior
-						// is used: base then points to the function previously
-						// defined in the same compilation cicle.
-						// Otherwise, use the definition from realBase, as the
-						// function points to an invalid version that was defined
-						// in a previous compilation cicle and has since disappeared.
-						// Like this, the result is allways as if the Helma app
-						// was restarted after each changed and the client version
-						// of Bootstrap.js was used.
-						if (realBase && base == dest && baseVal._version &&
-								baseVal._version != version)
-							base = realBase;
-#endif // HELMA
-						res = function() {
-							var prev = this.base;
-							// Look up the base function each time if we can,
-							// to reflect changes to the base class after 
-							// inheritance. this only works if inject is called
-							// with the third argument (base), see code bellow.
-							this.base = base != dest ? base[name] : baseVal;
-							try { return val.apply(this, arguments); }
-							finally { this.base = prev; }
-						};
-						// Redirect toString to the one from the original function
-						// to "hide" the wrapper function
-						res.toString = function() {
-							return val.toString();
-						}
-#ifdef HELMA
-						// If versioning is used, set the new version now.
-						if (version)
-							res._version = version;
-#endif // HELMA
-					}
+					// Make generics first, as we might jump out bellow in the
+					// val.valueOf() === prev.valueOf() check,
+					// e.g. when explicitely reinjecting Array.prototype methods
+					// to produce generics of them.
 					if (generics) generics[name] = function(bind) {
 						// Do not call Array.slice generic here, as on Safari,
 						// this seems to confuse scopes (calling another
 						// generic from generic-producing code).
 						return dest[name].apply(bind,
 							Array.prototype.slice.call(arguments, 1));
+					}
+					if (prev && /\bthis\.base\b/.test(val)) {
+#ifdef HELMA
+						if (val.valueOf() === prev.valueOf()) return;
+						// If the base function has already the _version field set, 
+						// it is a function previously defined through inject. 
+						// In this case, the value of _version decides what to do:
+						// If we're in the same compilation cicle, Aspect behavior
+						// is used.
+						// Otherwise, fromBase is set to true, causing the closure
+						// to look up the base value each time.
+						var fromBase = base && base[name] == prev || prev._version && prev._version != version;
+#else // !HELMA
+						var fromBase = base && base[name] == prev;
+#endif // !HELMA
+						res = (function() {
+							var tmp = this.base;
+							// Look up the base function each time if we can,
+							// to reflect changes to the base class after 
+							// inheritance.
+							this.base = fromBase ? base[name] : prev;
+							try { return val.apply(this, arguments); }
+							finally { this.base = tmp; }
+						}).pretend(val);
+#ifdef HELMA
+						// If versioning is used, set the new version now.
+						if (version) res._version = version;
+#endif // HELMA
 					}
 				}
 				dest[name] = res;
@@ -155,7 +139,8 @@ new function() { // bootstrap
 				// to check against statics here...
 				if (!/^(statics|_generics|_hide)$/.test(name))
 #endif // HELMA
-					field(name);
+					field(name, generics);
+			// Do not create generics for these:
 			field('toString');
 			field('valueOf');
 		}
@@ -228,30 +213,25 @@ new function() { // bootstrap
 
 	// Now we can use the private inject to add methods to the Function.prototype
 	inject(Function.prototype, {
-		inject: function(src, base) {
+		inject: function(src) {
+			var proto = this.prototype, base = proto.__proto__ && proto.__proto__.constructor;
 			// When called from extend, a third argument is passed, pointing
 			// to the base class (the constructor).
 			// this variable is needed for inheriting static fields and proper
 			// lookups of base on each call (see bellow)
 #ifdef HELMA
-			var proto = this.prototype;
 			// On the server side, we need some kind of version handling for
 			// HopObjects because every time a prototype gets updated, the js
 			// file is evaluated in the same scope again. Using Prototype.inject
 			// in combination with base calls would result in a growing chain of
 			// calls to previous versions if no version handling would be
 			// involved.
-			// The versions are used further down to determine wether the
+			// The versions are used further up to determine wether the
 			// previously defined function in the same prototype should be used
-			// (AOP-like), or the same function in the real super prototype
-			// (realBase) should be used.
+			// (AOP-like), or the same function in the real super prototype.
 			// _version is only added to prototypes that inherit from HopObject,
 			// and is automatically increased in onCodeUpdate, as defined bellow.
-			if (proto instanceof HopObject && !proto._version)
-				proto._version = 1;
-			var version = proto._version;
-			// If versioning is used, retrieve the real base through __proto__:
-			var realBase = version && proto.__proto__ && proto.__proto__.constructor;
+			var version = proto instanceof HopObject && (proto._version || (proto._version = 1));
 #endif // HELMA
 			// Define new instance fields, and inherit from base, if available.
 			// Otherwise inherit from ourself this works for also for functions
@@ -262,25 +242,17 @@ new function() { // bootstrap
 			// wrapper function, and further changes to it after inheritance are
 			// not reflected.
 #ifndef HELMA // !HELMA
-			inject(this.prototype, src, base ? base.prototype : this.prototype, src && src._generics && this);
+			inject(proto, src, base && base.prototype, src && src._generics && this);
 #else // HELMA
 			// Pass realBase if defined.
-			inject(proto, src, base ? base.prototype : proto, src && src._generics && this, version,
-					realBase && realBase.prototype);
+			inject(proto, src, base && base.prototype, src && src._generics && this, version);
 #endif // HELMA
-			// Copy over static fields from base, as prototype-like inheritance
-			// is not possible for static fields. If base is null, this does
-			// nothing.
-			// TODO: This needs fixing for versioning on the server!
-			// Do not set dontEnum for static, as otherwise we won't be able to
-			// inject static fields from base next time
-			inject(this, base);
 			// Define new static fields, and inherit from base.
 #ifndef HELMA // !HELMA
 			return inject(this, src && src.statics, base);
 #else // HELMA
 			// Again, pass realBase if defined.
-			inject(this, src && src.statics, base, null, version, realBase);
+			inject(this, src && src.statics, base, null, version);
 			// For versioning, define onCodeUpdate to update _version each time:
 			if (version) {
 				// See if it is already defined, and override in a way that
@@ -322,6 +294,10 @@ new function() { // bootstrap
 			// this.dont will be undefined and no value will be passed to the
 			// constructor that would not know what to do with it.
 			ctor.dont = {};
+			// Copy over static fields, as prototype-like inheritance
+			// is not possible for static fields.
+			// TODO: This needs fixing for versioning on the server!
+			inject(ctor, this);
 			// Inject all the definitions in src
 			// Use the new inject instead of the one in ctor, in case it was
 			// overriden.
@@ -330,10 +306,22 @@ new function() { // bootstrap
 			// Do not rely on this.inject.call, as this might not yet be defined
 			// on legacy browsers yet.
 			ctor.inject = this.inject;
-			return ctor.inject(src, this);
+			return ctor.inject(src);
 #else // !BROWSER_LEGACY
-			return this.inject.call(ctor, src, this);
+			return this.inject.call(ctor, src);
 #endif // !BROWSER_LEGACY
+		},
+
+		pretend: function(fn) {
+			// Redirect toString to the one from the original function
+			// to "hide" the wrapper function
+			this.toString = function() {
+				return fn.toString();
+			}
+			this.valueOf= function() {
+				return fn.valueOf();
+			}
+			return this;
 		}
 	});
 
@@ -414,7 +402,7 @@ new function() { // bootstrap
 		 */
 		inject: function(src) {
 			// src can either be a function to be called, or an object literal.
-			return inject(this, src, this);
+			return inject(this, src);
 		},
 
 		/**
@@ -437,10 +425,10 @@ new function() { // bootstrap
 /* TODO: Try this out:
 #ifndef EXTEND_OBJECT
 		statics: {
-			inject: function(src, base) {
+			inject: function(src) {
 				// Inject anything added to Base into Array as well.
-				Array.inject(src, base);
-				return this.base(src, base);
+				Array.inject(src);
+				return this.base(src);
 			},
 
 			extend: function(src) {
