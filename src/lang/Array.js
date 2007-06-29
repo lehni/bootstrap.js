@@ -327,7 +327,7 @@ Array.inject(new function() {
 				// injecting the Array fields, which explicitely contain the
 				// native functions too (see bellow).
 				// Not supported: concat (Safari breaks it)
-				var ret = Base.extend(fields).inject(src, Array);
+				var ret = Base.extend(fields).inject(src);
 				// The subclass can use the normal extend again:
 				ret.extend = Function.extend;
 				return ret;
@@ -337,7 +337,7 @@ Array.inject(new function() {
 	// Fields that are hidden in Array.prototype are explicitely copied over,
 	// so that they can be inherited in extend() above, and generics are created
 	// for them too.
-	['push','pop','shift','unshift','sort','reverse','join','slice','splice'].each(function(name) {
+	['push','pop','shift','unshift','sort','reverse','join','slice','splice','toString'].each(function(name) {
 		fields[name] = proto[name];
 	});
 	// length is set so instances of array have it set to 0 to begin with.

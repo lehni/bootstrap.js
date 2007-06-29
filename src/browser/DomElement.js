@@ -109,7 +109,7 @@ DomElement = Base.extend(new function() {
 	// Private inject function for DomElement. It adds support for
 	// _methods and _properties declarations, which forward calls and define
 	// getter / setters for fields of the native DOM node.
-	function inject(src, base) {
+	function inject(src) {
 		// Forward method calls. Returns result if any, otherwise reference
 		// to this.
 		src = src || {};
@@ -133,7 +133,7 @@ DomElement = Base.extend(new function() {
 		});
 		delete src._methods;
 		delete src._properties;
-		return Function.inject.call(this, src, base);
+		return Function.inject.call(this, src);
 	}
 
 	return {
@@ -177,8 +177,8 @@ DomElement = Base.extend(new function() {
 		},
 
 		statics: {
-			inject: function(src, base) {
-				var ret = inject.call(this, src, base);
+			inject: function(src) {
+				var ret = inject.call(this, src);
 				// Now, after src was processed in #inject, inject not only into
 				// this, but also into DomElements where the functions are
 				// "multiplied" for each of the elements of the collection.
@@ -192,7 +192,7 @@ DomElement = Base.extend(new function() {
 				// Undo overriding of the inject method above for subclasses,
 				// as only injecting into DomElement (not subclasses) shall also
 				// inject into DomElements!
-				inject.call(ret, src, this);
+				inject.call(ret, src);
 				// Now reset inject. Reseting before does not work, as it would
 				// be overridden during static inheritance again.
 				ret.inject = inject;
@@ -299,13 +299,11 @@ DomElement.inject(new function() {
 		},
 
 		getChildren: function() {
-		 	return Array.filter(this.$.childNodes, function(child) {
-				return child.nodeName && child.nodeType == 1;
-			});
+		 	return new this._elements(this.$.childNodes);
 		},
 
 		hasChildren: function() {
-			return this.$.childNodes.length > 0;
+			return this.$.hasChildNodes();
 		},
 
 		hasParent: function(el) {
@@ -360,12 +358,7 @@ DomElement.inject(new function() {
 		},
 
 		removeChildren: function() {
-			var child = this.$.firstChild;
-			while (child) {
-				var next = child.nextSibling;
-				this.removeChild(child);
-				child = next;
-			}
+			this.getChildren().remove();
 		},
 
 		replaceWith: function(el) {
