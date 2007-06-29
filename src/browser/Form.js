@@ -63,7 +63,9 @@ Select = FormElement.extend({
 	_properties: ['type', 'selectedIndex'],
 
 	getSelected: function() {
-		return this.getElements('option[selected]');
+		// Xpath does not properly match selected attributes in option elements
+		// Force filter code:
+		return this.getElements('option[selected]', true);
 	},
 
 	getValue: function() {

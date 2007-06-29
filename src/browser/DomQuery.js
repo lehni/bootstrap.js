@@ -18,7 +18,7 @@ new function() {
 		return tag == '*' || el.tagName && el.tagName.toLowerCase() == tag;
 	}
 
-	function parsePseudo(pseudo) {
+	function getPseudo(pseudo, method) {
 		var match = pseudo.match(/^([\w-]+)(?:\((.*)\))?$/);
 		if (!match) throw 'Bad pseudo selector: ' + pseudo;
 		var name = match[1].split('-')[0];
@@ -29,7 +29,7 @@ new function() {
 			argument: handler && handler.parser
 				? (handler.parser.apply ? handler.parser(argument) : handler.parser)
 				: argument,
-			handler: handler.handler || handler
+			handler: (handler.handler || handler)[method]
 		};
 	}
 
@@ -43,101 +43,101 @@ new function() {
 		return prefix == 'xhtml' ? 'http://www.w3.org/1999/xhtml' : false;
 	}
 
-	var xpath = Browser.XPATH;
+	// method indices:
+	var XPATH= 0, FILTER = 1;
 
-	var method = xpath
-		? { // XPath
-			getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
-				var temp = context.namespaceURI ? 'xhtml:' : '';
-				seperator = separator && (separator = DomElement.separators[separator]);
-				temp += seperator ? separator(tag) : tag;
-				if (pseudo) {
-					pseudo = parsePseudo(pseudo);
-					var handler = pseudo.handler;
-					if (handler) temp += handler(pseudo.argument);
-					else temp += pseudo.argument != undefined
-						? '[@' + pseudo.name + '="' + pseudo.argument + '"]'
-						: '[@' + pseudo.name + ']';
-				}
-				if (id) temp += '[@id="' + id + '"]';
-				if (className) temp += '[contains(concat(" ", @class, " "), " ' + className + ' ")]';
-				if (attribute) {
-					attribute = getAttribute(attribute);
-					if (attribute[2] && attribute[3]) {
-						var operator = DomElement.operators[attribute[2]];
-						if (operator) temp += operator(attribute[1], attribute[3]);
-					} else {
-						temp += '[@' + attribute[1] + ']';
-					}
-				}
-				items.push(temp);
-				return items;
-			},
-
-			getElements: function(items, elements, context) {
-				var xpath = document.evaluate('.//' + items.join(''), context,
-					resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-				for (var i = 0, j = xpath.snapshotLength; i < j; i++)
-					elements.push(xpath.snapshotItem(i));
+	var methods = [ { // XPath: 
+		getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
+			var temp = context.namespaceURI ? 'xhtml:' : '';
+			seperator = separator && (separator = DomElement.separators[separator]);
+			temp += seperator ? separator[XPATH](tag) : tag;
+			if (pseudo) {
+				pseudo = getPseudo(pseudo, XPATH);
+				var handler = pseudo.handler;
+				if (handler) temp += handler(pseudo.argument);
+				else temp += pseudo.argument != undefined
+					? '[@' + pseudo.name + '="' + pseudo.argument + '"]'
+					: '[@' + pseudo.name + ']';
 			}
+			if (id) temp += '[@id="' + id + '"]';
+			if (className) temp += '[contains(concat(" ", @class, " "), " ' + className + ' ")]';
+			if (attribute) {
+				attribute = getAttribute(attribute);
+				if (attribute[2] && attribute[3]) {
+					var operator = DomElement.operators[attribute[2]];
+					if (operator) temp += operator[XPATH](attribute[1], attribute[3]);
+				} else {
+					temp += '[@' + attribute[1] + ']';
+				}
+			}
+			items.push(temp);
+			return items;
+		},
+
+		getElements: function(items, elements, context) {
+			var res = document.evaluate('.//' + items.join(''), context,
+				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
+			for (var i = 0, j = res.snapshotLength; i < j; i++)
+				elements.push(res.snapshotItem(i));
 		}
-		: { // Filter:
-			getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
-				if (separator && (separator = DomElement.separators[separator])) {
-					items = separator(items, tag);
-					if (id) items = items.filter(function(el) {
-						return el.id == id;
+	}, { // Filter:
+		getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
+			if (separator && (separator = DomElement.separators[separator])) {
+				items = separator[FILTER](items, tag);
+				if (id) items = items.filter(function(el) {
+					return el.id == id;
+				});
+			} else {
+				if (id) {
+					var el = document.getElementById(id);
+					if (!el || context && !DomElement.isAncestor(el, context) || !hasTag(el, tag))
+						return null;
+					items = [el];
+				} else {
+					items = Array.create(context.getElementsByTagName(tag));
+				}
+			}
+			if (className) items = items.filter(function(el) {
+				return el.className && (' ' + el.className + ' ').indexOf(' ' + className + ' ') != -1;
+			});
+			if (attribute) attribute = getAttribute(attribute);
+			if (pseudo) {
+				pseudo = getPseudo(pseudo, FILTER);
+				var handler = pseudo.handler;
+				if (handler) {
+					// Pass an empty array to the filter method, as a temporary
+					// storage space. Used in nth's filter.
+					items = items.filter(function(el) {
+						return handler(el, pseudo.argument, version);
 					});
 				} else {
-					if (id) {
-						var el = document.getElementById(id);
-						if (!el || context && !DomElement.isAncestor(el, context) || !hasTag(el, tag))
-							return null;
-						items = [el];
-					} else {
-						items = Array.create(context.getElementsByTagName(tag));
-					}
+					attribute = [null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument];
 				}
-				if (className) items = items.filter(function(el) {
-					return el.className && (' ' + el.className + ' ').indexOf(' ' + className + ' ') != -1;
-				});
-				if (attribute) attribute = getAttribute(attribute);
-				if (pseudo) {
-					pseudo = parsePseudo(pseudo);
-					var handler = pseudo.handler;
-					if (handler) {
-						// Pass an empty array to the filter method, as a temporary
-						// storage space. Used in nth's filter.
-						items = items.filter(function(el) {
-							return handler(el, pseudo.argument, version);
-						});
-					} else {
-						attribute = [null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument];
-					}
-				}
-				if (attribute) {
-					var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
-					items = items.filter(function(el) {
-						// TODO: Find a way to do this without passing through wrapper
-						var att = DomElement.get(el).getProperty(name);
-						return att && (!operator || operator(att, value));
-					});
-				}
-				return items;
-			},
-
-			getElements: function(items, elements, context) {
-				elements.append(items);
 			}
-		};
+			if (attribute) {
+				var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
+				operator = operator && operator[FILTER];
+				items = items.filter(function(el) {
+					// TODO: Find a way to do this without passing through wrapper
+					var att = DomElement.get(el).getProperty(name);
+					return att && (!operator || operator(att, value));
+				});
+			}
+			return items;
+		},
+
+		getElements: function(items, elements, context) {
+			elements.append(items);
+		}
+	}];
 
 	function following(one) {
-		return xpath
-			? function(tag) {
+		return [
+			function(tag) {
 				return '/following-sibling::' + tag + (one ? '[1]' : '');
-			}
-			: function(items, tag) {
-		        return items.each(function(item) {
+			},
+			function(items, tag) {
+				return items.each(function(item) {
 					var next = item.nextSibling;
 					while (next) {
 						if (hasTag(next, tag)) {
@@ -147,7 +147,8 @@ new function() {
 						next = next.nextSibling;
 					}
 				}, []);
-		    }
+			}
+		];
 	}
 
 	DomElement.separators = {
@@ -155,90 +156,99 @@ new function() {
 
 		'+': following(true),
 
-		'>': xpath
-			? function(tag) {
+		'>': [
+		 	function(tag) {
 				return '/' + tag;
-			}
-			: function(items, tag) {
+			},
+			function(items, tag) {
 				return items.each(function(item) {
 					Base.each(item.childNodes, function(child) {
 						if (hasTag(child, tag))
 							this.push(child);
 					}, this);
 				}, []);
-		    },
-
-		' ': xpath
-			? function(tag) {
-				return '//' + tag;
 			}
-			: function(items, tag) {
+		],
+
+		' ': [
+			function(tag) {
+				return '//' + tag;
+			},
+			function(items, tag) {
 				return items.each(function(item) {
 					this.append(item.getElementsByTagName(tag));
 				}, []);
-		    }
+			}
+		]
 	};
 
 	DomElement.operators = {
-	    '=': xpath
-			? function(a, v) {
+		'=': [
+			function(a, v) {
 				return '[@' + a + '="' + v + '"]';
+			},
+			function(a, v) {
+				return a == v;
 			}
-			: function(a, v) {
-		        return a == v;
-		    },
+		],
 
-	    '*=': xpath
-	 		? function(a, v) {
+		'*=': [
+	 		function(a, v) {
 				return '[contains(@' + a + ', "' + v + '")]';
+			},
+			function(a, v) {
+				return a.contains(v);
 			}
-			: function(a, v) {
-		        return a.contains(v);
-		    },
+		],
 
-	    '^=': xpath
-	 		? function(a, v) {
+		'^=': [
+	 		function(a, v) {
 				return '[starts-with(@' + a + ', "' + v + '")]';
+			},
+			function(a, v) {
+				return a.substr(0, v.length) == v;
 			}
-			: function(a, v) {
-		        return a.substr(0, v.length) == v;
-		    },
+		],
 
-	    '$=': xpath
-			? function(a, v) {
+		'$=': [
+			function(a, v) {
 				return '[substring(@' + a + ', string-length(@' + a + ') - ' + v.length + ' + 1) = "' + v + '"]';
+			},
+			function(a, v) {
+				return a.substr(a.length - v.length) == v;
 			}
-			: function(a, v) {
-		        return a.substr(a.length - v.length) == v;
-		    },
+		],
 
-	    '!=': xpath
-			? function(a, v) {
+		'!=': [
+			function(a, v) {
 				return '[@' + a + '!="' + v + '"]';
+			},
+			function(a, v) {
+				return a != v;
 			}
-			: function(a, v) {
-		        return a != v;
-		    },
+		],
 
-	    '~=': xpath
-			? function(a, v) {
+		'~=': [
+			function(a, v) {
 				return '[contains(concat(" ", @' + a + ', " "), " ' + v + ' ")]';
+			},
+			function(a, v) {
+				return a.contains(v, ' ');
 			}
-			: function(a, v) {
-		        return a.contains(v, ' ');
-		    }
+		]
 	};
 
-	var nth = xpath
-		? function(argument) {
+	var nth = [
+		function(argument) {
 			switch(argument.special) {
 			case 'n': return '[count(preceding-sibling::*) mod ' + argument.a + ' = ' + argument.b + ']';
 			case 'last': return '[count(following-sibling::*) = 0]';
 			case 'only': return '[not(preceding-sibling::* or following-sibling::*)]';
 			default: return '[count(preceding-sibling::*) = ' + argument.a + ']';
 			}
-		}
-		: function(el, argument, version) {
+		},
+
+		function(el, argument, version) {
 			// This is slightly faster, but produces more code.
 			var parent = el.parentNode, children = parent._children;
 			if (!children || children.version != version) {
@@ -257,29 +267,32 @@ new function() {
 			}
 			return include;
 		}
+	];
 
 	DomElement.pseudos = {
-		enabled: xpath
-			? function() {
+		enabled: [
+			function() {
 				return '[not(@disabled)]';
-			}
-			: function(el) {
+			},
+			function(el) {
 				return !el.disabled;
-			},
+			}
+		],
 
-		empty: xpath
-		 	? function() {
+		empty: [
+		 	function() {
 				return '[not(node())]';
-			}
-			: function(el) {
-				return Element.getText(el).length === 0;
 			},
-
-		contains: xpath
-			? function(argument) {
-				return '[contains(text(), "' + argument + '")]';
+			function(el) {
+				return Element.getText(el).length === 0;
 			}
-			: function(el, argument) {
+		],
+
+		contains: [
+			function(argument) {
+				return '[contains(text(), "' + argument + '")]';
+			},
+			function(el, argument) {
 				var nodes = el.childNodes;
 				for (var i = 0; i < nodes.length; i++) {
 					var child = nodes[i];
@@ -287,7 +300,8 @@ new function() {
 						child.nodeValue.contains(argument)) return true;
 				}
 				return false;
-			},
+			}
+		],
 
 		nth: {
 			parser: function(argument) {
@@ -342,10 +356,11 @@ new function() {
 	var version = 0;
 
 	DomElement.inject({
-		getElements: function(selectors, nowrap) {
+		getElements: function(selectors, filter, nowrap) {
 			// Increase version number for keeping cached elements in sync.
 			version++;
 			var elements = nowrap ? [] : new this._elements();
+			var method = methods[filter || !Browser.XPATH ? FILTER : XPATH];
 			selectors = typeof selectors == 'string' ? selectors.split(',') : selectors || ['*'];
 			for (var i = 0; i < selectors.length; i++) {
 				var items = [], separators = [];
@@ -367,14 +382,14 @@ new function() {
 			return elements;
 		},
 
-		getElement: function(selector) {
+		getElement: function(selector, filter) {
 			var el;
 			if (selector.charAt(0) == '#') {
 				el = document.getElementById(selector.substring(1));
 				if (el && !DomElement.isAncestor(el, this.$))
 					el = null;
 			} else {
-			 	el = this.getElements(selector, true)[0];
+			 	el = this.getElements(selector, filter, true)[0];
 			}
 			return DomElement.get(el);
 		},
