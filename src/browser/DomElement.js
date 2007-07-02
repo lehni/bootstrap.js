@@ -412,7 +412,7 @@ DomElement.inject(new function() {
 			if (key) return this.$[key];
 			var flag = flags[name];
 			if (!Browser.IE || flag) return this.$.getAttribute(name, flag);
-			var node = this.attributes[name];
+			var node = this.$.attributes[name];
 			return node && node.nodeValue;
 		},
 
