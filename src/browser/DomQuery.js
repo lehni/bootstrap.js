@@ -362,14 +362,14 @@ new function() {
 			var elements = nowrap ? [] : new this._elements();
 			// Xpath does not properly match selected attributes in option elements
 			// Force filter code when the selectors contain "option["
-			var method = methods[/option\[/.test(selectors) || !Browser.XPATH ? FILTER : XPATH];
 			selectors = typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
 			for (var i = 0; i < selectors.length; i++) {
-				var selector = selectors[i];
-				if ($typeof(selector) == 'element') elements.push(selector);
+				var selector = selectors[i], type = $typeof(selector);
+				if (type == 'element') elements.push(selector);
 				else {
+					var method = methods[type == 'string' && /option\[/.test(selector) || !Browser.XPATH ? FILTER : XPATH];
 					var items = [], separators = [];
 					selector = selector.trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
 						if (match.charAt(2)) match = match.trim();
