@@ -137,6 +137,7 @@ Enumerable = new function() {
 
 	return {
 		HIDE
+		_generics: true,
 
 		/**
 		 * The core of all Enumerable functions. TODO: document
@@ -149,17 +150,36 @@ Enumerable = new function() {
 
 		/**
 		 * Searches the list for the first element where the condition of the
-		 * passed iterator is met and returns its key / value pair as an object:
-		 * { key: ... , value: ... }
+		 * passed iterator is met and returns its key.
 		 */
-		find: ITERATE(function(iter, bind, that) {
+		findKey: ITERATE(function(iter, bind, that) {
 			return this.each(function(val, key) {
 				if (ITERATOR(iter, bind, val, key, that, __find)) {
-					this.found = { key: key, value: val };
+					this.key = key;
 					throw $break;
 				}
-			}, {}).found || null;
+			}, {}).key || null;
 		}, '__find'),
+
+		find: function(iter, bind) {
+			return this[this.findKey(iter, bind)];
+		},
+
+		removeKey: function(key) {
+			var val = this[key];
+			delete this[key];
+			return val;
+		},
+
+		/**
+		 * Removes an element. Find is used to find the element fullfilling the
+		 * criteria, then removeKey is called, which has a different implementation
+		 * for Array.
+		 */ 
+		remove: function(iter) {
+			var key = this.findKey(iter);
+			if (key != null) return this.removeKey(key);
+		},
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -169,7 +189,7 @@ Enumerable = new function() {
 		 * regarding iterators (as defined in iterate())
 		 */
 		some: ITERATE(function(iter, bind) {
-			return !!this.find(iter, bind);
+			return this.findKey(iter, bind) != null;
 		}, '__some'),
 
 		/**
@@ -180,12 +200,12 @@ Enumerable = new function() {
 		 * regarding iterators (as defined in iterate())
 		 */
 		every: ITERATE(function(iter, bind, that) {
-			return !this.find(function(val, i) {
+			return this.findKey(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
-				return ITERATOR(iter, this, val, i, that, __every);
-			}, bind);
+				return !ITERATOR(iter, this, val, i, that, __every);
+			}, bind) == null;
 		}, '__every'),
 
 		/**

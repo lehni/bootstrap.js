@@ -20,7 +20,6 @@
 Hash = Base.extend(Enumerable).inject({
 	HIDE
 	_generics: true,
-	_type: 'hash',
 
 	/**
 	 * Constructs a new Hash. The constructor takes a variable amount of
@@ -41,7 +40,7 @@ Hash = Base.extend(Enumerable).inject({
 		// Allways use Base.each() as we don't know wether the passed object
 		// really inherits from Base.
 		return obj ? Base.each(obj, function(val, key) {
-			this[key] = /^(object|hash)$/.test($typeof(this[key]))
+			this[key] = $typeof(this[key]) == 'object'
 					? Hash.prototype.merge.call(this[key], val) : val;
 		}, this) : this;
 	},
@@ -66,7 +65,7 @@ Hash = Base.extend(Enumerable).inject({
 		 * Warning: Does not create a new instance if it is a hash already!
 		 */
 		create: function(obj) {
-			return arguments.length == 1 && $typeof(obj) == 'hash' ? obj
+			return arguments.length == 1 && obj.constructor == Hash ? obj
 				: Hash.prototype.initialize.apply(new Hash(), arguments);
 		}
 	}

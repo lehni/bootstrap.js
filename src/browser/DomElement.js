@@ -68,8 +68,8 @@ DomElements = Array.extend(new function() {
 							// sets it
 							var ret = (obj[key] || val).apply(obj, args);
 							if (get) {
-								values = values || ($typeof(ret) == 'element')
-									? new collection() : [];
+								values = values || ($typeof(ret) == 'element'
+									? new collection() : []);
 								values.push(ret);
 							}
 						});
@@ -145,7 +145,7 @@ DomElement = Base.extend(new function() {
 			// Support element creating constructors on subclasses of DomElement
 			// that define prototype._tag and can take one argument, which 
 			// defines the properties to be set:
-			if (this._tag && /^(object|hash)$/.test($typeof(el))) {
+			if (this._tag && $typeof(el) == 'object') {
 				props = el;
 				el = this._tag;
 			}
@@ -239,12 +239,6 @@ DomElement = Base.extend(new function() {
 // Use the modified inject function from above which injects both into DomElement
 // and DomElements.
 DomElement.inject(new function() {
-	function walk(el, name, start) {
-		el = el[start ? start : name];
-		while (el && $typeof(el) != 'element') el = el[name];
-		return DomElement.get(el);
-	}
-
 	// Dom / Html to JS property mappings, as used by getProperty, setProperty
 	// and removeProperty.
 	var properties = {
@@ -255,11 +249,27 @@ DomElement.inject(new function() {
 		selected: 'selected'
 	};
 
+	var flags = {
+		href: 2, src: 2
+	};
+
 	var setterCache = {};
+
+	function walk(el, name, start) {
+		el = el[start ? start : name];
+		while (el && $typeof(el) != 'element') el = el[name];
+		return DomElement.get(el);
+	}
+
+	function create(where) {
+		return function() {
+			return this.create(arguments)['insert' + where](this);
+		}
+	}
 
 	return {
 		set: function(props) {
-			return EACH(props, function(val, key) {
+			return props ? EACH(props, function(val, key) {
 				// First see if there is a setter for the given property
 				var set = (key == 'events') ? this.addEvents : setterCache[key];
 				// Do not call capitalize, as this is time critical and executes
@@ -271,7 +281,7 @@ DomElement.inject(new function() {
 				// list for the call.
 				if (set) set[val && val.push ? 'apply' : 'call'](this, val);
 				else this.setProperty(key, val);
-			}, this);
+			}, this) : this;
 		},
 
 		getTag: function() {
@@ -319,6 +329,11 @@ DomElement.inject(new function() {
 			return this;
 		},
 
+		appendText: function(text){
+			this.$.appendChild(document.createTextNode(text));
+			return this;
+		},
+
 		insertBefore: function(el) {
 			el = DomElement.get(el);
 			el.$.parentNode.insertBefore(this.$, el.$);
@@ -334,8 +349,6 @@ DomElement.inject(new function() {
 		},
 
 		insertFirst: function(el) {
-			// TODO: See Ext's insertFirst, add support for createChild, return
-			// added element instead of this?!
 			el = DomElement.get(el);
 			el.$.insertBefore(this.$, el.$.firstChild);
 			return this;
@@ -345,6 +358,29 @@ DomElement.inject(new function() {
 			DomElement.get(el).appendChild(this);
 			return this;
 		},
+
+		create: function(values) {
+			var elements = new this._elements();
+			if (!values.length) values = arguments;
+			for (var i = 0; i < values.length; i += 3) {
+				var el = DomElement.get(document.createElement(values[i])).set(values[i + 1]);
+				var content = values[i + 2];
+				if (content) {
+					if (content.length) this.create(content).insertInside(el);
+					else el.appendText(content);
+				}
+				elements.push(el);
+			}
+			return elements;
+		},
+
+		createBefore: create('Before'),
+
+		createAfter: create('After'),
+
+		createFirst: create('First'),
+
+		createInside: create('Inside'),
 
 		remove: function() {
 			this.$.parentNode.removeChild(this.$);
@@ -373,7 +409,11 @@ DomElement.inject(new function() {
 
 		getProperty: function(name) {
 			var key = properties[name];
-			return key ? this.$[key] : this.$.getAttribute(name);
+			if (key) return this.$[key];
+			var flag = flags[name];
+			if (!Browser.IE || flag) return this.$.getAttribute(name, flag);
+			var node = this.attributes[name];
+			return node && node.nodeValue;
 		},
 
 		setProperty: function(name, value) {

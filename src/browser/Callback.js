@@ -46,9 +46,16 @@ Callback = {
 		return this;
 	},
 
+	addEvents: function(events) {
+		return EACH((events || []), function(fn, type) {
+			this.addEvent(type, fn);
+		}, this);
+	},
+
 	fireEvent: function(type) {
+		var args = Array.slice(arguments, 1);
 		return (this.events && this.events[type] || []).each(function(fn) {
-			fn.apply(this, Array.slice(arguments, 1));
+			fn.apply(this, args);
 		}, this);
 	},
 

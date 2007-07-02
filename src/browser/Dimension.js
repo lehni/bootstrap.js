@@ -49,7 +49,7 @@ HtmlElement.inject(new function() {
 		// Do not set bounds, as arguments would then be modified, which we're
 		// referencing here:
 		return function(values) {
-			var vals = /^(object|hash|array)$/.test($typeof(values)) ? values : arguments;
+			var vals = /^(object|array)$/.test($typeof(values)) ? values : arguments;
 			if (offset) {
 				if (vals.x) vals.left = vals.x;
 				if (vals.y) vals.top = vals.y;
@@ -119,7 +119,7 @@ HtmlElement.inject(new function() {
 		
 		statics: {
 			getAt: function(pos, exclude) {
-				var el = HtmlElement.get(document.body);
+				var el = Document.getElement('body');
 				while (true) {
 					var max = -1;
 					var ch = el.getFirst();

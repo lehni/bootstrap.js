@@ -9,6 +9,7 @@
 #include "lang/Number.js"
 #include "lang/RegExp.js"
 #include "lang/Math.js"
+#include "remote/Json.js"
 #ifdef BROWSER
 #include "browser/Browser.js"
 #include "browser/DomElement.js"
@@ -22,8 +23,12 @@
 #include "browser/Document.js"
 #include "browser/Drag.js"
 #include "browser/Cookie.js"
-#include "browser/Asset.js"
+
+#include "browser/remote/HttpRequest.js"
+#include "browser/remote/Ajax.js"
+#include "browser/remote/Asset.js"
 
 #include "browser/effects/Fx.Style.js"
 #include "browser/effects/Fx.Styles.js"
+
 #endif // BROWSER

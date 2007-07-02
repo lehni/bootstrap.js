@@ -6,10 +6,13 @@
 
 Browser = new function() {
 	var name = (navigator.platform.match(/(MAC)|(WIN)|(LINUX)|(NIX)/i) || ['OTHER'])[0].toUpperCase();
-	var js/*@cc_on=@_jscript_version@*/;
+	var js/*@cc_on=@_jscript_version@*/, xpath = !!document.evaluate;
+	var webkit = document.childNodes && !document.all && !navigator.taintEnabled;
 	var ret = {
 		PLATFORM: name,
-		WEBKIT: document.childNodes && !document.all && !navigator.taintEnabled,
+		WEBKIT: webkit,
+		WEBKIT2: webkit && !xpath,
+		WEBKIT3: webkit && xpath,
 		OPERA: !!window.opera,
 		GECKO: !!document.getBoxObjectFor,
 		IE: !!js,
@@ -18,10 +21,17 @@ Browser = new function() {
 		IE6: js == 5.6,
 		IE7: js == 5.7,
 		MACIE: js && name == 'MAC',
-		XPATH: !!document.evaluate
+		XPATH: xpath
 	};
 	ret[name] = true;
 	return ret;
 };
+
+#ifdef BROWSER_LEGACY
+if (!this.encodeURIComponent) {
+	encodeURIComponent = escape;
+	decodeURIComponent = unescape;
+}
+#endif // BROWSER_LEGACY
 
 #endif // __browser_Browser__

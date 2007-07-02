@@ -44,7 +44,7 @@ DomEvent = Base.extend(new function() {
 		initialize: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = HtmlElement.get(event.target || event.srcElement);
+			this.target = DomElement.get(event.target || event.srcElement);
 			if (this.target.nodeType == 3)
 				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
@@ -75,7 +75,7 @@ DomEvent = Base.extend(new function() {
 				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = HtmlElement.get(event.relatedTarget ||
+					this.relatedTarget = DomElement.get(event.relatedTarget ||
 						this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
@@ -161,22 +161,18 @@ DomElement.inject({
 				type = fake.type;
 			}
 			if (type) {
-				var bound = func, that = this;
 				// Check if the function takes a parameter. If so, it must
 				// want an event. Wrap it so it recieves a wrapped event, and
 				// bind it to that at the same time, as on PC IE, event listeners
 				// are not called bound to their objects.
-				if (func.parameters().length > 0)
-					bound = function(event) { // wants event param
+				var that = this, bound = (func.parameters().length == 0)
+					? func.bind(this)
+					: function(event) { 
 						return func.call(that, new DomEvent(event));
 					};
 				if (this.$.addEventListener) {
 					this.$.addEventListener(type, bound, false);
 				} else if (this.$.attachEvent) {
-					// On IE, the handler allways needs to be bound.
-					// But if the function recieves an event in the parameter list,
-					// it was already wrapped above.
-					if (bound == func) bound = func.bind(this);
 					this.$.attachEvent('on' + type, bound);
 #ifdef BROWSER_LEGACY
 				} else {
@@ -233,8 +229,8 @@ DomElement.inject({
 		return this;
 	},
 
-	addEvents: function(src) {
-		return EACH((src || []), function(fn, type) {
+	addEvents: function(events) {
+		return EACH((events || []), function(fn, type) {
 			this.addEvent(type, fn);
 		}, this);
 	},

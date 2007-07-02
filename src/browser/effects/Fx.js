@@ -51,7 +51,7 @@ Fx.Base = Base.extend({
 		} else {
 			this.stop(true);
 			this.update(this.to);
-			this.fireEvent('onComplete', this.element, 10);
+			this.fireEvent('complete', this.element);
 			this.callChain();
 		}
 	},
@@ -90,7 +90,6 @@ Fx.Base = Base.extend({
 	}
 });
 
-Fx.Base.inject(Chain);
-Fx.Base.inject(Callback);
+Fx.Base.inject(Chain).inject(Callback);
 
 #endif // __browser_Fx__

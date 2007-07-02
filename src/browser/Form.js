@@ -6,25 +6,25 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Form
 
+HtmlElement.inject({
+	getFormElements: function() {
+		return this.getElements(['input', 'select', 'textarea']);
+	}
+})
+
 Form = HtmlElement.extend({
 	_tag: 'form',
-
-	/**
-	 * Overrides getElements to only return form elements by default.
-	 * Explicitely call with '*' to return all elements contained in this form.
-	 */
-	getElements: function(selectors) {
-		return this.base(selectors || ['input', 'select', 'textarea']);
-	},
+	_properties: ['action', 'method', 'target'],
+	_methods: ['submit'],
 
 	blur: function() {
-		return this.getElements().each(function(el) {
+		return this.getFormElements().each(function(el) {
 			el.blur();
 		}, this);
 	},
 
 	enable: function(enable) {
-		return this.getElements().each(function(el) {
+		return this.getFormElements().each(function(el) {
 			el.enable(enable);
 		}, this);
 	}
@@ -43,13 +43,20 @@ FormElement = HtmlElement.extend({
 
 Input = FormElement.extend({
 	_tag: 'input',
-	_properties: ['type', 'value', 'checked', 'defaultChecked'],
+	_properties: ['type', 'checked', 'defaultChecked'],
 	_methods: ['click'],
 
 	getValue: function() {
-		if (this.checked && /^(checkbox|radio)$/.test(this.$.type) ||
+		if (this.$.checked && /^(checkbox|radio)$/.test(this.$.type) ||
 			/^(hidden|text|password)$/.test(this.$.type))
 			return this.$.value;
+	},
+
+	// TODO: decide if setValue for checkboxes / radios should actually change
+	// the value or set checked if the values match!
+	setValue: function(val) {
+		if (/^(checkbox|radio)$/.test(this.$.type)) this.$.checked = this.$.value == val;
+		else this.$.value = val;
 	}
 });
 
@@ -62,24 +69,23 @@ Select = FormElement.extend({
 	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
 
+	getOptions: function() {
+		return this.getElements('option');
+	},
+
 	getSelected: function() {
-		// Xpath does not properly match selected attributes in option elements
-		// Force filter code:
-		return this.getElements('option[selected]', true);
+		return this.getElements('option[selected]');
 	},
 
 	getValue: function() {
 		return this.getSelected().getProperty('value');
 	},
 
-	setSelected: function(value) {
-		// TODO: add support for value == array, for multiple selections
-		value = DomElement.unwrap(value);
-		Base.each(this.$.options, function(opt, i) {
-			if (opt == value || opt.value == value) {
-				this.$.selectedIndex = i;
-				throw $break;
-			}
+	setValue: function(values) {
+		this.$.selectedIndex = -1;
+		Base.each(values.length != null ? values : [values], function(val) {
+			val = DomElement.unwrap(val);
+			this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
 		}, this);
 	}
 });

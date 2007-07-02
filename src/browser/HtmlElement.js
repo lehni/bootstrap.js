@@ -68,6 +68,28 @@ HtmlElement.inject({
 	setHtml: function(html) {
 		this.$.innerHTML = html;
 		return this;
+	},
+
+	getText: function() {
+		var tag = this.getTag();
+		return /^(style|script)$/.test(tag)
+			? Browser.IE
+				? tag == 'style' ? this.$.styleSheet.cssText : this.getProperty('text')
+				: this.$.innerHTML
+			: this.$.innerText || this.$.textContent;
+	},
+
+	setText: function(text) {
+		var tag = this.getTag();
+		if (/^(style|script)$/.test(tag)) {
+			if (Browser.IE) {
+				if (tag == 'style') this.$.styleSheet.cssText = text;
+				else this.setProperty('text', text);
+			} else
+				this.$.innerHTML = text;
+		} else
+			this[this.innerText !== undefined ? 'innerText' : 'textContent'] = text;
+		return this;
 	}
 });
 
