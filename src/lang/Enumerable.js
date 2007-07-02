@@ -158,7 +158,7 @@ Enumerable = new function() {
 					this.key = key;
 					throw $break;
 				}
-			}, {}).key || null;
+			}, { key: null }).key;
 		}, '__find'),
 
 		find: function(iter, bind) {
