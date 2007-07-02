@@ -136,6 +136,11 @@ DomElement = Base.extend(new function() {
 		return Function.inject.call(this, src);
 	}
 
+	function constructor(el) {
+		return el.tagName && constructors[el.tagName.toLowerCase()] ||
+			(el.className === undefined ? DomElement : HtmlElement)
+	}
+
 	return {
 		// Tells $typeof the type to return when encountering an element.
 		_type: 'element',
@@ -153,24 +158,21 @@ DomElement = Base.extend(new function() {
 				if (Browser.IE && props && (props.name || props.type))
 					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
-				try {
-					el = document.createElement(el);
-				} catch (e) {
-					var i = 0;
-				}
+				el = document.createElement(el);
+			} else {
+				// Does the DomElement wrapper for this element already exist?
+				if (el._wrapper) return el._wrapper;
 			}
-			// Generate special ids for document and window, so they can be found
-			// too. Use # in the ids for these special objects as a hint for the
-			// garbage collector to not touch these objects. '#' cannot be
-			// present in normal Html elements ids.
-			var id = el.id || el == document && '#doc' || el == window && '#win';
-			// Does the DomElement wrapper for this element already exist?
-			if (el._wrapper) return el._wrapper;
+			// Check if we're using the right constructor, if not, construct
+			// with the right one:
+			var ctor = constructor(el);
+			if (ctor != this.constructor)
+				return new ctor(el);
 			// Store a reference to the native element.
 			this.$ = el;
 			this.id = el.id;
 			// Store a reference in the native element to the wrapper. 
-			// Needs to be cleaned up by garbage collection!
+			// Needs to be cleaned up by garbage collection. See above
 			el._wrapper = this;
 			elements[elements.length] = el;
 			if (props) this.set(props);
@@ -207,18 +209,15 @@ DomElement = Base.extend(new function() {
 				// Make sure we're using the right constructor. DomElement as 
 				// the default, HtmlElement for anything with className !== undefined
 				// and special constructors based on tag names.
-				return el ? el._wrapper || el._elements && el ||
-					new (el.tagName && constructors[el.tagName.toLowerCase()] ||
-						(el.className === undefined ? DomElement : HtmlElement))(el)
-					: null;
-			},
-
-			collect: function(el) {
-				elements[elements.length] = el;
+				return el ? el._wrapper || el._elements && el || new (constructor(el))(el) : null;
 			},
 
 			unwrap: function(el) {
 				return el && el.$ || el;
+			},
+
+			collect: function(el) {
+				elements.push(el);
 			},
 
 			isAncestor: function(el, parent) {
@@ -253,7 +252,7 @@ DomElement.inject(new function() {
 		href: 2, src: 2
 	};
 
-	var setterCache = {};
+	var setters = {};
 
 	function walk(el, name, start) {
 		el = el[start ? start : name];
@@ -271,11 +270,11 @@ DomElement.inject(new function() {
 		set: function(props) {
 			return props ? EACH(props, function(val, key) {
 				// First see if there is a setter for the given property
-				var set = (key == 'events') ? this.addEvents : setterCache[key];
+				var set = (key == 'events') ? this.addEvents : setters[key];
 				// Do not call capitalize, as this is time critical and executes
 				// faster (we only need to capitalize the first char here).
 				if (set === undefined)
-					set = setterCache[key] = this['set' +
+					set = setters[key] = this['set' +
 						key.charAt(0).toUpperCase() + key.substring(1)] || null;
 				// If the passed value is an array, use it as the argument
 				// list for the call.
@@ -363,8 +362,9 @@ DomElement.inject(new function() {
 			var values = typeof(arg) == 'string' ? arguments : arg;
 			var elements = new this._elements();
 			for (var i = 0; i < values.length; i += 3) {
-				var el = DomElement.get(document.createElement(values[i])).set(values[i + 1]);
-				var content = values[i + 2];
+				// Calling the DomElement constructor will automatically call
+				// the constructor of the right subclass.
+				var el = new DomElement(values[i], values[i + 1]), content = values[i + 2];
 				if (content) {
 					if (content.length) this.create(content).insertInside(el);
 					else el.appendText(content);
