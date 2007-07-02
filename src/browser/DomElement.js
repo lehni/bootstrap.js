@@ -359,9 +359,9 @@ DomElement.inject(new function() {
 			return this;
 		},
 
-		create: function(values) {
+		create: function(arg) {
+			var values = typeof(arg) == 'string' ? arguments : arg;
 			var elements = new this._elements();
-			if (!values.length) values = arguments;
 			for (var i = 0; i < values.length; i += 3) {
 				var el = DomElement.get(document.createElement(values[i])).set(values[i + 1]);
 				var content = values[i + 2];
