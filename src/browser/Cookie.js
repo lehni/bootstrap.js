@@ -15,17 +15,17 @@
 
 Cookie = {
 	set: function(name, value, expires, path) {
-		document.cookie = name + '=' + escape(value) + (expires ? ';expires=' +
+		document.cookie = name + '=' + encodeURIComponent(value) + (expires ? ';expires=' +
 			expires.toGMTString() : '') + ';path=' + (path || '/');
 	},
 	
 	get: function(name) {
 		var res = document.cookie.match('(^|;)\\s*' + name + "=([^;]*)");
-		if (res) return unescape(res[1]);
+		if (res) return decodeURIComponent(res[1]);
 	},
 
 	remove: function(name) {
-		this.set(key, '', -1);
+		this.set(name, '', -1);
 	}
 };
 

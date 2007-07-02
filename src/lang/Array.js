@@ -169,19 +169,18 @@ Array.inject(new function() {
 			return false;
 		}, '__some'),
 
-		find: function(iter) {
+		findKey: function(iter) {
 			// use the faster indexOf in case we're not using iterator functions.
 			if (iter && !/^(function|regexp)$/.test($typeof(iter))) {
 				var i = this.indexOf(iter);
-				return i != -1 ? { key: i, value: this[i] } : null;
+				return i != -1 ? i : null;
 			}
 			// TODO: this.base? Speed?
-			return Enumerable.find.call(this, iter);
+			return Enumerable.findKey.call(this, iter);
 		},
 
-		remove: function(iter) {
-			var entry = this.find(iter);
-			if (entry) return this.splice(entry.key, 1)[0];
+		removeKey: function(key) {
+			return this.splice(key, 1)[0];
 		},
 
 		/**
@@ -249,15 +248,30 @@ Array.inject(new function() {
 		},
 
 		/**
-		 * Creates an object containing the array's values assigned to the
-		 * given keys assigned.
+		 * Creates an object containing the array's values associated to the
+		 * given keys.
 		 */
-		assign: function(keys) {
-			var that = this, index = 0;
-			return keys.each(function(key) {
-				this[key] = that[index++];
-				if (index == that.length) throw $break;
-			}, {});
+		associate: function(obj) {
+			if (obj.length != null) {
+				var that = this;
+				return Base.each(obj, function(name, index) {
+					this[name] = that[index];
+					if (index == that.length)
+						throw $break;
+				}, {})
+			} else {
+				obj = Hash.create(obj);
+				return this.each(function(val) {
+					var type = $typeof(val);
+					obj.each(function(hint, name) {
+						if (hint == 'any' || type == hint) {
+							this[name] = val;
+							delete obj[name];
+							throw $break;
+						}
+					}, this);
+				}, {});
+			}
 		},
 
 		/**

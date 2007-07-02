@@ -136,6 +136,7 @@ new function() {
 			function(tag) {
 				return '/following-sibling::' + tag + (one ? '[1]' : '');
 			},
+
 			function(items, tag) {
 				return items.each(function(item) {
 					var next = item.nextSibling;
@@ -249,7 +250,6 @@ new function() {
 		},
 
 		function(el, argument, version) {
-			// This is slightly faster, but produces more code.
 			var parent = el.parentNode, children = parent._children;
 			if (!children || children.version != version) {
 				if (!children) DomElement.collect(parent);
@@ -356,41 +356,52 @@ new function() {
 	var version = 0;
 
 	DomElement.inject({
-		getElements: function(selectors, filter, nowrap) {
+		getElements: function(selectors, nowrap) {
 			// Increase version number for keeping cached elements in sync.
 			version++;
 			var elements = nowrap ? [] : new this._elements();
-			var method = methods[filter || !Browser.XPATH ? FILTER : XPATH];
-			selectors = typeof selectors == 'string' ? selectors.split(',') : selectors || ['*'];
+			// Xpath does not properly match selected attributes in option elements
+			// Force filter code when the selectors contain "option["
+			var method = methods[/option\[/.test(selectors) || !Browser.XPATH ? FILTER : XPATH];
+			selectors = typeof selectors == 'string'
+				? selectors.split(',')
+				: selectors.length != null ? selectors : [selectors];
 			for (var i = 0; i < selectors.length; i++) {
-				var items = [], separators = [];
-				var selector = selectors[i].trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
-					if (match.charAt(2)) match = match.trim();
-					separators.push(match.charAt(0));
-					return '%' + match.charAt(1);
-				}).split('%');
-				for (var j = 0; j < selector.length; j++) {
-					var match = selector[j].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
-					if (!match) throw 'Bad selector: ' + selector[j];
-					var temp = method.getParam(items, separators[j - 1], this.$,
-						match[1] || '*', match[2], match[3], match[4], match[5], version);
-					if (!temp) break;
-					items = temp;
+				var selector = selectors[i];
+				if ($typeof(selector) == 'element') elements.push(selector);
+				else {
+					var items = [], separators = [];
+					selector = selector.trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
+						if (match.charAt(2)) match = match.trim();
+						separators.push(match.charAt(0));
+						return '%' + match.charAt(1);
+					}).split('%');
+					for (var j = 0; j < selector.length; j++) {
+						var match = selector[j].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
+						if (!match) throw 'Bad selector: ' + selector[j];
+						var temp = method.getParam(items, separators[j - 1], this.$,
+							match[1] || '*', match[2], match[3], match[4], match[5], version);
+						if (!temp) break;
+						items = temp;
+					}
+					method.getElements(items, elements, this.$);
 				}
-				method.getElements(items, elements, this.$);
 			}
 			return elements;
 		},
 
-		getElement: function(selector, filter) {
-			var el;
-			if (selector.charAt(0) == '#') {
-				el = document.getElementById(selector.substring(1));
-				if (el && !DomElement.isAncestor(el, this.$))
-					el = null;
-			} else {
-			 	el = this.getElements(selector, filter, true)[0];
+		getElement: function(selector) {
+			var el, type = $typeof(selector);
+			if (type == 'string') {
+				if (selector.charAt(0) == '#')
+					selector = selector.substring(1);
+				// Try  fetching by id first, if no success, assume a real selector
+				el = document.getElementById(selector);
+			} else if (type == 'element') {
+				el = DomElement.unwrap(selector);
 			}
+			if (!el) el = this.getElements(selector, true)[0];
+			else if (!DomElement.isAncestor(el, this.$)) return null;
 			return DomElement.get(el);
 		},
 
