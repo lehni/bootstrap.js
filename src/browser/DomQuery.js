@@ -362,7 +362,7 @@ new function() {
 			var elements = nowrap ? [] : new this._elements();
 			// Xpath does not properly match selected attributes in option elements
 			// Force filter code when the selectors contain "option["
-			selectors = typeof selectors == 'string'
+			selectors = !selectors ? ['*'] : typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
 			for (var i = 0; i < selectors.length; i++) {
