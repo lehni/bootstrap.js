@@ -97,8 +97,7 @@ DomElement = Base.extend(new function() {
 	            if (el) {
 					var obj = el._wrapper;
 					if (obj && obj.dispose) obj.dispose();
-					delete el._wrapper;
-					delete el._children;
+					el._wrapper = el._children = null;
 				}
 				if (!force) elements.splice(i, 1);
 	        }
@@ -156,7 +155,8 @@ DomElement = Base.extend(new function() {
 			}
 			if (typeof(el) == 'string') {
 				if (Browser.IE && props && (props.name || props.type))
-					el = '<' + el + (props.name ? ' name="' + props.name + '"' : '')
+					el = '<' + el
+						+ (props.name ? ' name="' + props.name + '"' : '')
 						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
 				el = document.createElement(el);
 			} else {
@@ -167,7 +167,7 @@ DomElement = Base.extend(new function() {
 			// with the right one:
 			var ctor = constructor(el);
 			if (ctor != this.constructor)
-				return new ctor(el);
+				return new ctor(el, props);
 			// Store a reference to the native element.
 			this.$ = el;
 			this.id = el.id;
@@ -366,7 +366,7 @@ DomElement.inject(new function() {
 				// the constructor of the right subclass.
 				var el = new DomElement(values[i], values[i + 1]), content = values[i + 2];
 				if (content) {
-					if (content.length) this.create(content).insertInside(el);
+					if (content.push) this.create(content).insertInside(el);
 					else el.appendText(content);
 				}
 				elements.push(el);
