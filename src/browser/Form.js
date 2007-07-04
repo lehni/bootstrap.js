@@ -6,9 +6,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Form
 
+// Form related functions, but available in all elements:
+
 HtmlElement.inject({
 	getFormElements: function() {
 		return this.getElements(['input', 'select', 'textarea']);
+	},
+
+	getValue: function(name) {
+		var el = this.getElement(name);
+		return el && el.getValue && el.getValue();
+	},
+
+	setValue: function(name, val) {
+		var el = this.getElement(name);
+		if (!el) el = this.createInside('input', { type: 'hidden', id: name, name: name });
+		el.setValue(val);
+	},
+
+	getValues: function() {
+		return this.getFormElements().each(function(el) {
+			if (!el.getDisabled()) this[el.getName()] = el.getValue(); 
+		}, {});
+	},
+
+	setValues: function(values) {
+		Base.each(values, function(val, name) {
+			this.setValue(name, val);
+		}, this);
 	}
 })
 
@@ -27,22 +52,11 @@ Form = HtmlElement.extend({
 		return this.getFormElements().each(function(el) {
 			el.enable(enable);
 		}, this);
-	},
-
-	getValue: function(name) {
-		var el = this.getElement(name);
-		return el && el.getValue && el.getValue();
-	},
-
-	setValue: function(name, val) {
-		var el = this.getElement(name);
-		if (!el) el = this.createInside('input', { type: 'hidden', id: name, name: name });
-		el.setValue(val);
 	}
 });
 
 FormElement = HtmlElement.extend({
-	_properties: ['name'],
+	_properties: ['name', 'disabled'],
 	_methods: ['focus', 'blur'],
 
 	enable: function(enable) {
