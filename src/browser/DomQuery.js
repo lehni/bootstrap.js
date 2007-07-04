@@ -47,7 +47,7 @@ new function() {
 	var XPATH= 0, FILTER = 1;
 
 	var methods = [ { // XPath: 
-		getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
+		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
 			var temp = context.namespaceURI ? 'xhtml:' : '';
 			seperator = separator && (separator = DomElement.separators[separator]);
 			temp += seperator ? separator[XPATH](tag) : tag;
@@ -81,7 +81,7 @@ new function() {
 				elements.push(res.snapshotItem(i));
 		}
 	}, { // Filter:
-		getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
+		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
 			if (separator && (separator = DomElement.separators[separator])) {
 				if (separator) {
 					items = separator[FILTER](items, tag);
@@ -116,7 +116,7 @@ new function() {
 					// Pass an empty array to the filter method, as a temporary
 					// storage space. Used in nth's filter.
 					items = items.filter(function(el) {
-						return handler(el, pseudo.argument, version);
+						return handler(el, pseudo.argument);
 					});
 				} else {
 					attribute = [null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument];
@@ -159,7 +159,7 @@ new function() {
 			var match = selector[i].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
 			if (!match) throw 'Bad selector: ' + selector[i];
 			var temp = method.getParam(items, separators[i - 1], context,
-				match[1] || '*', match[2], match[3], match[4], match[5], version);
+				match[1] || '*', match[2], match[3], match[4], match[5]);
 			if (!temp) break;
 			items = temp;
 		}
@@ -285,7 +285,7 @@ new function() {
 			}
 		},
 
-		function(el, argument, version) {
+		function(el, argument) {
 			var parent = el.parentNode, children = parent._children;
 			if (!children || children.version != version) {
 				if (!children) DomElement.collect(parent);
