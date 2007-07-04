@@ -136,7 +136,7 @@ HttpRequest = Base.extend(new function() {
 					this.fireEvent('success', text);
 					this.callChain();
 					// Some browsers need this object around for a while...
-					this.frame.div.remove.bind(this.frame.div).delay(1);
+					this.frame.div.remove.bind(this.frame.div).delay(1000);
 					this.frame = null;
 				}
 			}
