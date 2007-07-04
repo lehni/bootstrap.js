@@ -147,7 +147,8 @@ HtmlElement.inject(new function() {
 			return this.$['offset' + part];
 		};
 		fields['set' + part] = function(value) {
-			this.$.style[name] = value + 'px';
+			// Only set px if it's not ending with a unit already 
+			this.$.style[name] = /(%|px)$/.test(value) ? value : value + 'px';
 		};
 	});
 
