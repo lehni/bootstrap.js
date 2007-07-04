@@ -140,6 +140,8 @@ DomElement = Base.extend(new function() {
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
 
+	var dont = {};
+
 	return {
 		// Tells $typeof the type to return when encountering an element.
 		_type: 'element',
@@ -163,11 +165,14 @@ DomElement = Base.extend(new function() {
 				// Does the DomElement wrapper for this element already exist?
 				if (el._wrapper) return el._wrapper;
 			}
-			// Check if we're using the right constructor, if not, construct
-			// with the right one:
-			var ctor = constructor(el);
-			if (ctor != this.constructor)
-				return new ctor(el, props);
+			if (props == dont) props = null;
+			else {
+				// Check if we're using the right constructor, if not, construct
+				// with the right one:
+				var ctor = constructor(el);
+				if (ctor != this.constructor)
+					return new ctor(el, props);
+			}
 			// Store a reference to the native element.
 			this.$ = el;
 			this.id = el.id;
@@ -209,7 +214,7 @@ DomElement = Base.extend(new function() {
 				// Make sure we're using the right constructor. DomElement as 
 				// the default, HtmlElement for anything with className !== undefined
 				// and special constructors based on tag names.
-				return el ? el._wrapper || el._elements && el || new (constructor(el))(el) : null;
+				return el ? el._wrapper || el._elements && el || new (constructor(el))(el, dont) : null;
 			},
 
 			unwrap: function(el) {
