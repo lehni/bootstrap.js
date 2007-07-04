@@ -324,37 +324,47 @@ DomElement.inject(new function() {
 		},
 
 		appendChild: function(el) {
-			this.$.appendChild(DomElement.get(el).$);
-			return this;
-		},
-
-		appendText: function(text){
-			this.$.appendChild(document.createTextNode(text));
+			el = DomElement.get(el).$;
+			// Fix a bug on Mac IE when inserting Option elements to Select 
+			// elements, where the text on these objects is lost after insertion
+			var text = Browser.IE && el.text;
+			this.$.appendChild(el);
+			if (text) el.text = text;
 			return this;
 		},
 
 		insertBefore: function(el) {
 			el = DomElement.get(el);
+			// See appendChild
+			var text = Browser.IE && el.text;
 			el.$.parentNode.insertBefore(this.$, el.$);
+			if (text) this.$.text = text;
 			return this;
 		},
 
 		insertAfter: function(el) {
 			el = DomElement.get(el);
 			var next = el.getNext();
-			if (!next) el.$.parentNode.appendChild(this.$);
-			else el.$.parentNode.insertBefore(this.$, next.$);
+			if (next) this.insertBefore(next);
+			else el.getParent().appendChild(this);
 			return this;
 		},
 
 		insertFirst: function(el) {
 			el = DomElement.get(el);
-			el.$.insertBefore(this.$, el.$.firstChild);
+			var first = el.getFirst();
+			if (first) this.insertBefore(first);
+			else el.appendChild(this);
 			return this;
 		},
 
 		insertInside: function(el) {
 			DomElement.get(el).appendChild(this);
+			return this;
+		},
+
+		appendText: function(text){
+			this.$.appendChild(document.createTextNode(text));
 			return this;
 		},
 
@@ -371,7 +381,7 @@ DomElement.inject(new function() {
 				}
 				elements.push(el);
 			}
-			return elements;
+			return elements.length > 1 ? elements : elements[0];
 		},
 
 		createBefore: create('Before'),
