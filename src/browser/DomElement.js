@@ -444,6 +444,10 @@ DomElement.inject(new function() {
 			return EACH(src, function(val, name) {
 				this.setProperty(name, val);
 			}, this);
+		},
+
+		toString: function() {
+			return this.getTag() + (this.$.id ? '#' + this.$.id : '');
 		}
 	}
 });

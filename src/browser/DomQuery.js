@@ -83,9 +83,17 @@ new function() {
 	}, { // Filter:
 		getParam: function(items, separator, context, tag, id, className, attribute, pseudo, version) {
 			if (separator && (separator = DomElement.separators[separator])) {
-				items = separator[FILTER](items, tag);
-				if (id) items = items.filter(function(el) {
-					return el.id == id;
+				if (separator) {
+					items = separator[FILTER](items, tag);
+					if (id) items = items.filter(function(el) {
+						return el.id == id;
+					})
+				}
+			} else if (items.length) {
+				// If there is no seprataor and items contains elements,
+				// we're in item filter mode. Filter by tag and id then:
+				if (id || tag) items = items.filter(function(el) {
+					return (!tag || hasTag(el, tag)) && (!id || el.id == id);
 				});
 			} else {
 				if (id) {
@@ -131,6 +139,34 @@ new function() {
 		}
 	}];
 
+	var version = 0;
+
+	function evaluate(items, selector, context, elements) {
+		// XPATH does not properly match selected attributes in option elements
+		// Force filter code when the selectors contain "option["
+		// Also, use FILTER when filtering a previously filled list of items,
+		// as used by getParents()
+		var method = methods[typeof selector == 'string' &&
+			selector.contains('option[') || items.length || !Browser.XPATH
+			? FILTER : XPATH];
+		var separators = [];
+		selector = selector.trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
+			if (match.charAt(2)) match = match.trim();
+			separators.push(match.charAt(0));
+			return '%' + match.charAt(1);
+		}).split('%');
+		for (var i = 0; i < selector.length; i++) {
+			var match = selector[i].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
+			if (!match) throw 'Bad selector: ' + selector[i];
+			var temp = method.getParam(items, separators[i - 1], context,
+				match[1] || '*', match[2], match[3], match[4], match[5], version);
+			if (!temp) break;
+			items = temp;
+		}
+		method.getElements(items, elements, context);
+		return elements;
+	}
+
 	function following(one) {
 		return [
 			function(tag) {
@@ -142,7 +178,7 @@ new function() {
 					var next = item.nextSibling;
 					while (next) {
 						if (hasTag(next, tag)) {
-							this.push(next);
+							this[this.length] = next;
 							if (one) break;
 						}
 						next = next.nextSibling;
@@ -165,7 +201,7 @@ new function() {
 				return items.each(function(item) {
 					Base.each(item.childNodes, function(child) {
 						if (hasTag(child, tag))
-							this.push(child);
+							this[this.length] = child;
 					}, this);
 				}, []);
 			}
@@ -353,39 +389,18 @@ new function() {
 		}
 	};
 
-	var version = 0;
-
 	DomElement.inject({
 		getElements: function(selectors, nowrap) {
 			// Increase version number for keeping cached elements in sync.
 			version++;
 			var elements = nowrap ? [] : new this._elements();
-			// Xpath does not properly match selected attributes in option elements
-			// Force filter code when the selectors contain "option["
 			selectors = !selectors ? ['*'] : typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
 			for (var i = 0; i < selectors.length; i++) {
-				var selector = selectors[i], type = $typeof(selector);
-				if (type == 'element') elements.push(selector);
-				else {
-					var method = methods[type == 'string' && /option\[/.test(selector) || !Browser.XPATH ? FILTER : XPATH];
-					var items = [], separators = [];
-					selector = selector.trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
-						if (match.charAt(2)) match = match.trim();
-						separators.push(match.charAt(0));
-						return '%' + match.charAt(1);
-					}).split('%');
-					for (var j = 0; j < selector.length; j++) {
-						var match = selector[j].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
-						if (!match) throw 'Bad selector: ' + selector[j];
-						var temp = method.getParam(items, separators[j - 1], this.$,
-							match[1] || '*', match[2], match[3], match[4], match[5], version);
-						if (!temp) break;
-						items = temp;
-					}
-					method.getElements(items, elements, this.$);
-				}
+				var selector = selectors[i];
+				if ($typeof(selector) == 'element') elements.push(selector);
+				else evaluate([], selector, this.$, elements);
 			}
 			return elements;
 		},
@@ -410,16 +425,20 @@ new function() {
 		},
 
 		getParents: function(selector) {
-			var parents = new this._elements();
+			// Increase version number for keeping cached elements in sync.
+			version++;
+			var parents = [];
 			for (var el = this.$.parentNode; el; el = el.parentNode)
 				parents.push(el);
-			/*
-			// TODO:
-			return selector && selector != '*'
-				? DomElement.filter(parents, selector, this)
-				: parents;
-			*/
-			return parents;
+			return evaluate(parents, selector, this.$, new this._elements());
+		},
+
+		getParent: function(selector) {
+			return !selector ? this.base() : this.getParents(selector)[0];
+		},
+
+		hasParent: function(selector) {
+			return typeof selector == 'string' ? !!this.getParent(selector) : this.base(selector);
 		}
 	});
 }
