@@ -261,7 +261,8 @@ Array.inject(new function() {
 				}, {})
 			} else {
 				obj = Hash.create(obj);
-				return this.each(function(val) {
+				// Use Base.each since this is also used for generics
+				return Base.each(this, function(val) {
 					var type = $typeof(val);
 					obj.each(function(hint, name) {
 						if (hint == 'any' || type == hint) {

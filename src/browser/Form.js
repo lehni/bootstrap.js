@@ -27,6 +27,17 @@ Form = HtmlElement.extend({
 		return this.getFormElements().each(function(el) {
 			el.enable(enable);
 		}, this);
+	},
+
+	getValue: function(name) {
+		var el = this.getElement(name);
+		return el && el.getValue && el.getValue();
+	},
+
+	setValue: function(name, val) {
+		var el = this.getElement(name);
+		if (!el) el = this.createInside('input', { type: 'hidden', id: name, name: name });
+		el.setValue(val);
 	}
 });
 
@@ -48,12 +59,13 @@ Input = FormElement.extend({
 
 	getValue: function() {
 		if (this.$.checked && /^(checkbox|radio)$/.test(this.$.type) ||
-			/^(hidden|text|password)$/.test(this.$.type))
+			/^(hidden|text|password|button)$/.test(this.$.type))
 			return this.$.value;
 	},
 
 	// TODO: decide if setValue for checkboxes / radios should actually change
-	// the value or set checked if the values match!
+	// the value or set checked if the values match! Maybe a new function is
+	// needed that does that, e.g. set / getCurrent
 	setValue: function(val) {
 		if (/^(checkbox|radio)$/.test(this.$.type)) this.$.checked = this.$.value == val;
 		else this.$.value = val;

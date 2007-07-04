@@ -405,6 +405,10 @@ new function() {
 			return DomElement.get(el);
 		},
 
+		hasElement: function(selector) {
+			return !!this.getElement(selector);
+		},
+
 		getParents: function(selector) {
 			var parents = new this._elements();
 			for (var el = this.$.parentNode; el; el = el.parentNode)
