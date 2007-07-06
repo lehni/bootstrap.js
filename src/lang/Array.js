@@ -237,14 +237,19 @@ Array.inject(new function() {
 		},
 
 		/**
-		 * Appends the elments of the given enumerable object.
+		 * Appends the elments of the passed array.
 		 */
 		append: function(obj) {
+			/*
 			// Do not rely on obj to have .each set, as it might come from
 			// another frame.
 			return Base.each(obj, function(val) {
 				this.push(val);
 			}, this);
+			*/
+			for (var i = 0, j = obj.length; i < j; i++)
+				this.push(obj[i]);
+			return this;
 		},
 
 		/**
@@ -258,7 +263,7 @@ Array.inject(new function() {
 					this[name] = that[index];
 					if (index == that.length)
 						throw $break;
-				}, {})
+				}, {});
 			} else {
 				obj = Hash.create(obj);
 				// Use Base.each since this is also used for generics
