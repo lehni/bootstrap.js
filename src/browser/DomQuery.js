@@ -34,7 +34,7 @@ new function() {
 	}
 
 	function getAttribute(attribute) {
-		var match = attribute.match(/^(\w+)(?:([!*^$~]?=)["']?([^"'\]]*)["']?)?$/);
+		var match = attribute.match(/^(\w+)(?:([!*^$~|]?=)["']?([^"'\]]*)["']?)?$/);
 		if (!match) throw 'Bad attribute selector: ' + attribute;
 		return match;
 	}
@@ -174,6 +174,19 @@ new function() {
 			},
 
 			function(items, tag) {
+				var found = [];
+				for (var i = 0, j = items.length; i < j; i++){
+					var next = items[i].nextSibling;
+					while (next) {
+						if (hasTag(next, tag)) {
+							found[found.length] = next;
+							if (one) break;
+						}
+						next = next.nextSibling;
+					}
+				}
+				return found;
+				/*
 				return items.each(function(item) {
 					var next = item.nextSibling;
 					while (next) {
@@ -184,6 +197,7 @@ new function() {
 						next = next.nextSibling;
 					}
 				}, []);
+				*/
 			}
 		];
 	}
@@ -198,12 +212,23 @@ new function() {
 				return '/' + tag;
 			},
 			function(items, tag) {
+				var found = [];
+				for (var i = 0, j = items.length; i < j; i++){
+					var children = items[i].childNodes;
+					for (var k = 0, l = children.length; k < l; k++) {
+						var child = children[k]
+						if (hasTag(child, tag)) found[found.length] = child;
+					}
+				}
+				return found;
+				/*
 				return items.each(function(item) {
 					Base.each(item.childNodes, function(child) {
 						if (hasTag(child, tag))
 							this[this.length] = child;
 					}, this);
 				}, []);
+				*/
 			}
 		],
 
@@ -212,9 +237,15 @@ new function() {
 				return '//' + tag;
 			},
 			function(items, tag) {
+				var found = [];
+				for (var i = 0, j = items.length; i < j; i++)
+					found.append(items[i].getElementsByTagName(tag));
+				return found;
+				/*
 				return items.each(function(item) {
 					this.append(item.getElementsByTagName(tag));
 				}, []);
+				*/
 			}
 		]
 	};
@@ -262,6 +293,15 @@ new function() {
 			},
 			function(a, v) {
 				return a != v;
+			}
+		],
+
+		'|=': [
+			function(a, v) {
+				return '[starts-with(@' + a + ', "' + v + '-") or @' + a + '="' + v + '"]';
+			},
+			function(a, v) {
+				return a == v || a.substr(0, v.length + 1) == v + '-';
 			}
 		],
 
@@ -425,11 +465,11 @@ new function() {
 		},
 
 		getParents: function(selector) {
-			// Increase version number for keeping cached elements in sync.
-			version++;
 			var parents = [];
 			for (var el = this.$.parentNode; el; el = el.parentNode)
 				parents.push(el);
+			// Increase version number for keeping cached elements in sync.
+			version++;
 			return evaluate(parents, selector, this.$, new this._elements());
 		},
 
