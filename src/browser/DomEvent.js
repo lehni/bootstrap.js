@@ -147,41 +147,36 @@ DomElement.inject({
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
 		if (func && !entries.find(function(entry) { return entry.func == func })) {
-			// Do not store bound in the function object, as functions may be
-			// shared among several elements, and they each have their own 
-			// bound function. So use entries that point to both instead, as 
-			// both the original function and the bound function are needed
-			// for removal of the event listener.
 			// See if we need to fake an event here.
-			var orig = func, fake = DomEvent.events[type];
+			var listener = func, name = type, fake = DomEvent.events[type];
 			if (fake) {
-				if (fake.add) func = fake.add.call(this, func) || func;
-				if (fake.property) this[fake.property] = orig;
-				func = fake.listener || func;
-				type = fake.type;
+				if (typeof fake == 'funciton') fake = fake.call(this, func);
+				listener = fake.listener || listener;
+				name = fake.type;
 			}
-			if (type) {
-				// Check if the function takes a parameter. If so, it must
-				// want an event. Wrap it so it recieves a wrapped event, and
-				// bind it to that at the same time, as on PC IE, event listeners
-				// are not called bound to their objects.
-				var that = this, bound = (func.parameters().length == 0)
-					? func.bind(this)
-					: function(event) { 
-						return func.call(that, new DomEvent(event));
-					};
+			// Check if the function takes a parameter. If so, it must
+			// want an event. Wrap it so it recieves a wrapped event, and
+			// bind it to that at the same time, as on PC IE, event listeners
+			// are not called bound to their objects.
+			var that = this, bound = (listener.parameters().length == 0)
+				? listener.bind(this)
+				: function(event) { 
+					event = new DomEvent(event);
+					if (listener.call(that, event) === false)
+						event.stop();
+				};
+			if (name) {
 				if (this.$.addEventListener) {
-					this.$.addEventListener(type, bound, false);
+					this.$.addEventListener(name, bound, false);
 				} else if (this.$.attachEvent) {
-					this.$.attachEvent('on' + type, bound);
+					this.$.attachEvent('on' + name, bound);
 #ifdef BROWSER_LEGACY
 				} else {
 					// Simulate multiple callbacks, with support for
 					// stopPropagation and preventDefault
-					this.$['on' + type] = function(event) {
-						event = new DomEvent(event);
+					this.$['on' + name] = function(event) {
 						entries.each(function(entry) {
-							entry.func.call(that, event);
+							entry.bound(event);
 							if (event.event.cancelBubble) throw $break;
 						});
 						// passing "this" for bind above breaks throw $break
@@ -192,7 +187,9 @@ DomElement.inject({
 #endif // !BROWSER_LEGACY
 				}
 			}
-			entries.push({ func: func, bound: bound });
+			// func is the one to be called through fireEvent. see dragstart
+			// Also store a refrence to name here, as this might have changed too.
+			entries.push({ func: func, name: name, bound: bound });
 		}
 		return this;
 	},
@@ -207,20 +204,16 @@ DomElement.inject({
 			entries = this.events[type] = Array.create(entries);
 #endif // !BROWSER_LEGACY
 			if (entry = entries.remove(function(entry) { return entry.func == func })) {
-				var fake = DomEvent.events[type];
-				if (fake) {
-					if (fake.remove) fake.remove.call(this, func);
-					if (fake.property) delete this[fake.property];
-					type = fake.type;
-				}
-				if (type) {
+				var name = entry.name, fake = DomEvent.events[type];
+				if (fake && fake.remove) fake.remove.call(this, func);
+				if (name) {
 					if (this.$.removeEventListener) {
-						this.$.removeEventListener(type, entry.bound, false);
+						this.$.removeEventListener(name, entry.bound, false);
 					} else if (this.$.detachEvent) {
-						this.$.detachEvent('on' + type, entry.bound);
+						this.$.detachEvent('on' + name, entry.bound);
 #ifdef BROWSER_LEGACY
 					} else if (!entries.length) {
-						this.$['on' + type] = null;
+						this.$['on' + name] = null;
 #endif // !BROWSER_LEGACY
 					}
 				}
@@ -252,12 +245,13 @@ DomElement.inject({
 		return this;
 	},
 
-	fireEvent: function(type) {
+	fireEvent: function(type, event) {
 		var entries = (this.events || {})[type];
 		if (entries) {
-			var args = Array.slice(arguments, 1);
+			// Make sure we pass already wrapped events through
+			if (event) event = event.event ? event : new DomEvent(event);
 			entries.each(function(entry) {
-				entry.func.apply(this, args);
+				entry.func.call(this, event);
 			}, this);
 		}
 	},
