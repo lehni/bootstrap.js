@@ -30,10 +30,14 @@ Json = new function() {
 		},
 
 		decode: function(string, secure) {
-			return ($typeof(string) != 'string' || !string.length) ||
-				(secure && !(/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/).test(string.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '')))
-				? null
-			 	: eval('(' + string + ')');
+			try {
+				return ($typeof(string) != 'string' || !string.length) ||
+					(secure && !/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(
+						string.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '')))
+					? null : eval('(' + string + ')');
+			} catch(e) {
+				return null;
+			}
 		}
 	};
 };
