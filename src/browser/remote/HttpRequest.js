@@ -46,7 +46,7 @@ HttpRequest = Base.extend(new function() {
 			iframe: window.frames[id] || document.getElementById(id),
 			element: Document.getElement(id)
 		};
-		// Opera fix: force the frame to render:
+		// Opera fix: force the iframe to be valid
 		div.offsetWidth;
 	}
 
@@ -72,6 +72,9 @@ HttpRequest = Base.extend(new function() {
 			var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function' });
 			this.url = params.url;
 			this.setOptions(params.options);
+			// if a handler is passed, it is used to recieve both success and
+			// failure events. Only the success event will recieve a result
+			// argument though.
 			if (params.handler)
 				this.addEvents({ success: params.handler, failure: params.handler });
 			this.options.isSuccess = this.options.isSuccess || this.isSuccess;
@@ -125,20 +128,18 @@ HttpRequest = Base.extend(new function() {
 			var frame = this.frame && this.frame.iframe;
 			if (frame && frame.location != 'about:blank') {
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
-				var text = doc && doc.body && (doc.body.innerHTML || doc.body.innerText);
-				if (text != null) {
-					// First tag in IE ends up in <head>, safe it
-					// res.text = res.text.replace(/<title><\/title>/gi, "")
-					//	.replace(/^(<head>([\s\S]*)<\/head>\s*<body>|<body>)([\s\S]*)<\/body>$/gi, "$2$3");
-					var head = Browser.IE && doc.getElementsByTagName('head')[0];
-					text = (head && head.innerHTML || '') + text;
-					this.response = { text: text };
-					this.fireEvent('success', text);
-					this.callChain();
-					// Some browsers need this object around for a while...
-					this.frame.div.remove.bind(this.frame.div).delay(1000);
-					this.frame = null;
-				}
+				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
+				// First tag in IE ends up in <head>, safe it
+				// res.text = res.text.replace(/<title><\/title>/gi, "")
+				//	.replace(/^(<head>([\s\S]*)<\/head>\s*<body>|<body>)([\s\S]*)<\/body>$/gi, "$2$3");
+				var head = Browser.IE && doc.getElementsByTagName('head')[0];
+				text = (head && head.innerHTML || '') + text;
+				this.response = { text: text };
+				this.fireEvent('success', text);
+				this.callChain();
+				// Some browsers need this object to stay around for a while
+				this.frame.div.remove.bind(this.frame.div).delay(1000);
+				this.frame = null;
 			}
 		},
 
@@ -181,7 +182,8 @@ HttpRequest = Base.extend(new function() {
 				if (this.frame.form)
 					this.frame.form.set({
 						target: this.frame.id, action: url, method: method,
-						// Firefox does not seem to support setting charset= on enctype here, so leave it away...
+						// Firefox does not seem to support setting charset= 
+						// on enctype here, so ignore this.encoding here
 						enctype: method == 'get' ? 'application/x-www-form-urlencoded' : 'multipart/form-data'
 					}).submit();
 				else
