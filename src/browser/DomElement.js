@@ -175,7 +175,6 @@ DomElement = Base.extend(new function() {
 			}
 			// Store a reference to the native element.
 			this.$ = el;
-			this.id = el.id;
 			// Store a reference in the native element to the wrapper. 
 			// Needs to be cleaned up by garbage collection. See above
 			el._wrapper = this;
@@ -292,6 +291,10 @@ DomElement.inject(new function() {
 			return this.$.tagName.toLowerCase();
 		},
 
+		getId: function() {
+			return this.$.id;
+		},
+
 		getPrevious: function() {
 			return walk(this.$, 'previousSibling');
 		},
@@ -398,7 +401,8 @@ DomElement.inject(new function() {
 		createInside: create('Inside'),
 
 		remove: function() {
-			this.$.parentNode.removeChild(this.$);
+			if (this.$.parentNode)
+				this.$.parentNode.removeChild(this.$);
 			return this;
 		},
 
@@ -414,7 +418,8 @@ DomElement.inject(new function() {
 
 		replaceWith: function(el) {
 			el = DomElement.get(el);
-			this.$.parentNode.replaceChild(el.$, this.$);
+			if (this.$.parentNode)
+				this.$.parentNode.replaceChild(el.$, this.$);
 			return el;
 		},
 
