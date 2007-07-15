@@ -17,7 +17,7 @@
 if (!Array.prototype.push) {
 	Array.inject({
 		push: function() {
-			for (var i = 0, j = arguments.length; i < j; i++)
+			for (var i = 0, j = arguments.length; i < j; ++i)
 				this[this.length++] = arguments[i];
 			return this.length;
 		},
@@ -32,7 +32,7 @@ if (!Array.prototype.push) {
 
 		shift: function() {
 			var old = this[0];
-			for (var i = 0, j = this.length - 1; i < j; i++)
+			for (var i = 0, j = this.length - 1; i < j; ++i)
 				this[i] = this[i + 1];
 			delete this[this.length - 1];
 			this.length--;
@@ -44,7 +44,7 @@ if (!Array.prototype.push) {
 			this.length += num;
 			for (var i = len - 1; i >= 0; i--)
 				this[i + num] = this[i];
-			for (i = 0; i < num; i++)
+			for (i = 0; i < num; ++i)
 				this[i] = arguments[i];
 			return this.length;
 		},
@@ -52,7 +52,7 @@ if (!Array.prototype.push) {
 		splice: function(start, del) {
 			var res = new Array(del), len = this.length;
 			// Collect all the removed elements.
-			for (var i = 0; i < del; i++)
+			for (var i = 0; i < del; ++i)
 				res[i] = this[i + start];
 			var num = arguments.length - 2;
 			if (num > 0) del -= num;
@@ -62,7 +62,7 @@ if (!Array.prototype.push) {
 					this[i] = this[i + del];
 				// Delete the entries that are not used any more.
 				// This is needed for pseudo arrays.
-				for (i = len - del; i < len; i++)
+				for (i = len - del; i < len; ++i)
 					delete this[i];
 				this.length = len - del;
 			} else {
@@ -78,7 +78,7 @@ if (!Array.prototype.push) {
 			}
 			// Add the new entries
 			if (num > 0)
-				for (i = 0; i < num; i++)
+				for (i = 0; i < num; ++i)
 					this[i + start] = arguments[i + 2];
 			return res;
 		},
@@ -91,7 +91,7 @@ if (!Array.prototype.push) {
 			if (end < 0) end += this.length;
 			else if (end == null) end = this.length;
 			var res = new Array(end - start);
-			for (var i = start; i < end; i++)
+			for (var i = start; i < end; ++i)
 				res[i - start] = this[i];
 			return res;
 		}
@@ -120,7 +120,7 @@ Array.inject(new function() {
 		indexOf: proto.indexOf || function(obj, i) {
 			i = i || 0;
 			if (i < 0) i = Math.max(0, this.length + i);
-			for (var j = this.length; i < j; i++)
+			for (var j = this.length; i < j; ++i)
 				if (this[i] == obj) return i;
 			return -1;
 		},
@@ -142,7 +142,7 @@ Array.inject(new function() {
 		 */
 		filter: ITERATE(proto.filter || function(iter, bind, that) {
 			var res = [];
-			for (var i = 0, j = this.length; i < j; i++)
+			for (var i = 0, j = this.length; i < j; ++i)
 				if (ITERATOR(iter, bind, this[i], i, that, __filter))
 					res[res.length] = this[i];
 			return res;
@@ -150,20 +150,20 @@ Array.inject(new function() {
 
 		map: ITERATE(proto.map || function(iter, bind, that) {
 			var res = new Array(this.length);
-			for (var i = 0, j = this.length; i < j; i++)
+			for (var i = 0, j = this.length; i < j; ++i)
 				res[i] = ITERATOR(iter, bind, this[i], i, that, __map);
 			return res;
 		}, '__map'),
 
 		every: ITERATE(proto.every || function(iter, bind, that) {
-			for (var i = 0, j = this.length; i < j; i++)
+			for (var i = 0, j = this.length; i < j; ++i)
 				if (!ITERATOR(iter, bind, this[i], i, that, __every))
 					return false;
 			return true;
 		}, '__every'),
 
 		some: ITERATE(proto.some || function(iter, bind, that) {
-			for (var i = 0, j = this.length; i < j; i++)
+			for (var i = 0, j = this.length; i < j; ++i)
 				if (ITERATOR(iter, bind, this[i], i, that, __some))
 					return true;
 			return false;
@@ -247,7 +247,7 @@ Array.inject(new function() {
 				this.push(val);
 			}, this);
 			*/
-			for (var i = 0, j = obj.length; i < j; i++)
+			for (var i = 0, j = obj.length; i < j; ++i)
 				this.push(obj[i]);
 			return this;
 		},
@@ -334,7 +334,7 @@ Array.inject(new function() {
 				if (list.toArray)
 					return list.toArray();
 				var res = [];
-				for (var i = 0; i < list.length; i++)
+				for (var i = 0; i < list.length; ++i)
 					res[i] = list[i];
 				return res;
 			},
@@ -347,7 +347,7 @@ Array.inject(new function() {
 				// injecting the Array fields, which explicitely contain the
 				// native functions too (see bellow).
 				// Not supported: concat (Safari breaks it)
-				var ret = Base.extend(fields).inject(src);
+				var ret = Base.extend(extend).inject(src);
 				// The subclass can use the normal extend again:
 				ret.extend = Function.extend;
 				return ret;
@@ -357,14 +357,18 @@ Array.inject(new function() {
 	// Fields that are hidden in Array.prototype are explicitely copied over,
 	// so that they can be inherited in extend() above, and generics are created
 	// for them too.
-	['push','pop','shift','unshift','sort','reverse','join','slice','splice','toString'].each(function(name) {
+	['push','pop','shift','unshift','sort','reverse','join','slice','splice','concat'].each(function(name) {
 		fields[name] = proto[name];
 	});
+	var extend = Base.clone(fields);
 	// length is set so instances of array have it set to 0 to begin with.
 	// (any length modifying operation on them like #push will then
 	// define / modify the length field in the insance). We cannot set it in the
 	// Hash above, as this would make Base.each believe it's an array like object.
-	fields.length = 0;
+	extend.length = 0;
+	// The native toString does not work for classes inheriting from Array.
+	// but luckily join does the same and works.
+	extend.toString = proto.join;
 	return fields;
 });
 
