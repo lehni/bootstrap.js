@@ -77,37 +77,35 @@ new function() {
 		getElements: function(items, elements, context) {
 			var res = document.evaluate('.//' + items.join(''), context,
 				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-			for (var i = 0, j = res.snapshotLength; i < j; i++)
+			for (var i = 0, j = res.snapshotLength; i < j; ++i)
 				elements.push(res.snapshotItem(i));
 		}
 	}, { // Filter:
 		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
 			if (separator && (separator = DomElement.separators[separator])) {
-				if (separator) {
-					items = separator[FILTER](items, tag);
-					if (id) items = items.filter(function(el) {
-						return el.id == id;
-					})
-				}
-			} else if (items.length) {
+				if (separator) items = separator[FILTER](items, tag);
+				tag = null; // Clear as it is already filtered through the separator
+			} else if (!items.length) {
 				// If there is no seprataor and items contains elements,
-				// we're in item filter mode. Filter by tag and id then:
-				if (id || tag) items = items.filter(function(el) {
-					return (!tag || hasTag(el, tag)) && (!id || el.id == id);
-				});
-			} else {
+				// we're in item filter mode. Only filter by tag and id bellow then.
 				if (id) {
+					// first try getElementById. If that does not return the right
+					// object, retrieve tags first and then filter by id.
 					var el = document.getElementById(id);
-					if (!el || context && !DomElement.isAncestor(el, context) || !hasTag(el, tag))
-						return null;
-					items = [el];
-				} else {
-					items = Array.create(context.getElementsByTagName(tag));
+					if (el && (!context || DomElement.isAncestor(el, context)) && hasTag(el, tag))
+						items = [el];
 				}
+				if (items.length) id = null; // Clear as it's already filtered through getElementById
+				else if (tag) items = Array.create(context.getElementsByTagName(tag));
+				tag = null; // Clear as it is already filtered by getElementsByTagName
 			}
-			if (className) items = items.filter(function(el) {
-				return el.className && (' ' + el.className + ' ').indexOf(' ' + className + ' ') != -1;
-			});
+			// Now filter by id, tag and classname in one go:
+			var filter = [];
+			if (id) filter.push("el.id == id");
+			if (tag) filter.push("hasTag(el, tag)");
+			if (className) filter.push("el.className && (' ' + el.className + ' ').indexOf(' ' + className + ' ') != -1");
+			if (filter.length) // do not use new Function(), as this cannot access the local scope, while eval can
+				items = items.filter(eval('(function(el) { return ' + filter.join(' && ') + ' })'));
 			if (attribute) attribute = getAttribute(attribute);
 			if (pseudo) {
 				pseudo = getPseudo(pseudo, FILTER);
@@ -155,7 +153,7 @@ new function() {
 			separators.push(match.charAt(0));
 			return '%' + match.charAt(1);
 		}).split('%');
-		for (var i = 0; i < selector.length; i++) {
+		for (var i = 0; i < selector.length; ++i) {
 			var match = selector[i].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
 			if (!match) throw 'Bad selector: ' + selector[i];
 			var temp = method.getParam(items, separators[i - 1], context,
@@ -175,7 +173,7 @@ new function() {
 
 			function(items, tag) {
 				var found = [];
-				for (var i = 0, j = items.length; i < j; i++){
+				for (var i = 0, j = items.length; i < j; ++i){
 					var next = items[i].nextSibling;
 					while (next) {
 						if (hasTag(next, tag)) {
@@ -213,7 +211,7 @@ new function() {
 			},
 			function(items, tag) {
 				var found = [];
-				for (var i = 0, j = items.length; i < j; i++){
+				for (var i = 0, j = items.length; i < j; ++i){
 					var children = items[i].childNodes;
 					for (var k = 0, l = children.length; k < l; k++) {
 						var child = children[k]
@@ -238,7 +236,7 @@ new function() {
 			},
 			function(items, tag) {
 				var found = [];
-				for (var i = 0, j = items.length; i < j; i++)
+				for (var i = 0, j = items.length; i < j; ++i)
 					found.append(items[i].getElementsByTagName(tag));
 				return found;
 				/*
@@ -370,7 +368,7 @@ new function() {
 			},
 			function(el, argument) {
 				var nodes = el.childNodes;
-				for (var i = 0; i < nodes.length; i++) {
+				for (var i = 0; i < nodes.length; ++i) {
 					var child = nodes[i];
 					if (child.nodeName && child.nodeType == 3 &&
 						child.nodeValue.contains(argument)) return true;
@@ -437,7 +435,7 @@ new function() {
 			selectors = !selectors ? ['*'] : typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
-			for (var i = 0; i < selectors.length; i++) {
+			for (var i = 0; i < selectors.length; ++i) {
 				var selector = selectors[i];
 				if ($typeof(selector) == 'element') elements.push(selector);
 				else evaluate([], selector, this.$, elements);
