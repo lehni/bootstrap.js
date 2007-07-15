@@ -13,15 +13,17 @@ DomEvent.add(new function() {
 	var object, last;
 
 	function dragStart(event) {
-		event.type = 'dragstart';
-		last = event.page;
-		if (this.onDragStart) this.onDragStart(event);
-		// onDragStart might stop the event, check here
-		if (!event.stopped) {
-			event.stop();
-			Document.addEvent('mousemove', drag);
-			Document.addEvent('mouseup', dragEnd);
-			object = this;
+		if (object != this) {
+			event.type = 'dragstart';
+			last = event.page;
+			this.fireEvent('dragstart', event);
+			// dragstart might stop the event, check here
+			if (!event.stopped) {
+				event.stop();
+				Document.addEvent('mousemove', drag);
+				Document.addEvent('mouseup', dragEnd);
+				object = this;
+			}
 		}
 	}
 
@@ -32,31 +34,33 @@ DomEvent.add(new function() {
 			y: event.page.y - last.y
 		}
 		last = event.page;
-		if (object.onDrag) object.onDrag(event);
+		object.fireEvent('drag', event);
 		event.preventDefault();
 	}
 
 	function dragEnd(event) {
-		event.type = 'dragend';
-		if (object.onDragEnd) object.onDragEnd(event);
-		event.preventDefault();
-		Document.removeEvent('mousemove', drag);
-		Document.removeEvent('mouseup', dragEnd);
-		object = null;
+		if (object) {
+			event.type = 'dragend';
+			object.fireEvent('dragend', event);
+			event.preventDefault();
+			Document.removeEvent('mousemove', drag);
+			Document.removeEvent('mouseup', dragEnd);
+			object = null;
+		}
 	}
 
 	return {
 		dragstart: {
-			property: 'onDragStart',
 			type: 'mousedown',
 			listener: dragStart
 		},
+
 		drag: {
-			property: 'onDrag'
+			type: 'mousedown',
+			listener: dragStart
 		},
-		dragend: {
-			property: 'onDragEnd'
-		}
+
+		dragend: {}
 	};
 });
 
