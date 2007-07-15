@@ -129,9 +129,9 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifdef DONT_ENUM
-				if (visible(src, name) && !/^(statics|_generics|_hide)$/.test(name))
+				if (visible(src, name) && !/^(statics|_generics|_hide|toString|valueOf)$/.test(name))
 #elif !defined(HELMA)
-				if (visible(src, name) && !/^(statics|_generics|prototype)$/.test(name))
+				if (visible(src, name) && !/^(statics|_generics|prototype|toString|valueOf)$/.test(name))
 #else // HELMA
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
@@ -187,14 +187,17 @@ new function() { // bootstrap
 		// it means it was modified somewhere between obj and there.
 		// If the entry allows overriding, we return true although _dontEnum
 		// lists it.
+		// We also need to detect if entries are actually _dontEnum entires
+		// or fields stored in Object.prototype. Check wether they have the 
+		// _object field set.
 #ifdef BROWSER_LEGACY
 		var val = obj[name], entry;
 		return val !== undefined && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== val);
+				!entry._object || entry._allow && entry._object[name] !== val);
 #else // !BROWSER_LEGACY
 		var entry;
 		return name in obj && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
-				entry.allow && entry.object[name] !== obj[name]);
+				!entry._object || entry._allow && entry._object[name] !== obj[name]);
 #endif // !BROWSER_LEGACY
 #else // !DONT_ENUM
 #ifndef HELMA
@@ -287,6 +290,10 @@ new function() { // bootstrap
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
+#ifdef HELMA
+			// On Helma, we can only dontEnum fields after they are set.
+			proto.dontEnum('constructor');
+#endif // HELMA
 			// An object to be passed as the first parameter in constructors
 			// when initialize should not be called. This needs to be a property
 			// of the created constructor, so that if .extend is called on native
@@ -372,8 +379,8 @@ new function() { // bootstrap
 			var d = this._dontEnum = !(d = this._dontEnum) ? {} :
 					d._object != this ? new (extend(d)) : d;
 			d._object = this;
-			for (var i = force == true ? 1 : 0; i < arguments.length; i++)
-				d[arguments[i]] = { object: this, allow: force != true };
+			for (var i = force == true ? 1 : 0; i < arguments.length; ++i)
+				d[arguments[i]] = { _object: this, _allow: force != true };
 		}
 	});
 
@@ -453,10 +460,10 @@ new function() { // bootstrap
 function $typeof(obj) {
 #ifdef BROWSER
 	// Handle elements, as needed by DomElement.js
-	return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element')
-		|| typeof obj) || undefined;
+	return obj != null && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element')
+		|| typeof obj) || null;
 #else // !BROWSER
-	return obj && (obj._type || typeof obj) || undefined;
+	return obj != null && (obj._type || typeof obj) || null;
 #endif // !BROWSER
 }
 
