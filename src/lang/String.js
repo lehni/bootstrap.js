@@ -40,8 +40,8 @@ String.inject({
 		});
 	},
 
-	hyphenate: function() {
-		return this.uncamelize().toLowerCase();
+	hyphenate: function(separator) {
+		return this.uncamelize(separator).toLowerCase();
 	},
 
 	capitalize: function() {
