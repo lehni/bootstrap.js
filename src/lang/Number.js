@@ -12,7 +12,7 @@ Number.inject({
 	toInt: String.prototype.toInt,
 	toFloat: String.prototype.toFloat,
 	times: function(fn) {
-		for (var i = 0; i < this; i++) fn(i);
+		for (var i = 0; i < this; ++i) fn(i);
 	}
 });
 

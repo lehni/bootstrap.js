@@ -101,7 +101,7 @@ Enumerable = new function() {
 	};
 
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
-		for (var i = 0, j = this.length; i < j; i++)
+		for (var i = 0, j = this.length; i < j; ++i)
 			ITERATOR(iter, bind, this[i], i, this, __each);
 	};
 

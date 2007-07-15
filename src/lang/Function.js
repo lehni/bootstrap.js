@@ -116,7 +116,7 @@ if (!Function.prototype.apply) {
 			var fn = cache[index];
 			if (!fn) {
 				fn = [];
-				for (var i = start; i < count; i++)
+				for (var i = start; i < count; ++i)
 					fn[i - start] = 'args[' + i + ']';
 				fn = cache[index] = new Function('obj, args',
 					'return obj.__f(' + fn + ');');
