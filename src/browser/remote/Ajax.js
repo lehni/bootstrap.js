@@ -79,6 +79,9 @@ Ajax = HttpRequest.extend({
 });
 
 Base.inject({
+	HIDE
+	_generics: true,
+
 	toQueryString: function() {
 		return EACH(this, function(val, key) {
 			this.push(encodeURIComponent(key) + '=' + encodeURIComponent(val));
@@ -95,9 +98,9 @@ HtmlElement.inject({
 		return new Ajax(this.getProperty('action'), Hash.create({ method: 'post' }, options)).request(this);
 	},
 
-	update: function(/* url: 'string', options: 'object', onComplete: 'function', data: 'any' */) {
-		var params = Array.associate(arguments, { url: 'string', options: 'object', onComplete: 'function', data: 'any' });
-		return new Ajax(params.url, Hash.create({ update: this }, params.options), params.onComplete).request(params.data);
+	update: function(/* url: 'string', options: 'object', handler: 'function', data: 'any' */) {
+		var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function', data: 'any' });
+		return new Ajax(params.url, Hash.create({ update: this }, params.options), params.handler).request(params.data);
 	}
 });
 
