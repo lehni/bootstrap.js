@@ -19,6 +19,7 @@
 #include "browser/Style.js"
 #include "browser/Dimension.js"
 #include "browser/Form.js"
+#include "browser/Selection.js"
 #include "browser/Window.js"
 #include "browser/Document.js"
 #include "browser/Drag.js"
