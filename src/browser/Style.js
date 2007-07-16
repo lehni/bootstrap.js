@@ -18,6 +18,7 @@
 HtmlElement.inject(new function() {
 	var fields = {
 		getStyle: function(name, dontCompute) {
+			if (name == undefined) return this.getStyles();
 			var el = this.$;
 			name = name.camelize();
 			var style = el.style[name];
@@ -55,6 +56,7 @@ HtmlElement.inject(new function() {
 		},
 
 		setStyle: function(name, value) {
+			if (value == undefined) return this.setStyles(name);
 			// Convert multi params to array:
 			if (arguments.length > 2) value = Array.slice(arguments, 1);
 			var el = this.$;
@@ -80,9 +82,9 @@ HtmlElement.inject(new function() {
 		},
 
 		getStyles: function() {
-			return EACH(arguments, function(name) {
+			return arguments.length ? EACH(arguments, function(name) {
 				this[name] = that.getStyle(name);
-			}, {});
+			}, {}) : this.$.style.cssText;
 		},
 
 		setStyles: function(styles) {
@@ -95,7 +97,7 @@ HtmlElement.inject(new function() {
 				}, this);
 				break;
 			case 'string':
-				this.$.cssText = styles;
+				this.$.style.cssText = styles;
 			}
 			return this;
 		}
