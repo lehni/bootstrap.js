@@ -1,5 +1,5 @@
-#ifndef __browser_Fx_CSS__
-#define __browser_Fx_CSS__
+#ifndef __browser_effects_Fx_CSS__
+#define __browser_effects_Fx_CSS__
 
 #ifdef HIDDEN
 /**
@@ -84,4 +84,4 @@ Fx.CSS = new function() {
 	}
 };
 
-#endif // __browser_Fx_CSS__
+#endif // __browser_effects_Fx_CSS__

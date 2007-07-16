@@ -1,5 +1,5 @@
-#ifndef __browser_Drag__
-#define __browser_Drag__
+#ifndef __browser_dom_Drag__
+#define __browser_dom_Drag__
 
 #include "DomEvent.js"
 #include "Document.js"
@@ -64,4 +64,4 @@ DomEvent.add(new function() {
 	};
 });
 
-#endif // __browser_Drag__
+#endif // __browser_dom_Drag__

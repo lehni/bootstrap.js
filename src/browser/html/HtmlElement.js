@@ -1,5 +1,5 @@
-#ifndef __browser_HtmlElement__
-#define __browser_HtmlElement__
+#ifndef __browser_html_HtmlElement__
+#define __browser_html_HtmlElement__
 
 #ifdef HIDDEN
 /**
@@ -9,6 +9,8 @@
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
 #endif
+
+#include "../dom/DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlElements
@@ -93,4 +95,4 @@ HtmlElement.inject({
 	}
 });
 
-#endif // __browser_HtmlElement__
+#endif // __browser_html_HtmlElement__

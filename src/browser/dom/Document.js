@@ -1,5 +1,5 @@
-#ifndef __browser_Document__
-#define __browser_Document__
+#ifndef __browser_dom_Document__
+#define __browser_dom_Document__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Document
@@ -16,4 +16,4 @@ function $$(selector, root) {
 	return (root || Document).getElements(selector);
 }
 
-#endif // __browser_Document__
+#endif // __browser_dom_Document__

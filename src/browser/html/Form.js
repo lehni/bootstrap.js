@@ -1,5 +1,5 @@
-#ifndef __browser_Form__
-#define __browser_Form__
+#ifndef __browser_html_Form__
+#define __browser_html_Form__
 
 #include "HtmlElement.js"
 
@@ -123,4 +123,4 @@ SelectOption = FormElement.extend({
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
 });
 
-#endif // __browser_Form__	
+#endif // __browser_html_Form__	

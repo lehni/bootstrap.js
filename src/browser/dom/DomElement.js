@@ -1,5 +1,5 @@
-#ifndef __browser_DomElement__
-#define __browser_DomElement__
+#ifndef __browser_dom_DomElement__
+#define __browser_dom_DomElement__
 
 #ifdef HIDDEN
 /**
@@ -462,4 +462,4 @@ DomElement.inject(new function() {
 	}
 });
 
-#endif // __browser_DomElement__
+#endif // __browser_dom_DomElement__

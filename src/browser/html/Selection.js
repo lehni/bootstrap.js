@@ -1,5 +1,5 @@
-#ifndef __browser_Selection__
-#define __browser_Selection__
+#ifndef __browser_html_Selection__
+#define __browser_html_Selection__
 
 #include "Form.js"
 
@@ -66,4 +66,4 @@ FormElement.inject({
  
 });
 
-#endif // __browser_Selection__
+#endif // __browser_html_Selection__

@@ -1,5 +1,5 @@
-#ifndef __browser_Asset__
-#define __browser_Asset__
+#ifndef __browser_remote_Asset__
+#define __browser_remote_Asset__
 
 #ifdef HIDDEN
 /**
@@ -94,4 +94,4 @@ Asset = new function() {
 	}
 };
 
-#endif // __browser_Asset__
+#endif // __browser_remote_Asset__

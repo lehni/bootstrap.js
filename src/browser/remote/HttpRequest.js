@@ -1,5 +1,5 @@
-#ifndef __lang_HttpRequest__
-#define __lang_HttpRequest__
+#ifndef __browser_remote_HttpRequest__
+#define __browser_remote_HttpRequest__
 
 #ifdef HIDDEN
 /**
@@ -232,4 +232,4 @@ HttpRequest = Base.extend(new function() {
 
 HttpRequest.inject(Chain).inject(Callback);
 
-#endif // __lang_HttpRequest__
+#endif // __browser_remote_HttpRequest__

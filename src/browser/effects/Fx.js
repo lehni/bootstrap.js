@@ -1,5 +1,5 @@
-#ifndef __browser_Fx__
-#define __browser_Fx__
+#ifndef __browser_effects_Fx__
+#define __browser_effects_Fx__
 
 #ifdef HIDDEN
 /**
@@ -92,4 +92,4 @@ Fx.Base = Base.extend({
 
 Fx.Base.inject(Chain).inject(Callback);
 
-#endif // __browser_Fx__
+#endif // __browser_effects_Fx__
