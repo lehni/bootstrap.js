@@ -46,7 +46,7 @@ new function() {
 	// method indices:
 	var XPATH= 0, FILTER = 1;
 
-	var methods = [ { // XPath: 
+	var methods = [{ // XPath: 
 		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
 			var temp = context.namespaceURI ? 'xhtml:' : '';
 			seperator = separator && (separator = DomElement.separators[separator]);
@@ -96,7 +96,7 @@ new function() {
 						items = [el];
 				}
 				if (items.length) id = null; // Clear as it's already filtered through getElementById
-				else if (tag) items = Array.create(context.getElementsByTagName(tag));
+				else items = Array.create(context.getElementsByTagName(tag));
 				tag = null; // Clear as it is already filtered by getElementsByTagName
 			}
 			// Now filter by id, tag and classname in one go:
@@ -445,16 +445,15 @@ new function() {
 
 		getElement: function(selector) {
 			var el, type = $typeof(selector);
-			if (type == 'string') {
-				if (selector.charAt(0) == '#')
-					selector = selector.substring(1);
-				// Try  fetching by id first, if no success, assume a real selector
-				el = document.getElementById(selector);
-			} else if (type == 'element') {
+			// Try  fetching by id first, if no success, assume a real selector
+			if (type == 'string')
+				el = document.getElementById(selector.charAt(0) == '#' ? selector.substring(1) : selector);
+			else if (type == 'element')
 				el = DomElement.unwrap(selector);
-			}
+			// if el was fetched by id above, but is not a child of this,
+			// use the real selector.
+			if (el && !DomElement.isAncestor(el, this.$)) el = null;
 			if (!el) el = this.getElements(selector, true)[0];
-			else if (!DomElement.isAncestor(el, this.$)) return null;
 			return DomElement.get(el);
 		},
 
