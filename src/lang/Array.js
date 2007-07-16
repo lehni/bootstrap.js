@@ -110,7 +110,6 @@ Array.inject(new function() {
 	// Instead, use the generics in Base and Hash.
 	var fields = Hash.merge(Base.clone(Enumerable), {
 		_generics: true,
-
 		// tell $typeof what to return for arrays.
 		_type: 'array',
 
@@ -243,12 +242,20 @@ Array.inject(new function() {
 			/*
 			// Do not rely on obj to have .each set, as it might come from
 			// another frame.
+			// This is a bit too slow for DomQuery stuff:
 			return Base.each(obj, function(val) {
 				this.push(val);
 			}, this);
 			*/
 			for (var i = 0, j = obj.length; i < j; ++i)
 				this.push(obj[i]);
+			return this;
+		},
+
+		subtract: function(obj) {
+			for (var i = 0, j = obj.length; i < j; ++i)
+				// TODO: Conflict between Array#remove and DomElement(s)#remove. Resolve!
+				Array.remove(this, obj[i]);
 			return this;
 		},
 

@@ -147,12 +147,12 @@ DomElement.inject({
 		this.events = this.events || {};
 		var entries = this.events[type] = this.events[type] || [];
 		if (func && !entries.find(function(entry) { return entry.func == func })) {
-			// See if we need to fake an event here.
-			var listener = func, name = type, fake = DomEvent.events[type];
-			if (fake) {
-				if (typeof fake == 'funciton') fake = fake.call(this, func);
-				listener = fake.listener || listener;
-				name = fake.type;
+			// See if we have a pseudo event here.
+			var listener = func, name = type, pseudo = DomEvent.events[type];
+			if (pseudo) {
+				if (typeof pseudo == 'funciton') pseudo = pseudo.call(this, func);
+				listener = pseudo.listener || listener;
+				name = pseudo.type;
 			}
 			// Check if the function takes a parameter. If so, it must
 			// want an event. Wrap it so it recieves a wrapped event, and
@@ -204,8 +204,8 @@ DomElement.inject({
 			entries = this.events[type] = Array.create(entries);
 #endif // !BROWSER_LEGACY
 			if (entry = entries.remove(function(entry) { return entry.func == func })) {
-				var name = entry.name, fake = DomEvent.events[type];
-				if (fake && fake.remove) fake.remove.call(this, func);
+				var name = entry.name, pseudo = DomEvent.events[type];
+				if (pseudo && pseudo.remove) pseudo.remove.call(this, func);
 				if (name) {
 					if (this.$.removeEventListener) {
 						this.$.removeEventListener(name, entry.bound, false);
