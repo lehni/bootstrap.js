@@ -1,5 +1,5 @@
-#ifndef __browser_Cookie__
-#define __browser_Cookie__
+#ifndef __browser_remote_Cookie__
+#define __browser_remote_Cookie__
 
 #ifdef HIDDEN
 /**
@@ -29,4 +29,4 @@ Cookie = {
 	}
 };
 
-#endif // __browser_Cookie__
+#endif // __browser_remote_Cookie__

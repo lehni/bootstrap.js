@@ -1,5 +1,5 @@
-#ifndef __lang_Ajax__
-#define __lang_Ajax__
+#ifndef __browser_remote_Ajax__
+#define __browser_remote_Ajax__
 
 #ifdef HIDDEN
 /**
@@ -104,4 +104,4 @@ HtmlElement.inject({
 	}
 });
 
-#endif // __lang_Ajax__
+#endif // __browser_remote_Ajax__

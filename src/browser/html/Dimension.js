@@ -1,5 +1,5 @@
-#ifndef __browser_Dimension__
-#define __browser_Dimension__
+#ifndef __browser_html_Dimension__
+#define __browser_html_Dimension__
 
 #ifdef HIDDEN
 /**
@@ -155,4 +155,4 @@ HtmlElement.inject(new function() {
 	return fields;
 });
 
-#endif // __browser_Dimension__
+#endif // __browser_html_Dimension__

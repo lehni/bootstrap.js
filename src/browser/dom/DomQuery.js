@@ -1,5 +1,5 @@
-#ifndef __browser_DomQuery__
-#define __browser_DomQuery__
+#ifndef __browser_dom_DomQuery__
+#define __browser_dom_DomQuery__
 
 #ifdef HIDDEN
 /**
@@ -480,4 +480,4 @@ new function() {
 	});
 }
 
-#endif // __browser_DomQuery__
+#endif // __browser_dom_DomQuery__

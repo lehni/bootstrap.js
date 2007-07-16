@@ -1,5 +1,5 @@
-#ifndef __browser_Fx_Style__
-#define __browser_Fx_Style__
+#ifndef __browser_effects_Fx_Style__
+#define __browser_effects_Fx_Style__
 
 #ifdef HIDDEN
 /**
@@ -54,4 +54,4 @@ HtmlElement.inject({
 	}
 });
 
-#endif // __browser_Fx_Style__
+#endif // __browser_effects_Fx_Style__

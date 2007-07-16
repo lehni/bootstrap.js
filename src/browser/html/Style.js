@@ -1,5 +1,5 @@
-#ifndef __browser_Style__
-#define __browser_Style__
+#ifndef __browser_html_Style__
+#define __browser_html_Style__
 
 #ifdef HIDDEN
 /**
@@ -121,4 +121,4 @@ HtmlElement.inject(new function() {
 	return fields;
 });
 
-#endif // __browser_Style__
+#endif // __browser_html_Style__

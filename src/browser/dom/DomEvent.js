@@ -1,5 +1,5 @@
-#ifndef __browser_DomEvent__
-#define __browser_DomEvent__
+#ifndef __browser_dom_DomEvent__
+#define __browser_dom_DomEvent__
 
 #ifdef HIDDEN
 /**
@@ -261,4 +261,4 @@ DomElement.inject({
 	}
 });
 
-#endif // __browser_DomEvent__
+#endif // __browser_dom_DomEvent__

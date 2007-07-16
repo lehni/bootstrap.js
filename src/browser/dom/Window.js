@@ -1,5 +1,5 @@
-#ifndef __browser_Window__
-#define __browser_Window__
+#ifndef __browser_dom_Window__
+#define __browser_dom_Window__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Window
@@ -50,4 +50,4 @@ Window = DomElement.get(window).inject({
 
 Window.addEvent('unload', DomElement.dispose);
 
-#endif // __browser_Window__
+#endif // __browser_dom_Window__
