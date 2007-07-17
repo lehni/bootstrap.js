@@ -67,7 +67,7 @@ DomEvent = Base.extend(new function() {
 					x: event.pageX ? event.pageX - window.pageXOffset : event.clientX,
 					y: event.pageY ? event.pageY - window.pageYOffset : event.clientY
 				};
-				// TODO: Calculate only if Dimension.js is defined! add conditional macro
+				// TODO: Calculate only if Dimension.js is defined! add conditional macro?
 				var offset = this.target.getOffset();
 				this.offset = {
 					x: this.page.x - offset.x,

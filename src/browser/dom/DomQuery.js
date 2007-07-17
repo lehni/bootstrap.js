@@ -47,12 +47,12 @@ new function() {
 	var XPATH= 0, FILTER = 1;
 
 	var methods = [{ // XPath: 
-		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
+		getParam: function(items, separator, context, tag, id, classNames, attributes, pseudos) {
 			var temp = context.namespaceURI ? 'xhtml:' : '';
 			seperator = separator && (separator = DomElement.separators[separator]);
 			temp += seperator ? separator[XPATH](tag) : tag;
-			if (pseudo) {
-				pseudo = getPseudo(pseudo, XPATH);
+			for (var i = pseudos.length; i;) {
+				var pseudo = getPseudo(pseudos[--i], XPATH);
 				var handler = pseudo.handler;
 				if (handler) temp += handler(pseudo.argument);
 				else temp += pseudo.argument != undefined
@@ -60,9 +60,10 @@ new function() {
 					: '[@' + pseudo.name + ']';
 			}
 			if (id) temp += '[@id="' + id + '"]';
-			if (className) temp += '[contains(concat(" ", @class, " "), " ' + className + ' ")]';
-			if (attribute) {
-				attribute = getAttribute(attribute);
+			for (i = classNames.length; i;)
+				temp += '[contains(concat(" ", @class, " "), " ' + classNames[--i] + ' ")]';
+			for (i = attributes.length; i;) {
+				var attribute = getAttribute(attributes[--i]);
 				if (attribute[2] && attribute[3]) {
 					var operator = DomElement.operators[attribute[2]];
 					if (operator) temp += operator[XPATH](attribute[1], attribute[3]);
@@ -81,7 +82,7 @@ new function() {
 				elements.push(res.snapshotItem(i));
 		}
 	}, { // Filter:
-		getParam: function(items, separator, context, tag, id, className, attribute, pseudo) {
+		getParam: function(items, separator, context, tag, id, classNames, attributes, pseudos) {
 			if (separator && (separator = DomElement.separators[separator])) {
 				if (separator) items = separator[FILTER](items, tag);
 				tag = null; // Clear as it is already filtered through the separator
@@ -103,13 +104,12 @@ new function() {
 			var filter = [];
 			if (id) filter.push("el.id == id");
 			if (tag) filter.push("hasTag(el, tag)");
-			if (className) filter.push("el.className && (' ' + el.className + ' ').indexOf(' ' + className + ' ') != -1");
+			for (var i = classNames.length; i;)
+				filter.push("el.className && (' ' + el.className + ' ').indexOf(' ' + classNames[" + (--i) + "] + ' ') != -1");
 			if (filter.length) // do not use new Function(), as this cannot access the local scope, while eval can
 				items = items.filter(eval('(function(el) { return ' + filter.join(' && ') + ' })'));
-			if (attribute) attribute = getAttribute(attribute);
-			if (pseudo) {
-				pseudo = getPseudo(pseudo, FILTER);
-				var handler = pseudo.handler;
+			for (i = pseudos.length; i;) {
+				var pseudo = getPseudo(pseudos[--i], FILTER), handler = pseudo.handler;
 				if (handler) {
 					// Pass an empty array to the filter method, as a temporary
 					// storage space. Used in nth's filter.
@@ -117,15 +117,18 @@ new function() {
 						return handler(el, pseudo.argument);
 					});
 				} else {
-					attribute = [null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument];
+					attributes.push([null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument]);
 				}
 			}
-			if (attribute) {
+			for (i = attributes.length; i;) {
+				var attribute = getAttribute(attributes[--i]);
 				var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
 				operator = operator && operator[FILTER];
+				// Ugly hack to use DomElement.prototype.getProperty on unwrapped element:
+				var get = { property: DomElement.prototype.getProperty };
 				items = items.filter(function(el) {
-					// TODO: Find a way to do this without passing through wrapper
-					var att = DomElement.get(el).getProperty(name);
+					get.$ = el;
+					var att = get.property(name);
 					return att && (!operator || operator(att, value));
 				});
 			}
@@ -153,11 +156,19 @@ new function() {
 			separators.push(match.charAt(0));
 			return '%' + match.charAt(1);
 		}).split('%');
-		for (var i = 0; i < selector.length; ++i) {
-			var match = selector[i].match(/^(\w*|\*)(?:#([\w-]+))?(?:\.([\w-]+))?(?:\[(.*)\])?(?::(.*))?$/);
-			if (!match) throw 'Bad selector: ' + selector[i];
-			var temp = method.getParam(items, separators[i - 1], context,
-				match[1] || '*', match[2], match[3], match[4], match[5]);
+		for (var i = 0, j = selector.length; i < j; ++i) {
+			var tag = '*', id = null, classes = [], attributes = [], pseudos = [];
+			if (selector[i].replace(/:[^:]+|\[[^\]]+\]|\.[\w-]+|#[\w-]+|\w+|\*/g, function(str) {
+				switch (str.charAt(0)){
+					case ':': pseudos.push(str.slice(1)); break;
+					case '[': attributes.push(str.slice(1, str.length - 1)); break;
+					case '.': classes.push(str.slice(1)); break;
+					case '#': id = str.slice(1); break;
+					default: tag = str;
+				}
+				return '';
+			})) break;
+			var temp = method.getParam(items, separators[i - 1], context, tag, id, classes, attributes, pseudos);
 			if (!temp) break;
 			items = temp;
 		}
@@ -248,6 +259,17 @@ new function() {
 		]
 	};
 
+	function contains(sep) {
+		return [
+			function(a, v) {
+				return '[contains(' + (sep ? 'concat("' + sep + '", @' + a + ', "' + sep + '")' : '@' + a) + ', "' + sep + v + sep + '")]';
+			},
+			function(a, v) {
+				return a.contains(v, sep);
+			}
+		]
+	}
+
 	DomElement.operators = {
 		'=': [
 			function(a, v) {
@@ -255,15 +277,6 @@ new function() {
 			},
 			function(a, v) {
 				return a == v;
-			}
-		],
-
-		'*=': [
-	 		function(a, v) {
-				return '[contains(@' + a + ', "' + v + '")]';
-			},
-			function(a, v) {
-				return a.contains(v);
 			}
 		],
 
@@ -294,23 +307,11 @@ new function() {
 			}
 		],
 
-		'|=': [
-			function(a, v) {
-				return '[starts-with(@' + a + ', "' + v + '-") or @' + a + '="' + v + '"]';
-			},
-			function(a, v) {
-				return a == v || a.substr(0, v.length + 1) == v + '-';
-			}
-		],
+		'*=': contains(''),
 
-		'~=': [
-			function(a, v) {
-				return '[contains(concat(" ", @' + a + ', " "), " ' + v + ' ")]';
-			},
-			function(a, v) {
-				return a.contains(v, ' ');
-			}
-		]
+		'|=': contains('-'),
+
+		'~=': contains(' ')
 	};
 
 	var nth = [
