@@ -93,7 +93,7 @@ Enumerable = new function() {
 #ifdef SET_ITERATOR
 			// Allways restore previous value in the end.
 			try { return fn.call(this, iter, bind, this); }
-			finally { bind[name] = prev; }
+			finally { prev ? bind[name] = prev : delete bind[name] }
 #else // !SET_ITERATOR
 			return fn.call(this, iter, bind, this);
 #endif// !SET_ITERATOR
