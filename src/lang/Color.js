@@ -29,21 +29,21 @@ Array.inject({
 		}
 	},
 
-	rgbToHsb: function(rgb) {
-		var red = rgb[0], green = rgb[1], blue = rgb[2];
+	rgbToHsb: function() {
+		var r = this[0], g = this[1], b = this[2];
 		var hue, saturation, brightness;
-		var max = Math.max(red, green, blue), min = Math.min(red, green, blue);
+		var max = Math.max(r, g, b), min = Math.min(r, g, b);
 		var delta = max - min;
 		brightness = max / 255;
 		saturation = (max != 0) ? delta / max : 0;
 		if (saturation == 0) {
 			hue = 0;
 		} else {
-			var rr = (max - red) / delta;
-			var gr = (max - green) / delta;
-			var br = (max - blue) / delta;
-			if (red == max) hue = br - gr;
-			else if (green == max) hue = 2 + rr - br;
+			var rr = (max - r) / delta;
+			var gr = (max - g) / delta;
+			var br = (max - b) / delta;
+			if (r == max) hue = br - gr;
+			else if (g == max) hue = 2 + rr - br;
 			else hue = 4 + gr - rr;
 			hue /= 6;
 			if (hue < 0) hue++;
@@ -51,16 +51,16 @@ Array.inject({
 		return [Math.round(hue * 360), Math.round(saturation * 100), Math.round(brightness * 100)];
 	},
 
-	hsbToRgb: function(hsb) {
-		var br = Math.round(hsb[2] / 100 * 255);
-		if (hsb[1] == 0) {
+	hsbToRgb: function() {
+		var br = Math.round(this[2] / 100 * 255);
+		if (this[1] == 0) {
 			return [br, br, br];
 		} else {
-			var hue = hsb[0] % 360;
+			var hue = this[0] % 360;
 			var f = hue % 60;
-			var p = Math.round((hsb[2] * (100 - hsb[1])) / 10000 * 255);
-			var q = Math.round((hsb[2] * (6000 - hsb[1] * f)) / 600000 * 255);
-			var t = Math.round((hsb[2] * (6000 - hsb[1] * (60 - f))) / 600000 * 255);
+			var p = Math.round((this[2] * (100 - this[1])) / 10000 * 255);
+			var q = Math.round((this[2] * (6000 - this[1] * f)) / 600000 * 255);
+			var t = Math.round((this[2] * (6000 - this[1] * (60 - f))) / 600000 * 255);
 			switch (Math.floor(hue / 60)) {
 				case 0: return [br, t, p];
 				case 1: return [q, br, p];
