@@ -41,7 +41,7 @@ FormElement.inject({
 		return this.getValue().substring(range.start, range.end);
 	},
 
-	setSelectedText: function(value, select) {
+	replaceSelectedText: function(value, select) {
 		var range = this.getSelection(), curr = this.getValue();
 		this.setValue(curr.substring(0, range.start) + value + curr.substring(range.end, curr.length));
 		return select || select == undefined
