@@ -445,10 +445,13 @@ new function() {
 		},
 
 		getElement: function(selector) {
-			var el, type = $typeof(selector);
-			// Try  fetching by id first, if no success, assume a real selector
-			if (type == 'string')
-				el = document.getElementById(selector.charAt(0) == '#' ? selector.substring(1) : selector);
+			var el, type = $typeof(selector), match;
+			// Try  fetching by id first, if no success, assume a real selector.
+			// Note that '#' is not needed, a string that could be an id (a-zA-Z_-)
+			// is enough for trying getElementById first.
+			// So $() can also work like Mootools' $()
+			if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
+				el = document.getElementById(match[1]);
 			else if (type == 'element')
 				el = DomElement.unwrap(selector);
 			// if el was fetched by id above, but is not a child of this,
