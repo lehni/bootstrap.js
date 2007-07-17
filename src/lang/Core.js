@@ -129,15 +129,15 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifdef DONT_ENUM
-				if (visible(src, name) && !/^(statics|_generics|_hide|toString|valueOf)$/.test(name))
+				if (visible(src, name) && !/^(toString|valueOf|statics|_generics|_hide)$/.test(name))
 #elif !defined(HELMA)
-				if (visible(src, name) && !/^(statics|_generics|prototype|toString|valueOf)$/.test(name))
+				if (visible(src, name) && !/^(prototype|toString|valueOf|statics|_generics)$/.test(name))
 #else // HELMA
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
 				// that are defined already, as an added attribute. So we need
 				// to check against statics here...
-				if (!/^(statics|_generics|_hide)$/.test(name))
+				if (!/^(prototype|statics|_generics|_hide)$/.test(name))
 #endif // HELMA
 					field(name, generics);
 			// Do not create generics for these:
