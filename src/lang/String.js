@@ -1,5 +1,5 @@
-#ifndef __lang_Color__
-#define __lang_Color__
+#ifndef __lang_String__
+#define __lang_String__
 
 #include "Array.js"
 
@@ -102,4 +102,4 @@ if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
 
 #endif // BROWSER_LEGACY
 
-#endif // __lang_Color__
+#endif // __lang_String__
