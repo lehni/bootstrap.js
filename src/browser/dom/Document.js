@@ -5,8 +5,6 @@
 // Document
 
 Document = DomElement.get(document);
-// TODO: find a better workaround for this.
-Document._elements = HtmlElements;
 
 function $(selector, root) {
 	return (root || Document).getElement(selector);
