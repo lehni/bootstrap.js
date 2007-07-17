@@ -371,7 +371,7 @@ DomElement.inject(new function() {
 			return this;
 		},
 
-		appendText: function(text){
+		appendText: function(text) {
 			this.$.appendChild(document.createTextNode(text));
 			return this;
 		},

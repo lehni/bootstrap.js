@@ -159,7 +159,7 @@ new function() {
 		for (var i = 0, j = selector.length; i < j; ++i) {
 			var tag = '*', id = null, classes = [], attributes = [], pseudos = [];
 			if (selector[i].replace(/:[^:]+|\[[^\]]+\]|\.[\w-]+|#[\w-]+|\w+|\*/g, function(str) {
-				switch (str.charAt(0)){
+				switch (str.charAt(0)) {
 					case ':': pseudos.push(str.slice(1)); break;
 					case '[': attributes.push(str.slice(1, str.length - 1)); break;
 					case '.': classes.push(str.slice(1)); break;
@@ -184,7 +184,7 @@ new function() {
 
 			function(items, tag) {
 				var found = [];
-				for (var i = 0, j = items.length; i < j; ++i){
+				for (var i = 0, j = items.length; i < j; ++i) {
 					var next = items[i].nextSibling;
 					while (next) {
 						if (hasTag(next, tag)) {
@@ -222,7 +222,7 @@ new function() {
 			},
 			function(items, tag) {
 				var found = [];
-				for (var i = 0, j = items.length; i < j; ++i){
+				for (var i = 0, j = items.length; i < j; ++i) {
 					var children = items[i].childNodes;
 					for (var k = 0, l = children.length; k < l; k++) {
 						var child = children[k]
