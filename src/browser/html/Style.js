@@ -16,42 +16,74 @@
 // Style
 
 HtmlElement.inject(new function() {
+	var styles = ['Top', 'Right', 'Bottom', 'Left'].each(function(dir) {
+		['margin', 'padding'].each(function(style) {
+			var sd = style + dir;
+			this.part[style][sd] = this.all[sd] = '@px';
+		}, this);
+		var bd = 'border' + dir;
+		this.part.border[bd] = this.all[bd] = '@px @ rgb(@, @, @)';
+		var bdw = bd + 'Width', bds = bd + 'Style', bdc = bd + 'Color';
+		this.part[bd] = {};
+		this.part.borderWidth[bdw] = this.part[bd][bdw] = '@px';
+		this.part.borderStyle[bds] = this.part[bd][bds] = '@';
+		this.part.borderColor[bdc] = this.part[bd][bdc] = 'rgb(@, @, @)';
+	}, {
+		all: {
+			width: '@px', height: '@px', left: '@px', top: '@px', right: '@px', bottom: '@px',
+			color: 'rgb(@, @, @)', backgroundColor: 'rgb(@, @, @)', backgroundPosition: '@px @px',
+			fontSize: '@px', letterSpacing: '@px', lineHeight: '@px', textIndent: '@px',
+			margin: '@px @px @px @px', padding: '@px @px @px @px', border: '@px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @)',
+			borderWidth: '@px @px @px @px', borderStyle: '@ @ @ @', borderColor: 'rgb(@, @, @) rgb(@, @, @) rgb(@, @, @) rgb(@, @, @)',
+			clip: 'rect(@px, @px, @px, @px)'
+		},
+		part: {
+			'margin': {}, 'padding': {}, 'border': {}, 'borderWidth': {}, 'borderStyle': {}, 'borderColor': {}
+		}
+	});
+
 	var fields = {
 		getStyle: function(name, dontCompute) {
 			if (name == undefined) return this.getStyles();
 			var el = this.$;
 			name = name.camelize();
 			var style = el.style[name];
-			if (!style) switch (name) {
-				case 'opacity':
+			if (!style && style != 0 || /auto|inherit/.test(style)) {
+				if (name == 'opacity') {
 					var op = this.opacity;
 					return op || op == 0 ? op : this.getVisible() ? 1 : 0;
-				case 'margin':
-				case 'padding':
-					var res = [];
-					['top', 'right', 'bottom', 'left'].each(function(prop) {
-						res.push(this.getStyle(property + '-' + prop, dontCompute) || '0');
+				}
+				if (styles.part[name]) {
+					style = Hash.map(styles.part[name], function(val, key) {
+						return this.getStyle(key);
 					}, this);
-					return res.every(function(val) {
-						return val == res[0];
-					}) ? res[0] : res;
-			}
-			if (!dontCompute) {
+					return style.every(function(val) {
+						return val == style[0];
+					}) ? style[0] : style.join(' ');
+				}
 				// el.currentStyle: IE, document.defaultView: everything else
-				if (!style) style = document.defaultView && document.defaultView.getComputedStyle(el, '').getPropertyValue(name.hyphenate())
+				style = document.defaultView && document.defaultView.getComputedStyle(el, null).getPropertyValue(name.hyphenate())
 					|| el.currentStyle && el.currentStyle[name];
-				else if (style == 'auto' && /^(width|height)$/.test(name))
-					return el['offset' + name.capitalize()] + 'px';
 			}
-			switch(name) {
-			case 'visibility':
+			// TODO: this does not belong here
+			if (name == 'visibility')
 				return /^(visible|inherit(|ed))$/.test(style);
-			// TODO:
-			// case 'clip': if (name == 'clip') // TODO: split clip rect!
-			// case 'zIndex': return style.toInt() || 0;
+#ifdef __lang_Color__
+			var color = style && style.match(/rgb[a]?\([\d\s,]+\)/);
+			if (color) return style.replace(color[0], color[0].rgbToHex());
+#endif // !__lang_Color__
+			if (Browser.IE && isNaN(parseInt(style))) {
+				// fix IE style:
+				if (/^(width|height)$/.test(name)) {
+					var size = 0;
+					(name == 'width' ? ['left', 'right'] : ['top', 'bottom']).each(function(val) {
+						size += this.getStyle('border-' + val + '-width').toInt() + this.getStyle('padding-' + val).toInt();
+					}, this);
+					return element['offset' + name.capitalize()] - size + 'px';
+				} else if (name.test(/border(.+)Width|margin|padding/)) {
+					return '0px';
+				}
 			}
-			// TODO:
-			// return (style && /color/i.test(name) && /rgb/.test(style)) ? style.rgbToHex() : style;
 			return style;
 		},
 
@@ -63,21 +95,40 @@ HtmlElement.inject(new function() {
 			switch (name) {
 			case 'visibility':
 				el.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
-				break;
+				return this;
 			case 'opacity':
 				if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
 				if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
 				el.style.opacity = this.opacity = value;
-				this.setStyle('visibility', !!value);
-				break;
-			case 'clip':
-				// TODO: Calculate only if Dimension.js is defined? add conditional macro?
-				if (value == true) value = [0, el.offsetWidth, el.offsetHeight, 0];
-				el.style.clip = value.push ? 'rect(' + value.join('px ') + 'px)' : value;
+				return this.setStyle('visibility', !!value);
+			case 'float':
+				name = Browser.IE ? 'styleFloat' : 'cssFloat';
 				break;
 			default:
-				el.style[name.camelize()] = value; // TODO: color! (value.push) ? 'rgb(' + value.join(',') + ')' : value;
+				name = name.camelize();
 			}
+			if ($typeof(value) != 'string') {
+				// TODO: optimize:
+				var map = (styles.all[name] || '@').split(' '), index = 0;
+				var compute = function(value) {
+					return (value ? (value.push ? value : [value]) : []).map(function(val) {
+						var bit = map[index];
+						if (!bit) return '';
+						switch ($typeof(val)) {
+							case 'number':
+								index++;
+								return bit.replace('@', Math.round(val));
+							case 'array':
+								return compute(val);
+						};
+						index++;
+						return val;
+					}).join(' ');
+
+				};
+				value = compute(value);
+			}
+			el.style[name] = value;
 			return this;
 		},
 
