@@ -32,38 +32,32 @@ FormElement.inject({
 		return { start: this.$.selectionStart, end: this.$.selectionEnd };
 	},
  
-	getSelectedText: function() {		
+	getSelectedText: function() {
+/* needed? the other should allways produce the right result.
 		if(Browser.IE)
 			return document.selection.createRange().text;
+*/
  		var range = this.getSelection();
 		return this.getValue().substring(range.start, range.end);
+	},
+
+	setSelectedText: function(value, select) {
+		var range = this.getSelection(), curr = this.getValue();
+		this.setValue(curr.substring(0, range.start) + value + curr.substring(range.end, curr.length));
+		return select || select == undefined
+			? this.setSelection(range.start, range.start + value.length)
+			: this.setCaretPosition(range.start + value.length);
+	},
+
+	getCaretPosition: function() {
+		return this.getSelection().start;
 	},
  
 	setCaretPosition: function(pos) {
 		if(pos == -1)
 			pos = this.getValue().length;
 		return this.setSelection(pos, pos);
-	},
- 
-	getCaretPosition: function() {
-		return this.getSelection().start;
-	},
- 
-	insertAtCaret: function(value, select) {
-		var range = this.getSelection(), curr = this.getValue();
-		this.setValue(curr.substring(0, range.start) + value + curr.substring(range.end, curr.length));
-		if (select || select == undefined)
-			this.setSelection(range.start, range.start + value.length);
-		else
-			this.setCaretPosition(range.start + value.length);
-		return this;
-	},
- 
-	insertAroundCaret: function(before, after, select) {
-		var range = this.getSelection();
-		return this.insertAtCaret(before + this.getValue().substring(range.start, range.end) + after, select);
 	}
- 
 });
 
 #endif // __browser_html_Selection__
