@@ -48,6 +48,8 @@ Fx.CSS = new function() {
 		}
 	};
 
+#ifdef __lang_Color__
+
 	var color = {
 		parse: function(value) {
 			return value.push ? value : value.hexToRgb(true);
@@ -64,9 +66,13 @@ Fx.CSS = new function() {
 		}
 	};
 
+#endif // !__lang_Color__
+
 	return {
 		select: function(property, to) {
+#ifdef __lang_Color__
 			if (/color/i.test(property)) return color;
+#endif // !__lang_Color__
 			if (/ /.test(to)) return multi;
 			return single;
 		},
