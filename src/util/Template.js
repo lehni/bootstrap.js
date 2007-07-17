@@ -436,9 +436,19 @@ Template.prototype = {
 			}
 		}
 
+		var macroParam = 0;
+		function nestedMacro(that, value, code, stack) {
+			if (/^<%/.test(value)) {
+				// A nested macro: render it, then set the result to a variable
+				var nested = value;
+				value = "param_" + (macroParam++) + "";
+				code.push("var " + value + " = " + that.parseMacro(nested, code, stack, false, true) + ";");
+			}
+			return value;
+		}
+
 		// Now do the main parsing of the parts
 		var part, isFirst = true, append;
-		var macroParam = 0;
 		while (part = nextPart()) {
 			if (isFirst) {
 				nextMacro(part); // add new macro
@@ -450,12 +460,7 @@ Template.prototype = {
 				// TODO: Calling nextPart here should only return values, nothing else!
 				// add error handling...
 				var key = part.substring(0, part.length - 1), value = nextPart();
-				if (/^<%/.test(value)) {
-					// A nested macro: render it, then set the result to a variable
-					var nested = value;
-					value = "param_" + (macroParam++) + "";
-					code.push("var " + value + " = " + this.parseMacro(nested, code, stack, false, true) + ";");
-				}
+				value = nestedMacro(this, value, code, stack);
 				macro.param.push('"' + key + '": ' + value);
 				// Override defaults only:
 				if (macro.values[key] !== undefined)
@@ -466,8 +471,9 @@ Template.prototype = {
 				isFirst = true;
 			} else { // unnamed param
 				// Unnamed parameters are not allowed in <%= tags
-				// allowed groups for unnamed params: '' "" [] {}
-				if (!macro.isData && !macro.isControl && (/^['"[{]/.test(part))) {
+				// allowed groups for unnamed params: '' "" [] {} <%%>
+				if (!macro.isData && !macro.isControl && (/^['"[{]|<%/.test(part))) {
+					part = nestedMacro(this, part, code, stack);
 					macro.unnamed.push(part);
 					// Appending to macro opcode not allowed after first parameter
 					append = false;
