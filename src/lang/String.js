@@ -1,5 +1,7 @@
-#ifndef __lang_String__
-#define __lang_String__
+#ifndef __lang_Color__
+#define __lang_Color__
+
+#include "Array.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // String
@@ -19,8 +21,8 @@ String.inject({
 		return this ? this.split(/\s+/) : [];
 	},
 
-	toInt: function() {
-		return parseInt(this);
+	toInt: function(base) {
+		return parseInt(this, base || 10);
 	},
 
 	toFloat: function() {
@@ -100,4 +102,4 @@ if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
 
 #endif // BROWSER_LEGACY
 
-#endif // __lang_String__
+#endif // __lang_Color__
