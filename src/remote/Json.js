@@ -13,6 +13,10 @@ Json = new function() {
 
 	return {
 		encode: function(obj) {
+#ifdef RHINO
+			var str = uneval(obj);
+			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
+#else // !RHINO			
 			switch ($typeof(obj)) {
 				case 'string':
 					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
@@ -27,6 +31,7 @@ Json = new function() {
 					return obj + "";
 			}
 			return null;
+#endif // !RHINO
 		},
 
 		decode: function(string, secure) {
