@@ -11,11 +11,13 @@
 #endif
 
 #include "../dom/DomElement.js"
+#include "../dom/Document.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlElements
 
-HtmlElements = DomElements.extend();
+// TODO: find a better workaround for setting Document._elements here:
+HtmlElements = Document._elements = DomElements.extend();
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlElement
