@@ -105,31 +105,29 @@ DomEvent = Base.extend(new function() {
 				mouseenter: hover('mouseenter', 'mouseover'),
 				mouseleave: hover('mouseleave', 'mouseout'),
 				mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
-				domready: { // only used by Window.
-					add: function(func) {
-						if (window.loaded) func.call(this);
-						else {
-							var domReady = function() {
-								if (this.loaded) return;
-								this.loaded = true;
-								if (this.timer) this.timer = this.timer.clear();
-								this.fireEvent('domready');
-							}.bind(this);
-							if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
-								this.timer = (function() {
-									if (/^(loaded|complete)$/.test(document.readyState)) domReady();
-								}).periodic(50);
-							} else if (document.readyState && Browser.IE) { // IE
-								document.write('<script id=ie_ready defer src="'
-									+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
-									+ '"><\/script>');
-								document.getElementById('ie_ready').onreadystatechange = function() {
-									if (window.readyState == 'complete') domReady();
-								};
-							} else { // Others
-								Window.addEvent('load', domReady);
-								Document.addEvent('DOMContentLoaded', domReady);
-							}
+				domready: function(func) { // only used by Window.
+					if (window.loaded) func.call(this);
+					else {
+						var domReady = function() {
+							if (this.loaded) return;
+							this.loaded = true;
+							if (this.timer) this.timer = this.timer.clear();
+							this.fireEvent('domready');
+						}.bind(this);
+						if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
+							this.timer = (function() {
+								if (/^(loaded|complete)$/.test(document.readyState)) domReady();
+							}).periodic(50);
+						} else if (document.readyState && Browser.IE) { // IE
+							document.write('<script id=ie_ready defer src="'
+								+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
+								+ '"><\/script>');
+							document.getElementById('ie_ready').onreadystatechange = function() {
+								if (window.readyState == 'complete') domReady();
+							};
+						} else { // Others
+							Window.addEvent('load', domReady);
+							Document.addEvent('DOMContentLoaded', domReady);
 						}
 					}
 				}
@@ -150,9 +148,9 @@ DomElement.inject({
 			// See if we have a pseudo event here.
 			var listener = func, name = type, pseudo = DomEvent.events[type];
 			if (pseudo) {
-				if (typeof pseudo == 'funciton') pseudo = pseudo.call(this, func);
-				listener = pseudo.listener || listener;
-				name = pseudo.type;
+				if (typeof pseudo == 'function') pseudo = pseudo.call(this, func);
+				listener = pseudo && pseudo.listener || listener;
+				name = pseudo && pseudo.type;
 			}
 			// Check if the function takes a parameter. If so, it must
 			// want an event. Wrap it so it recieves a wrapped event, and
