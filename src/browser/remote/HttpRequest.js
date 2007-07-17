@@ -126,7 +126,8 @@ HttpRequest = Base.extend(new function() {
 
 		onFrameLoad: function() {
 			var frame = this.frame && this.frame.iframe;
-			if (frame && frame.location != 'about:blank') {
+			if (frame && frame.location != 'about:blank' && this.running) {
+				this.running = false;
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
 				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
 				// First tag in IE ends up in <head>, safe it
