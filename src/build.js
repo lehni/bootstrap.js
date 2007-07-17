@@ -9,7 +9,10 @@
 #include "lang/Number.js"
 #include "lang/RegExp.js"
 #include "lang/Math.js"
+#include "lang/Color.js"
+
 #include "remote/Json.js"
+
 #ifdef BROWSER
 #include "browser/Browser.js"
 

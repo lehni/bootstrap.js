@@ -14,8 +14,9 @@ Number.inject({
 
 	toFloat: String.prototype.toFloat,
 
-	times: function(fn) {
-		for (var i = 0; i < this; ++i) fn(i);
+	times: function(func, bind) {
+		for (var i = 0; i < this; ++i) func.call(bind, i);
+		return bind || this;
 	}
 });
 
