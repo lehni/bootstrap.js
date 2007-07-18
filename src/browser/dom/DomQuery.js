@@ -100,7 +100,7 @@ new function() {
 				else items = Array.create(context.getElementsByTagName(tag));
 				tag = null; // Clear as it is already filtered by getElementsByTagName
 			}
-			// Now filter by id, tag and classname in one go:
+			// Now filter by id, tag and/or classname(s) in one go:
 			var filter = [];
 			if (id) filter.push("el.id == id");
 			if (tag) filter.push("hasTag(el, tag)");
@@ -117,6 +117,7 @@ new function() {
 						return handler(el, pseudo.argument);
 					});
 				} else {
+					// Filter by attribute
 					attributes.push([null, pseudo.name, pseudo.argument != undefined ? '=' : null, pseudo.argument]);
 				}
 			}
@@ -124,10 +125,11 @@ new function() {
 				var attribute = getAttribute(attributes[--i]);
 				var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
 				operator = operator && operator[FILTER];
-				// Ugly hack to use DomElement.prototype.getProperty on unwrapped element:
+				// Ugly hack to call DomElement.prototype.getProperty on
+				// unwrapped elements. TODO: Find better solution.
 				var get = { property: DomElement.prototype.getProperty };
 				items = items.filter(function(el) {
-					get.$ = el;
+					get.$ = el; // point to the native elment for the call
 					var att = get.property(name);
 					return att && (!operator || operator(att, value));
 				});
