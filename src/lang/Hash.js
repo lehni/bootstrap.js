@@ -27,7 +27,7 @@ Hash = Base.extend(Enumerable).inject({
 	 */
 	initialize: function() {
 		// Explicitly return object as it is used in Hash.create's return statement
-		return EACH(arguments, function(obj) {
+		return Base.each(arguments, function(obj) {
 			this.merge(obj);
 		}, this);
 	},

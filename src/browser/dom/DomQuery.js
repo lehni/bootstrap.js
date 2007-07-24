@@ -125,14 +125,16 @@ new function() {
 				var attribute = getAttribute(attributes[--i]);
 				var name = attribute[1], operator = DomElement.operators[attribute[2]], value = attribute[3];
 				operator = operator && operator[FILTER];
-				// Ugly hack to call DomElement.prototype.getProperty on
-				// unwrapped elements. TODO: Find better solution.
-				var get = { property: DomElement.prototype.getProperty };
+				// Use a hack to call DomElement.prototype.getProperty on
+				// unwrapped elements very quickly: Set $ on
+				// DomElement.prototype, then call getProperty on it.
+				// This is much faster than the DomElement.getProperty generic.
 				items = items.filter(function(el) {
-					get.$ = el; // point to the native elment for the call
-					var att = get.property(name);
+					this.$ = el; // Point to the native elment for the call
+					var att = this.getProperty(name);
 					return att && (!operator || operator(att, value));
-				});
+				}, DomElement.prototype );
+				delete DomElement.prototype.$;
 			}
 			return items;
 		},

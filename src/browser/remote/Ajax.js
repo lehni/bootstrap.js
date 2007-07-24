@@ -24,14 +24,12 @@
 Ajax = HttpRequest.extend({
 	initialize: function(/* url: 'string', options: 'object', handler: 'function' */) {
 		var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function' });
-		this.addEvent('success', this.onSuccess, true);
+		this.addEvent('success', this.onSuccess);
 		if (!/^(post|get)$/.test(this.options.method)) {
 			this._method = this.options.method;
 			this.options.method = 'post';
 		}
 		this.base(params.url, params.options, params.handler);
-		this.setHeader('X-Requested-With', 'XMLHttpRequest');
-		this.setHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
 	},
 
 	onSuccess: function() {
@@ -39,7 +37,7 @@ Ajax = HttpRequest.extend({
 		if (this.options.evalScripts || this.options.evalResponse) this.evalScripts();
 	},
 
-	request: function(url, data) {
+	send: function(url, data) {
 		if (data === undefined) {
 			data = url || '';
 			url = this.url;
@@ -60,7 +58,7 @@ Ajax = HttpRequest.extend({
 			if (typeof data == 'string') data += '&_method=' + this._method;
 			else data.setValue('_method', this._method); // form
 		}
-		return this.send(url, data);
+		return this.base(url, data);
 	},
 
 	evalScripts: function() {
@@ -83,7 +81,7 @@ Base.inject({
 	_generics: true,
 
 	toQueryString: function() {
-		return EACH(this, function(val, key) {
+		return Base.each(this, function(val, key) {
 			this.push(encodeURIComponent(key) + '=' + encodeURIComponent(val));
 		}, []).join('&');
 	}
@@ -95,12 +93,12 @@ HtmlElement.inject({
 	},
 
 	send: function(options) {
-		return new Ajax(this.getProperty('action'), Hash.create({ method: 'post' }, options)).request(this);
+		return new Ajax(this.getProperty('action'), Hash.create({ method: 'post' }, options)).send(this);
 	},
 
 	update: function(/* url: 'string', options: 'object', handler: 'function', data: 'any' */) {
 		var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function', data: 'any' });
-		return new Ajax(params.url, Hash.create({ update: this }, params.options), params.handler).request(params.data);
+		return new Ajax(params.url, Hash.create({ update: this }, params.options), params.handler).send(params.data);
 	}
 });
 

@@ -23,10 +23,16 @@ Json = new function() {
 				case 'array':
 					return '[' + obj.map(this.encode).compact().join(',') + ']';
 				case 'object':
+					return '{' + Base.each(obj, function(val, key) {
+						if (val != undefined)
+							this.push(Json.encode(key) + ':' + Json.encode(val));
+					}, []) + '}';
+				/*
 					return '{' + Hash.map(obj, function(val, key) {
 						val = Json.encode(val);
 						if (val) return Json.encode(key) + ':' + val;
 					}).compact() + '}';
+				*/
 				default:
 					return obj + "";
 			}

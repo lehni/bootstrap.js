@@ -57,7 +57,7 @@ HtmlElement.inject(new function() {
 			var i = 0;
 			return fields.each(function(name) {
 				var val = vals.length ? vals[i++] : vals[name];
-				if (val != null) this.setStyle(name, (name == 'clip') ? val : val + 'px');
+				if (val != null) this.setStyle(name, val);
 			}, this);
 		}
 	}
@@ -147,8 +147,7 @@ HtmlElement.inject(new function() {
 			return this.$['offset' + part];
 		};
 		fields['set' + part] = function(value) {
-			// Only set px if it's not ending with a unit already 
-			this.$.style[name] = /(%|px)$/.test(value) ? value : value + 'px';
+			this.$.style[name] = value;
 		};
 	});
 

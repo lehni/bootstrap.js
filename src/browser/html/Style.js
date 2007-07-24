@@ -16,19 +16,7 @@
 // Style
 
 HtmlElement.inject(new function() {
-	var styles = ['Top', 'Right', 'Bottom', 'Left'].each(function(dir) {
-		['margin', 'padding'].each(function(style) {
-			var sd = style + dir;
-			this.part[style][sd] = this.all[sd] = '@px';
-		}, this);
-		var bd = 'border' + dir;
-		this.part.border[bd] = this.all[bd] = '@px @ rgb(@, @, @)';
-		var bdw = bd + 'Width', bds = bd + 'Style', bdc = bd + 'Color';
-		this.part[bd] = {};
-		this.part.borderWidth[bdw] = this.part[bd][bdw] = '@px';
-		this.part.borderStyle[bds] = this.part[bd][bds] = '@';
-		this.part.borderColor[bdc] = this.part[bd][bdc] = 'rgb(@, @, @)';
-	}, {
+	var styles = {
 		all: {
 			width: '@px', height: '@px', left: '@px', top: '@px', right: '@px', bottom: '@px',
 			color: 'rgb(@, @, @)', backgroundColor: 'rgb(@, @, @)', backgroundPosition: '@px @px',
@@ -40,6 +28,26 @@ HtmlElement.inject(new function() {
 		part: {
 			'margin': {}, 'padding': {}, 'border': {}, 'borderWidth': {}, 'borderStyle': {}, 'borderColor': {}
 		}
+	};
+
+	['Top', 'Right', 'Bottom', 'Left'].each(function(dir) {
+		['margin', 'padding'].each(function(style) {
+			var sd = style + dir;
+			styles.part[style][sd] = styles.all[sd] = '@px';
+		});
+		var bd = 'border' + dir;
+		styles.part.border[bd] = styles.all[bd] = '@px @ rgb(@, @, @)';
+		var bdw = bd + 'Width', bds = bd + 'Style', bdc = bd + 'Color';
+		styles.part[bd] = {};
+		styles.part.borderWidth[bdw] = styles.part[bd][bdw] = '@px';
+		styles.part.borderStyle[bds] = styles.part[bd][bds] = '@';
+		styles.part.borderColor[bdc] = styles.part[bd][bdc] = 'rgb(@, @, @)';
+	});
+
+	// Now pre-split all style.all settings at ' ', instead of each time
+	// in setStyles
+	Base.each(styles.all, function(val, name) {
+		this[name] = val.split(' ');
 	});
 
 	var fields = {
@@ -73,13 +81,13 @@ HtmlElement.inject(new function() {
 			if (color) return style.replace(color[0], color[0].rgbToHex());
 #endif // !__lang_Color__
 			if (Browser.IE && isNaN(parseInt(style))) {
-				// fix IE style:
+				// Fix IE style:
 				if (/^(width|height)$/.test(name)) {
 					var size = 0;
 					(name == 'width' ? ['left', 'right'] : ['top', 'bottom']).each(function(val) {
 						size += this.getStyle('border-' + val + '-width').toInt() + this.getStyle('padding-' + val).toInt();
 					}, this);
-					return element['offset' + name.capitalize()] - size + 'px';
+					return (this.$['offset' + name.capitalize()] - size) + 'px';
 				} else if (name.test(/border(.+)Width|margin|padding/)) {
 					return '0px';
 				}
@@ -107,33 +115,23 @@ HtmlElement.inject(new function() {
 			default:
 				name = name.camelize();
 			}
-			if ($typeof(value) != 'string') {
-				// TODO: optimize:
-				var map = (styles.all[name] || '@').split(' '), index = 0;
-				var compute = function(value) {
-					return (value ? (value.push ? value : [value]) : []).map(function(val) {
-						var bit = map[index];
-						if (!bit) return '';
-						switch ($typeof(val)) {
-							case 'number':
-								index++;
-								return bit.replace('@', Math.round(val));
-							case 'array':
-								return compute(val);
-						};
-						index++;
-						return val;
-					}).join(' ');
-
-				};
-				value = compute(value);
+			var type = $typeof(value);
+			if (value && type != 'string') {
+				var parts = styles.all[name] || ['@'], index = 0;
+				// Flatten arrays, e.g. for borderColor where it might be an
+				// array of four color arrays.
+				value = (type == 'array' ? value.flatten() : [value]).map(function(val) {
+					var part = parts[index++];
+					if (!part) throw $break;
+					return $typeof(val) == 'number' ? part.replace('@', Math.round(val)) : val;
+				}).join(' ');
 			}
 			el.style[name] = value;
 			return this;
 		},
 
 		getStyles: function() {
-			return arguments.length ? EACH(arguments, function(name) {
+			return arguments.length ? Base.each(arguments, function(name) {
 				this[name] = that.getStyle(name);
 			}, {}) : this.$.style.cssText;
 		},
@@ -141,7 +139,7 @@ HtmlElement.inject(new function() {
 		setStyles: function(styles) {
 			switch ($typeof(styles)) {
 			case 'object':
-				EACH(styles, function(style, name) {
+				Base.each(styles, function(style, name) {
 					// only set styles that have a defined value (null !== undefined)
 					if (style !== undefined)
 						this.setStyle(name, style);

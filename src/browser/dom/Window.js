@@ -37,7 +37,7 @@ Window = DomElement.get(window).inject({
 			}
 			focus = params.focus;
 			// Now convert paramets to string.
-			params = EACH(params, function(p, n) {
+			params = Base.each(params, function(p, n) {
 				if (!/^(focus|confirm)$/.test(n))
 					this.push(n + '=' + p);
 			}, []).join(',');

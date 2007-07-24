@@ -47,7 +47,7 @@ Callback = {
 	},
 
 	addEvents: function(events) {
-		return EACH((events || []), function(fn, type) {
+		return Base.each((events || []), function(fn, type) {
 			this.addEvent(type, fn);
 		}, this);
 	},
