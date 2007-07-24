@@ -8,6 +8,8 @@
 // Color
 
 Array.inject({
+	HIDE
+
 	hexToRgb: function(toArray) {
 		if (this.length >= 3) {
 			var rgb = [];

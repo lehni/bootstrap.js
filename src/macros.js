@@ -40,9 +40,3 @@
 #else // !SET_ITERATOR && !BROWSER_LEGACY
 #define AND_NAME_IS_VISIBLE(NAME)
 #endif // !SET_ITERATOR && !BROWSER_LEGACY
-
-#ifdef EXTEND_OBJECT
-#define EACH(OBJECT, ARGS...) OBJECT.each(ARGS)
-#else // !EXTEND_OBJECT
-#define EACH(OBJECT, ARGS...) Base.each(OBJECT, ARGS)
-#endif // !EXTEND_OBJECT

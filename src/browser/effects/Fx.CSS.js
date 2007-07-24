@@ -38,7 +38,7 @@ Fx.CSS = new function() {
 		},
 
 		compute: function(from, to, fx) {
-			return EACH(from, function(val, i) {
+			return Base.each(from, function(val, i) {
 				this[i] = fx.compute(val, to[i]);
 			}, []);
 		},
@@ -56,7 +56,7 @@ Fx.CSS = new function() {
 		},
 
 		compute: function(from, to, fx) {
-			return EACH(from, function(val, i) {
+			return Base.each(from, function(val, i) {
 				this[i] = Math.round(fx.compute(val, to[i]));
 			}, []);
 		},

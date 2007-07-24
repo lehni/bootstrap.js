@@ -38,6 +38,9 @@ HtmlElement.inject({
 	}
 })
 
+// TODO: Consider naming these FormElement, InputElement, TextAreaElement,
+// SelectElement and OptionElement. Also, think of ImageElement (with setSrc...).
+
 Form = HtmlElement.extend({
 	_tag: 'form',
 	_properties: ['action', 'method', 'target'],

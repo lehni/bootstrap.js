@@ -57,7 +57,7 @@ DomElements = Array.extend(new function() {
 				// new function that iterates that calls the function on each of
 				// the collection's elements.
 				// src can either be a function to be called, or a object literal.
-				return this.base(EACH((src || {}), function(val, key) {
+				return this.base(Base.each(src || {}, function(val, key) {
 					this[key] = typeof val != 'function' ? val : function() {
 						// Only collect values if calling a getter function,
 						// otherwise return this
@@ -135,7 +135,7 @@ DomElement = Base.extend(new function() {
 		return Function.inject.call(this, src);
 	}
 
-	function constructor(el) {
+	function getConstructor(el) {
 		return el.tagName && constructors[el.tagName.toLowerCase()] ||
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
@@ -169,7 +169,7 @@ DomElement = Base.extend(new function() {
 			else {
 				// Check if we're using the right constructor, if not, construct
 				// with the right one:
-				var ctor = constructor(el);
+				var ctor = getConstructor(el);
 				if (ctor != this.constructor)
 					return new ctor(el, props);
 			}
@@ -184,12 +184,35 @@ DomElement = Base.extend(new function() {
 
 		statics: {
 			inject: function(src) {
-				var ret = inject.call(this, src);
+				// Produce generic-versions for each of the injected non-static
+				// methods, so that they function on native methods instead of
+				// wrapped ones. This means DomElement.getProperty(el, name) can
+				// be called on non wrapped elements.
+				var proto = this.prototype;
+				if (src) src.statics = Base.each(src, function(val, name) {
+					if (typeof val == 'function' && !this[name]) {
+						// We need to be fast, so assume a maximum of two params
+						this[name] = function(el, param1, param2) {
+							if (el) {
+								try {
+									// If the element is unwrapped, use the ugly
+									// trick of setting $ on the prototype and
+									// call throught that, then erase again.
+									proto.$ = el.$ || el;
+									return proto[name](param1, param2);
+								} finally {
+									delete proto.$;
+								}
+							}
+						}
+					}
+				}, src.statics || {});
+				inject.call(this, src);
 				// Now, after src was processed in #inject, inject not only into
 				// this, but also into DomElements where the functions are
 				// "multiplied" for each of the elements of the collection.
-				this.prototype._elements.inject(src);
-				return ret;
+				proto._elements.inject(src);
+				return this;
 			},
 
 			extend: function(src) {
@@ -213,7 +236,7 @@ DomElement = Base.extend(new function() {
 				// Make sure we're using the right constructor. DomElement as 
 				// the default, HtmlElement for anything with className !== undefined
 				// and special constructors based on tag names.
-				return el ? el._wrapper || el._elements && el || new (constructor(el))(el, dont) : null;
+				return el ? el._wrapper || el._elements && el || new (getConstructor(el))(el, dont) : null;
 			},
 
 			unwrap: function(el) {
@@ -245,11 +268,11 @@ DomElement.inject(new function() {
 	// Dom / Html to JS property mappings, as used by getProperty, setProperty
 	// and removeProperty.
 	var properties = {
-		'class': 'className', 'for': 'htmlFor', colspan: 'colSpan',
-		rowspan: 'rowSpan', accesskey: 'accessKey', tabindex: 'tabIndex',
-		maxlength: 'maxLength', readonly: 'readOnly', value: 'value',
-		disabled: 'disabled', checked: 'checked', multiple: 'multiple',
-		selected: 'selected'
+		'class': 'className', className: 'className', 'for': 'htmlFor',
+		colspan: 'colSpan', rowspan: 'rowSpan', accesskey: 'accessKey',
+		tabindex: 'tabIndex', maxlength: 'maxLength', readonly: 'readOnly',
+		value: 'value', disabled: 'disabled', checked: 'checked',
+		multiple: 'multiple', selected: 'selected'
 	};
 
 	var flags = {
@@ -272,7 +295,7 @@ DomElement.inject(new function() {
 
 	return {
 		set: function(props) {
-			return props ? EACH(props, function(val, key) {
+			return props ? Base.each(props, function(val, key) {
 				// First see if there is a setter for the given property
 				var set = (key == 'events') ? this.addEvents : setters[key];
 				// Do not call capitalize, as this is time critical and executes
@@ -451,7 +474,7 @@ DomElement.inject(new function() {
 		},
 
 		setProperties: function(src) {
-			return EACH(src, function(val, name) {
+			return Base.each(src, function(val, name) {
 				this.setProperty(name, val);
 			}, this);
 		},

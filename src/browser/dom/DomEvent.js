@@ -221,7 +221,7 @@ DomElement.inject({
 	},
 
 	addEvents: function(events) {
-		return EACH((events || []), function(fn, type) {
+		return Base.each(events || [], function(fn, type) {
 			this.addEvent(type, fn);
 		}, this);
 	},
@@ -234,7 +234,7 @@ DomElement.inject({
 				}, this);
 				delete this.events[type];
 			} else {
-				EACH(this.events, function(ev, type) {
+				Base.each(this.events, function(ev, type) {
 					this.removeEvents(type);
 				}, this);
 				this.events = null;

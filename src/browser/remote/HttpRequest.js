@@ -83,8 +83,8 @@ HttpRequest = Base.extend(new function() {
 				this.encoding = this.options.encoding ? '; charset=' + this.options.encoding : '';
 				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' + this.encoding);
 			}
-			if (this.options.initialize)
-				this.options.initialize.call(this);
+			this.setHeader('X-Requested-With', 'XMLHttpRequest');
+			this.setHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
 		},
 
 		onStateChange: function() {
@@ -154,7 +154,7 @@ HttpRequest = Base.extend(new function() {
 			data = data || this.options.data;
 			this.running = true;
 			var method = this.options.method;
-			if (data && $typeof(data) == 'element') { // a form: use iframe
+			if ($typeof(data) == 'element') { // a form: use iframe
 		 		createFrame(this, DomElement.get(data));
 			} else {
 				createRequest(this);
