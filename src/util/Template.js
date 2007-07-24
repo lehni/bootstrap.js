@@ -432,6 +432,7 @@ Template.prototype = {
 #else // !HELMA
 					macro.isData = isEqualTag;
 #endif // !HELMA
+					macro.isSetter = next[0] == '$'; 
 				}
 			}
 		}
@@ -470,14 +471,19 @@ Template.prototype = {
 			} else if (part == '|') { // start a filter
 				isFirst = true;
 			} else { // unnamed param
-				// Unnamed parameters are not allowed in <%= tags
-				// allowed groups for unnamed params: '' "" [] {} <%%>
-				if (!macro.isData && !macro.isControl && (/^['"[{]|<%/.test(part))) {
+				// Detect setters. isSetter is turned on first for any tag starting
+				// with '<% $'. Since this might also be a template var setter,
+				// detect variable setter here by checking the first part for '='.
+				if (macro.isSetter && !macro.opcode.length && part[0] != '=')
+					macro.isSetter = false;
+				// Unnamed parameters are not allowed in <%= tags, in control tags
+				// or when setting variables.
+				if (!macro.isData && !macro.isControl && !macro.isSetter) {
 					part = nestedMacro(this, part, code, stack);
 					macro.unnamed.push(part);
 					// Appending to macro opcode not allowed after first parameter
 					append = false;
-				} else if (append) {
+				} else if (append) { // appending to the opcode...
 					macro.opcode.push(part);
 				} else {
 					throw "Syntax error: '" + part + "'";
@@ -629,7 +635,7 @@ Template.prototype = {
 		} else { // A normal <% %> macro
 			if (macro.opcode) {
 				// Setting a value? If not, this is a syntax error.
-				if (macro.command[0] == '$' && macro.opcode[0] == '=')
+				if (macro.isSetter)
 					code.push(						"var " + macro.command + " " + this.parseLoopVariables(macro.opcode, stack) + ";");
 				else
 					throw "Syntax error"; // No opcodes allowed in macros
@@ -801,6 +807,10 @@ Template.prototype = {
 					// there and does not want to rely on res to be around (e.g.)
 					// compatibility with browser and server), it can:
 					prm.__out__ = out;
+#ifdef HELMA
+					// On Helma, dontEnum these fields, so for-in does not see them.
+					prm.dontEnum('__template__', '__param__', '__out__');
+#endif // !HELMA
 					value = macro.apply(object, args);
 				} catch (e) {
 					var tag = this.getTagFromException(e);
