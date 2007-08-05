@@ -80,7 +80,7 @@ new function() { // bootstrap
 						// Do not call Array.slice generic here, as on Safari,
 						// this seems to confuse scopes (calling another
 						// generic from generic-producing code).
-						return dest[name].apply(bind,
+						return bind && dest[name].apply(bind,
 							Array.prototype.slice.call(arguments, 1));
 					}
 					if (prev && /\bthis\.base\b/.test(val)) {
@@ -131,20 +131,19 @@ new function() { // bootstrap
 #ifdef DONT_ENUM
 				if (visible(src, name) && !/^(toString|valueOf|statics|_generics|_hide)$/.test(name))
 #elif !defined(HELMA)
-				if (visible(src, name) && !/^(prototype|toString|valueOf|statics|_generics)$/.test(name))
+				if (visible(src, name) && !/^(prototype|constructor|toString|valueOf|statics|_generics)$/.test(name))
 #else // HELMA
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Helma, the native dontEnum can only be called on fields
 				// that are defined already, as an added attribute. So we need
 				// to check against statics here...
-				if (!/^(prototype|statics|_generics|_hide)$/.test(name))
+				if (!/^(prototype|constructor|toString|valueOf|statics|_generics|_hide)$/.test(name))
 #endif // HELMA
 					field(name, generics);
 			// Do not create generics for these:
 			field('toString');
 			field('valueOf');
 		}
-		return dest;
 	}
 
 	/**
@@ -216,7 +215,7 @@ new function() { // bootstrap
 
 	// Now we can use the private inject to add methods to the Function.prototype
 	inject(Function.prototype, {
-		inject: function(src) {
+		inject: function(src/*, ... */) {
 			var proto = this.prototype, base = proto.__proto__ && proto.__proto__.constructor;
 			// When called from extend, a third argument is passed, pointing
 			// to the base class (the constructor).
@@ -236,25 +235,16 @@ new function() { // bootstrap
 			// and is automatically increased in onCodeUpdate, as defined bellow.
 			var version = proto instanceof HopObject && (proto._version || (proto._version = 1));
 #endif // HELMA
-			// Define new instance fields, and inherit from base, if available.
-			// Otherwise inherit from ourself this works for also for functions
-			// in the base class, as they are available through this.prototype.
-			// But if base is not available, base will not be looked up each
-			// time when it's called (as this would result in an endless
-			// recursion). In this case, the super class is "hard-coded" in the
-			// wrapper function, and further changes to it after inheritance are
-			// not reflected.
 #ifndef HELMA // !HELMA
 			inject(proto, src, base && base.prototype, src && src._generics && this);
 #else // HELMA
-			// Pass realBase if defined.
+			// Pass version
 			inject(proto, src, base && base.prototype, src && src._generics && this, version);
 #endif // HELMA
 			// Define new static fields, and inherit from base.
 #ifndef HELMA // !HELMA
-			return inject(this, src && src.statics, base);
+			inject(this, src && src.statics, base);
 #else // HELMA
-			// Again, pass realBase if defined.
 			inject(this, src && src.statics, base, null, version);
 			// For versioning, define onCodeUpdate to update _version each time:
 			if (version) {
@@ -282,11 +272,16 @@ new function() { // bootstrap
 				if (proto.initialize)
 					proto.constructor = proto.initialize;
 			}
-			return this;
 #endif // HELMA
+			// If there are more than one argument, loop through them and call
+			// inject again. Do not simple inline the above code in one loop,
+			// since each of the passed objects might override this.inject.
+			for (var i = 1, j = arguments.length; i < j; i++)
+				this.inject(arguments[i]);
+			return this;
 		},
 
-		extend: function(src) {
+		extend: function(src/* , ... */) {
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
@@ -310,12 +305,15 @@ new function() { // bootstrap
 			// overriden.
 			// Needed when overriding static inject as in HtmlElements.js.
 #ifdef BROWSER_LEGACY
-			// Do not rely on this.inject.call, as this might not yet be defined
-			// on legacy browsers yet.
+			// Do not rely on this.inject.apply, as this might not yet be defined
+			// on legacy browsers yet. Pass on up to 6 src arguments.
+			// This should be more than enough when extending using different
+			// interfaces.
 			ctor.inject = this.inject;
-			return ctor.inject(src);
+			var a = arguments;
+			return ctor.inject(a[0], a[1], a[2], a[3], a[4], a[5]);
 #else // !BROWSER_LEGACY
-			return this.inject.call(ctor, src);
+			return this.inject.apply(ctor, arguments);
 #endif // !BROWSER_LEGACY
 		},
 
@@ -407,9 +405,10 @@ new function() { // bootstrap
 		/**
 		 * Injects the fields from the given object, adding base functionality
 		 */
-		inject: function(src) {
-			// src can either be a function to be called, or an object literal.
-			return inject(this, src);
+		inject: function(/* src, ... */) {
+			for (var i = 0, j = arguments.length; i < j; i++)
+				inject(this, arguments[i]);
+			return this;
 		},
 
 		/**
@@ -419,52 +418,17 @@ new function() { // bootstrap
 		 * newly created object just like in inject(), to copy the behavior
 		 * of Function.prototype.extend.
 		 */
-		extend: function(src) {
-			// notice the "new" here: the private extend returns a constructor
+		extend: function(/* src, ... */) {
+			// Notice the "new" here: the private extend returns a constructor
 			// as it's used for Function.prototype.extend as well. But when 
 			// extending objects, we want to return a new object that inherits
 			// from "this". In that case, the constructor is never used again,
 			// its just created to create a new object with the proper inheritance
 			// set and is garbage collected right after.
-			return (new (extend(this))).inject(src);
+			var res = new (extend(this));
+			return res.inject.apply(res, arguments);
 		}
-
-/* TODO: Try this out:
-#ifndef EXTEND_OBJECT
-		statics: {
-			inject: function(src) {
-				// Inject anything added to Base into Array as well.
-				Array.inject(src);
-				return this.base(src);
-			},
-
-			extend: function(src) {
-				var ret = this.base(src);
-				// Set proper versions of inject and extend on constructors
-				// extending Base, not the overriden ones in Base...
-				ret.extend = this.base;
-				ret.inject = Function.inject;
-				return ret;
-			}
-		}
-#endif
-*/
 	});
-#ifndef EXTEND_OBJECT
-	// As we do not extend Object, add Base methods to Array, before the Base
-	// fields are hidden through dontEnum.
-	Array.inject(Base.prototype);
-#endif // !EXTEND_OBJECT
-}
-
-function $typeof(obj) {
-#ifdef BROWSER
-	// Handle elements, as needed by DomElement.js
-	return obj != null && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element')
-		|| typeof obj) || null;
-#else // !BROWSER
-	return obj != null && (obj._type || typeof obj) || null;
-#endif // !BROWSER
 }
 
 #endif // __lang_Core__

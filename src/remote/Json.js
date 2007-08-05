@@ -17,7 +17,7 @@ Json = new function() {
 			var str = uneval(obj);
 			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
 #else // !RHINO			
-			switch ($typeof(obj)) {
+			switch (Base.type(obj)) {
 				case 'string':
 					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
 				case 'array':
@@ -42,7 +42,7 @@ Json = new function() {
 
 		decode: function(string, secure) {
 			try {
-				return ($typeof(string) != 'string' || !string.length) ||
+				return (Base.type(string) != 'string' || !string.length) ||
 					(secure && !/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(
 						string.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '')))
 					? null : eval('(' + string + ')');

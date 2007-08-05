@@ -92,7 +92,7 @@ DomEvent = Base.extend(new function() {
 			// Needed for dragging
 			this.stopped = true;
 			return this;
-	    },
+		},
 
 		preventDefault: function() {
 			if (this.event.preventDefault) this.event.preventDefault();
@@ -175,9 +175,9 @@ DomElement.inject({
 					this.$['on' + name] = function(event) {
 						entries.each(function(entry) {
 							entry.bound(event);
-							if (event.event.cancelBubble) throw $break;
+							if (event.event.cancelBubble) throw Base.stop;
 						});
-						// passing "this" for bind above breaks throw $break
+						// Passing "this" for bind above breaks throw Base.stop
 						// on MACIE.
 						// The reason is maybe that this is a native element?
 						return event.event.returnValue;
@@ -185,7 +185,7 @@ DomElement.inject({
 #endif // !BROWSER_LEGACY
 				}
 			}
-			// func is the one to be called through fireEvent. see dragstart
+			// Func is the one to be called through fireEvent. see dragstart
 			// Also store a refrence to name here, as this might have changed too.
 			entries.push({ func: func, name: name, bound: bound });
 		}

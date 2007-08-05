@@ -442,14 +442,14 @@ new function() {
 				: selectors.length != null ? selectors : [selectors];
 			for (var i = 0; i < selectors.length; ++i) {
 				var selector = selectors[i];
-				if ($typeof(selector) == 'element') elements.push(selector);
+				if (Base.type(selector) == 'element') elements.push(selector);
 				else evaluate([], selector, this.$, elements);
 			}
 			return elements;
 		},
 
 		getElement: function(selector) {
-			var el, type = $typeof(selector), match;
+			var el, type = Base.type(selector), match;
 			// Try  fetching by id first, if no success, assume a real selector.
 			// Note that '#' is not needed, a string that could be an id (a-zA-Z_-)
 			// is enough for trying getElementById first.

@@ -38,6 +38,14 @@ Function.inject(new function() {
 		_generics: true,
 
 		/**
+		 * Returns the function's name, if not unnamed.
+		 */
+		name: function() {
+			var match = this.toString().match(/^\s*function\s*(\w*)/);
+			return match && match[1];
+		},
+
+		/**
 		 * Returns the function's parameter names as an array
 		 */
 		parameters: function() {

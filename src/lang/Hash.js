@@ -17,7 +17,7 @@
  * element. This is much simpler and faster, and I have not yet found out the
  * advantage of how Prototype handles it. 
  */
-Hash = Base.extend(Enumerable).inject({
+Hash = Base.extend(Enumerable, {
 	HIDE
 	_generics: true,
 
@@ -27,22 +27,22 @@ Hash = Base.extend(Enumerable).inject({
 	 */
 	initialize: function() {
 		// Explicitly return object as it is used in Hash.create's return statement
-		return Base.each(arguments, function(obj) {
-			this.merge(obj);
-		}, this);
+		return this.merge.apply(this, arguments);
 	},
 
 	/**
 	 * Deep merges with the given enumerable object and returns the modifed hash.
 	 * Recursively calls merge on value pairs if they are dictionaries.
 	 */
-	merge: function(obj) {
+	merge: function() {
 		// Allways use Base.each() as we don't know wether the passed object
 		// really inherits from Base.
-		return obj ? Base.each(obj, function(val, key) {
-			this[key] = $typeof(this[key]) == 'object'
+		return Base.each(arguments, function(obj) {
+			Base.each(obj, function(val, key) {
+				this[key] = Base.type(this[key]) == 'object'
 					? Hash.prototype.merge.call(this[key], val) : val;
-		}, this) : this;
+			}, this);
+		}, this);
 	},
 
 	/**
@@ -65,13 +65,17 @@ Hash = Base.extend(Enumerable).inject({
 		 * Warning: Does not create a new instance if it is a hash already!
 		 */
 		create: function(obj) {
-			return arguments.length == 1 && obj.constructor == Hash ? obj
-				: Hash.prototype.initialize.apply(new Hash(), arguments);
+			return arguments.length == 1 && obj.constructor == Hash
+				? obj : Hash.prototype.initialize.apply(new Hash(), arguments);
 		}
 	}
 });
 
+#ifdef DEFINE_GLOBALS
+
 // Short-cut to Hash.create
 $H = Hash.create;
+
+#endif // DEFINE_GLOBALS
 
 #endif // __lang_Hash__

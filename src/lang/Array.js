@@ -106,11 +106,12 @@ if (!Array.prototype.push) {
 Array.inject(new function() {
 	var proto = Array.prototype;
 	// Do not use Hash.create, as this produces as Hash that hides all Enumerable
-	// methods from inject()! ( var fields = Hash.create(Enumerable, {...}) ).
-	// Instead, use the generics in Base and Hash.
-	var fields = Hash.merge(Base.clone(Enumerable), {
+	// methods from #inject, since they define _hide!
+	// ( var fields = Hash.create(Enumerable, {...}) )
+	// Instead, use the generics in Hash to fill a normal object.
+	var fields = Hash.merge({}, Enumerable, {
 		_generics: true,
-		// tell $typeof what to return for arrays.
+		// tell Base.type what to return for arrays.
 		_type: 'array',
 
 		/**
@@ -168,18 +169,32 @@ Array.inject(new function() {
 			return false;
 		}, '__some'),
 
-		findKey: function(iter) {
-			// use the faster indexOf in case we're not using iterator functions.
-			if (iter && !/^(function|regexp)$/.test($typeof(iter))) {
-				var i = this.indexOf(iter);
-				return i != -1 ? i : null;
-			}
-			// TODO: this.base? Speed?
-			return Enumerable.findKey.call(this, iter);
+		reduce: proto.reduce || function(fn, value) {
+			var i = 0;
+			if (arguments.length < 2 && this.length) value = this[i++];
+			for (var l = this.length; i < l; i++)
+				value = fn.call(null, value, this[i], i, this);
+			return value;
 		},
 
-		removeKey: function(key) {
-			return this.splice(key, 1)[0];
+		findEntry: function(iter, bind) {
+			// Use the faster indexOf in case we're not using iterator functions.
+			if (iter && !/^(function|regexp)$/.test(Base.type(iter))) {
+				var i = this.indexOf(iter);
+				// Pretend we were using a iterator function returning true when 
+				// the value matches iter, false otherwise.
+				// See Enumerable#findEntry for more explanations.
+				return { key: i != -1 ? i : null, value: this[i], result: i != -1 };
+			}
+			// Do not use this.base, as we might call this on non-arrays
+			return Enumerable.findEntry.call(this, iter, bind);
+		},
+
+		remove: function(iter, bind) {
+			var entry = this.findEntry(iter, bind);
+			if (entry.key != null)
+				this.splice(entry.key, 1);
+			return entry.value;
 		},
 
 		/**
@@ -236,26 +251,24 @@ Array.inject(new function() {
 		},
 
 		/**
-		 * Appends the elments of the passed array.
+		 * Appends the items of the passed array.
 		 */
-		append: function(obj) {
-			/*
-			// Do not rely on obj to have .each set, as it might come from
-			// another frame.
-			// This is a bit too slow for DomQuery stuff:
-			return Base.each(obj, function(val) {
-				this.push(val);
-			}, this);
-			*/
-			for (var i = 0, j = obj.length; i < j; ++i)
-				this.push(obj[i]);
+		append: function(items) {
+			// It would be nice if calling push with the items of the array
+			// as arguments would work, but it does not for non-arrays:
+			// this.push.apply(this, items);
+			for (var i = 0, j = items.length; i < j; ++i)
+				this.push(items[i]);
 			return this;
 		},
 
-		subtract: function(obj) {
-			for (var i = 0, j = obj.length; i < j; ++i)
+		/**
+		 * Removes all objects contained in items.
+		 */
+		subtract: function(items) {
+			for (var i = 0, j = items.length; i < j; ++i)
 				// TODO: Conflict between Array#remove and DomElement(s)#remove. Resolve!
-				Array.remove(this, obj[i]);
+				Array.remove(this, items[i]);
 			return this;
 		},
 
@@ -268,19 +281,18 @@ Array.inject(new function() {
 				var that = this;
 				return Base.each(obj, function(name, index) {
 					this[name] = that[index];
-					if (index == that.length)
-						throw $break;
+					if (index == that.length) throw Base.stop;
 				}, {});
 			} else {
 				obj = Hash.create(obj);
 				// Use Base.each since this is also used for generics
 				return Base.each(this, function(val) {
-					var type = $typeof(val);
+					var type = Base.type(val);
 					obj.each(function(hint, name) {
 						if (hint == 'any' || type == hint) {
 							this[name] = val;
 							delete obj[name];
-							throw $break;
+							throw Base.stop;
 						}
 					}, this);
 				}, {});
@@ -337,12 +349,17 @@ Array.inject(new function() {
 			 * Converts the list to an array. Various types are supported. 
 			 */
 			create: function(list) {
-				if (!list) return [];
+				if (!Base.check(list)) return [];
+				if (Base.type(list) == 'array') return list;
 				if (list.toArray)
 					return list.toArray();
-				var res = [];
-				for (var i = 0; i < list.length; ++i)
-					res[i] = list[i];
+				if (list.length != null) {
+					var res = [];
+					for (var i = 0, j = list.length; i < j; ++i)
+						res[i] = list[i];
+				} else {
+					res = [list];
+				}
 				return res;
 			},
 
@@ -354,7 +371,7 @@ Array.inject(new function() {
 				// injecting the Array fields, which explicitely contain the
 				// native functions too (see bellow).
 				// Not supported: concat (Safari breaks it)
-				var ret = Base.extend(extend).inject(src);
+				var ret = Base.extend(extend, src);
 				// The subclass can use the normal extend again:
 				ret.extend = Function.extend;
 				return ret;
@@ -379,7 +396,11 @@ Array.inject(new function() {
 	return fields;
 });
 
+#ifdef DEFINE_GLOBALS
+
 // Short-cut to Array.create
 $A = Array.create;
+
+#endif // DEFINE_GLOBALS
 
 #endif // __lang_Array__

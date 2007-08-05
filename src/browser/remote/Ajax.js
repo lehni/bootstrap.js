@@ -43,7 +43,7 @@ Ajax = HttpRequest.extend({
 			url = this.url;
 		}
 		data = data || this.options.data || '';
-		switch ($typeof(data)) {
+		switch (Base.type(data)) {
 			case 'element':
 				var el = DomElement.get(data);
 				// No need to post using forms if there are no files

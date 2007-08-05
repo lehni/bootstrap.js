@@ -38,14 +38,16 @@ DomElements = Array.extend(new function() {
 
 		/**
 		 * Only push wraps the added element in a DomElement. splice and unshift
-		 * are not overridden to do the same. Also, it only supports one element.
+		 * are not overridden to do the same.
 		 */
-		push: function(el) {
-			// Try _wrapper first, for faster performance
-			el = el._wrapper || DomElement.get(el);
-			if (el._unique != this._unique) {
-				el._unique = this._unique;
-				this[this.length++] = el;
+		push: function() {
+			for (var i = 0, j = arguments.length; i < j; ++i) {
+				var el = arguments[i];
+				// Try _wrapper first, for faster performance
+				if ((el = el && (el._wrapper || DomElement.get(el))) && el._unique != this._unique) {
+					el._unique = this._unique;
+					this[this.length++] = el;
+				}
 			}
 			return this.length;
 		},
@@ -68,7 +70,7 @@ DomElements = Array.extend(new function() {
 							// sets it
 							var ret = (obj[key] || val).apply(obj, args);
 							if (get) {
-								values = values || ($typeof(ret) == 'element'
+								values = values || (Base.type(ret) == 'element'
 									? new collection() : []);
 								values.push(ret);
 							}
@@ -128,6 +130,7 @@ DomElement = Base.extend(new function() {
 			}
 			src['set' + part] = function(value) {
 				this.$[name] = value;
+				return this;
 			}
 		});
 		delete src._methods;
@@ -143,7 +146,7 @@ DomElement = Base.extend(new function() {
 	var dont = {};
 
 	return {
-		// Tells $typeof the type to return when encountering an element.
+		// Tells Base.type the type to return when encountering an element.
 		_type: 'element',
 		_elements: DomElements,
 
@@ -151,7 +154,7 @@ DomElement = Base.extend(new function() {
 			// Support element creating constructors on subclasses of DomElement
 			// that define prototype._tag and can take one argument, which 
 			// defines the properties to be set:
-			if (this._tag && $typeof(el) == 'object') {
+			if (this._tag && Base.type(el) == 'object') {
 				props = el;
 				el = this._tag;
 			}
@@ -184,34 +187,40 @@ DomElement = Base.extend(new function() {
 
 		statics: {
 			inject: function(src) {
-				// Produce generic-versions for each of the injected non-static
-				// methods, so that they function on native methods instead of
-				// wrapped ones. This means DomElement.getProperty(el, name) can
-				// be called on non wrapped elements.
-				var proto = this.prototype;
-				if (src) src.statics = Base.each(src, function(val, name) {
-					if (typeof val == 'function' && !this[name]) {
-						// We need to be fast, so assume a maximum of two params
-						this[name] = function(el, param1, param2) {
-							if (el) {
-								try {
-									// If the element is unwrapped, use the ugly
-									// trick of setting $ on the prototype and
-									// call throught that, then erase again.
-									proto.$ = el.$ || el;
-									return proto[name](param1, param2);
-								} finally {
-									delete proto.$;
+				if (src) {
+					// Produce generic-versions for each of the injected
+					// non-static methods, so that they function on native
+					// methods instead of wrapped ones. This means
+					// DomElement.getProperty(el, name) can be called on non
+					// wrapped elements.
+					var proto = this.prototype;
+					src.statics = Base.each(src, function(val, name) {
+						if (typeof val == 'function' && !this[name]) {
+							// We need to be fast, so assume a maximum of two params
+							this[name] = function(el, param1, param2) {
+								if (el) {
+									try {
+										// If the element is unwrapped, use the ugly
+										// trick of setting $ on the prototype and
+										// call throught that, then erase again.
+										proto.$ = el.$ || el;
+										return proto[name](param1, param2);
+									} finally {
+										delete proto.$;
+									}
 								}
 							}
 						}
-					}
-				}, src.statics || {});
-				inject.call(this, src);
-				// Now, after src was processed in #inject, inject not only into
-				// this, but also into DomElements where the functions are
-				// "multiplied" for each of the elements of the collection.
-				proto._elements.inject(src);
+					}, src.statics || {});
+					inject.call(this, src);
+					// Remove toString, as we do not want it to be multiplied in
+					// _elements (it would not return a string but an array then).
+					delete src.toString;
+					// Now, after src was processed in #inject, inject not only
+					// into this, but also into DomElements where the functions
+					// are "multiplied" for each of the elements of the collection.
+					proto._elements.inject(src);
+				}
 				return this;
 			},
 
@@ -283,7 +292,7 @@ DomElement.inject(new function() {
 
 	function walk(el, name, start) {
 		el = el[start ? start : name];
-		while (el && $typeof(el) != 'element') el = el[name];
+		while (el && Base.type(el) != 'element') el = el[name];
 		return DomElement.get(el);
 	}
 
@@ -400,18 +409,35 @@ DomElement.inject(new function() {
 		},
 
 		create: function(arg) {
-			var values = typeof(arg) == 'string' ? arguments : arg;
+			var items = Base.type(arg) == 'array' ? arg : arguments;
 			var elements = new this._elements();
-			for (var i = 0; i < values.length; i += 3) {
+			for (var i = 0, j = items.length; i < j; i ++) {
+				var item = items[i];
+				// items are arrays of any of these forms:
+				// [tag, properties, content]
+				// [tag, properties]
+				// [tag, content]
+				// content is either an array of other items, or a string, in 
+				// which case it is appended as a string
+				var props = item[1], content = item[2];
+				if (!content && Base.type(props) != 'object') {
+					content = props;
+					props = null;
+				}
 				// Calling the DomElement constructor will automatically call
 				// the constructor of the right subclass.
-				var el = new DomElement(values[i], values[i + 1]), content = values[i + 2];
+				var el = new DomElement(item[0], props);
 				if (content) {
-					if (content.push) this.create(content).insertInside(el);
+					// If the content array is only one item, wrap it in another
+					// array, to create the items array.
+					if (content.push) this.create(Base.type(content[0]) == 'string'
+						? [content] : content).insertInside(el);
 					else el.appendText(content);
 				}
 				elements.push(el);
 			}
+			// Return the element only if we're creating one, otherwise return a
+			// elements array.
 			return elements.length > 1 ? elements : elements[0];
 		},
 

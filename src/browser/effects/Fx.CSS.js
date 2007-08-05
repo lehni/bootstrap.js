@@ -16,76 +16,86 @@
 // Fx.CSS
 
 Fx.CSS = new function() {
-	var single = {
-		parse: function(value) {
-			return value.toFloat();
+
+	var parsers = new Hash({
+#ifdef __lang_Color__
+		color: {
+			match: function(value) {
+				if (value.match(/^#[0-9a-f]{3,6}$/i)) return value.hexToRgb(true);
+				return ((value = value.match(/(\d+),\s*(\d+),\s*(\d+)/))) ? [value[1], value[2], value[3]] : false;
+			},
+
+			compute: function(from, to, fx) {
+				return from.map(function(value, i) {
+					return Math.round(fx.compute(value, to[i]));
+				});
+			},
+
+			get: function(value) {
+				return value.map(Number);
+			}
 		},
 
-		compute: function(from, to, fx) {
-			return fx.compute(from, to);
-		},
+#endif // __lang_Color__
+		number: {
+			match: function(value) {
+				return parseFloat(value);
+			},
 
-		get: function(value, unit) {
-			return value + unit;
+			compute: function(from, to, fx) {
+				return fx.compute(from, to);
+			},
+
+			get: function(value, unit) {
+				return (unit) ? value + unit : value;
+			}
 		}
-	};
+	});
 
-	var multi = {
-		parse: function(value) {
-			return value.push ? value : value.split(' ').map(function(val) {
-				return val.toFloat();
+	return {
+		start: function(element, property, values) {
+			values = Array.create(values);
+			if (!Base.check(values[1])) {
+				values[1] = values[0];
+				values[0] = element.getStyle(property);
+			}
+			var parsed = values.map(Fx.CSS.set);
+			return { from: parsed[0], to: parsed[1] };
+		},
+
+		set: function(value) {
+			// Array.create splits strings at white spaces through String#toArray
+			return Array.create(value).map(function(val) {
+				val = val + '';
+				var res = parsers.find(function(parser, key) {
+					var value = parser.match(val);
+					if (Base.check(value)) return { value: value, parser: parser };
+				}) || {
+					value: val,
+					parser: {
+						compute: function(from, to) {
+							return to;
+						}
+					}
+				};
+				return res;
 			});
 		},
 
 		compute: function(from, to, fx) {
-			return Base.each(from, function(val, i) {
-				this[i] = fx.compute(val, to[i]);
+			return from.map(function(obj, i) {
+				return {
+					value: obj.parser.compute(obj.value, to[i].value, fx),
+					parser: obj.parser
+				};
+			});
+		},
+
+		get: function(now, unit) {
+			return now.reduce(function(prev, cur) {
+				var get = cur.parser.get;
+				return prev.concat(get ? get(cur.value, unit) : cur.value);
 			}, []);
-		},
-
-		get: function(value, unit) {
-			return value.join(unit + ' ') + unit;
-		}
-	};
-
-#ifdef __lang_Color__
-
-	var color = {
-		parse: function(value) {
-			return value.push ? value : value.hexToRgb(true);
-		},
-
-		compute: function(from, to, fx) {
-			return Base.each(from, function(val, i) {
-				this[i] = Math.round(fx.compute(val, to[i]));
-			}, []);
-		},
-
-		get: function(value) {
-			return 'rgb(' + value.join(',') + ')';
-		}
-	};
-
-#endif // !__lang_Color__
-
-	return {
-		select: function(property, to) {
-#ifdef __lang_Color__
-			if (/color/i.test(property)) return color;
-#endif // !__lang_Color__
-			if (/ /.test(to)) return multi;
-			return single;
-		},
-
-		parse: function(el, property, fromTo) {
-			if (!fromTo.push) fromTo = [fromTo];
-			var from = fromTo[0], to = fromTo[1];
-			if (!to && to != 0) {
-				to = from;
-				from = el.getStyle(property);
-			}
-			var css = this.select(property, to);
-			return { from: css.parse(from), to: css.parse(to), css: css };
 		}
 	}
 };
