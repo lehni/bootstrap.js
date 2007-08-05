@@ -193,21 +193,20 @@ DomElement = Base.extend(new function() {
 					// methods instead of wrapped ones. This means
 					// DomElement.getProperty(el, name) can be called on non
 					// wrapped elements.
-					var proto = this.prototype;
+					var proto = this.prototype, that = this;
 					src.statics = Base.each(src, function(val, name) {
-						if (typeof val == 'function' && !this[name]) {
-							// We need to be fast, so assume a maximum of two params
+						if (typeof val == 'function' && !this[name] && !that[name]) {
+							// We need to be fast, so assume a maximum of two
+							// params instead of using Function#apply.
 							this[name] = function(el, param1, param2) {
-								if (el) {
-									try {
-										// If the element is unwrapped, use the ugly
-										// trick of setting $ on the prototype and
-										// call throught that, then erase again.
-										proto.$ = el.$ || el;
-										return proto[name](param1, param2);
-									} finally {
-										delete proto.$;
-									}
+								if (el) try {
+									// Use the ugly but fast trick of setting
+									// $ on the prototype and call throught
+									// that, then erase again.
+									proto.$ = el.$ || el;
+									return proto[name](param1, param2);
+								} finally {
+									delete proto.$;
 								}
 							}
 						}
@@ -288,7 +287,28 @@ DomElement.inject(new function() {
 		href: 2, src: 2
 	};
 
-	var setters = {};
+	// handlers caches getter and setter functions for given property names.
+	// See handle()
+	var handlers = { get: {}, set: {} };
+
+	// handle() handles both get and set calls for any given property name.
+	// prefix is either set or get, and is used for lookup of getter / setter
+	// methods. get/setProperty is used as a fallback.
+	// See DomElement#get/set
+	function handle(that, prefix, name, val) {
+		var list = handlers[prefix];
+		// First see if there is a getter / setter for the given property
+		var fn = name == 'events' && prefix == 'set' ? that.addEvents : list[name];
+		// Do not call capitalize, as this is time critical and executes
+		// faster (we only need to capitalize the first char here).
+		if (fn === undefined)
+			fn = list[name] = that[prefix +
+				name.charAt(0).toUpperCase() + name.substring(1)] || null;
+		// If the passed value is an array, use it as the argument
+		// list for the call.
+		if (fn) return fn[val && val.push ? 'apply' : 'call'](that, val);
+		else return that[prefix + 'Property'](name, val);
+	}
 
 	function walk(el, name, start) {
 		el = el[start ? start : name];
@@ -303,20 +323,20 @@ DomElement.inject(new function() {
 	}
 
 	return {
-		set: function(props) {
-			return props ? Base.each(props, function(val, key) {
-				// First see if there is a setter for the given property
-				var set = (key == 'events') ? this.addEvents : setters[key];
-				// Do not call capitalize, as this is time critical and executes
-				// faster (we only need to capitalize the first char here).
-				if (set === undefined)
-					set = setters[key] = this['set' +
-						key.charAt(0).toUpperCase() + key.substring(1)] || null;
-				// If the passed value is an array, use it as the argument
-				// list for the call.
-				if (set) set[val && val.push ? 'apply' : 'call'](this, val);
-				else this.setProperty(key, val);
-			}, this) : this;
+		set: function(name, value) {
+			switch (Base.type(name)) {
+				case 'string':
+					return handle(this, 'set', name, value);
+				case 'object':
+					return Base.each(name, function(val, key) {
+						handle(this, 'set', key, val);
+					}, this);
+			}
+			return this;
+		},
+
+		get: function(name) {
+			return handle(this, 'get', name);
 		},
 
 		getTag: function() {
