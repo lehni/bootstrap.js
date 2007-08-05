@@ -101,19 +101,19 @@ HtmlElement.inject(new function() {
 			if (arguments.length > 2) value = Array.slice(arguments, 1);
 			var el = this.$;
 			switch (name) {
-			case 'visibility':
-				el.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
-				return this;
-			case 'opacity':
-				if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
-				if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
-				el.style.opacity = this.opacity = value;
-				return this.setStyle('visibility', !!value);
-			case 'float':
-				name = Browser.IE ? 'styleFloat' : 'cssFloat';
-				break;
-			default:
-				name = name.camelize();
+				case 'visibility':
+					el.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
+					return this;
+				case 'opacity':
+					if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
+					if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
+					el.style.opacity = this.opacity = value;
+					return this.setStyle('visibility', !!value);
+				case 'float':
+					name = Browser.IE ? 'styleFloat' : 'cssFloat';
+					break;
+				default:
+					name = name.camelize();
 			}
 			var type = Base.type(value);
 			if (value && type != 'string') {
@@ -138,15 +138,15 @@ HtmlElement.inject(new function() {
 
 		setStyles: function(styles) {
 			switch (Base.type(styles)) {
-			case 'object':
-				Base.each(styles, function(style, name) {
-					// only set styles that have a defined value (null !== undefined)
-					if (style !== undefined)
-						this.setStyle(name, style);
-				}, this);
-				break;
-			case 'string':
-				this.$.style.cssText = styles;
+				case 'object':
+					Base.each(styles, function(style, name) {
+						// only set styles that have a defined value (null !== undefined)
+						if (style !== undefined)
+							this.setStyle(name, style);
+					}, this);
+					break;
+				case 'string':
+					this.$.style.cssText = styles;
 			}
 			return this;
 		}

@@ -320,11 +320,11 @@ new function() {
 
 	var nth = [
 		function(argument) {
-			switch(argument.special) {
-			case 'n': return '[count(preceding-sibling::*) mod ' + argument.a + ' = ' + argument.b + ']';
-			case 'last': return '[count(following-sibling::*) = 0]';
-			case 'only': return '[not(preceding-sibling::* or following-sibling::*)]';
-			default: return '[count(preceding-sibling::*) = ' + argument.a + ']';
+			switch (argument.special) {
+				case 'n': return '[count(preceding-sibling::*) mod ' + argument.a + ' = ' + argument.b + ']';
+				case 'last': return '[count(following-sibling::*) = 0]';
+				case 'only': return '[not(preceding-sibling::* or following-sibling::*)]';
+				default: return '[count(preceding-sibling::*) = ' + argument.a + ']';
 			}
 		},
 
@@ -338,11 +338,11 @@ new function() {
 				children.version = version;
 			}
 			var include = false;
-			switch(argument.special) {
-			case 'n': if (children.indexOf(el) % argument.a == argument.b) include = true; break;
-			case 'last': if (children.last() == el) include = true; break;
-			case 'only': if (children.length == 1) include = true; break;
-			case 'index': if (children[argument.a] == el) include = true;
+			switch (argument.special) {
+				case 'n': if (children.indexOf(el) % argument.a == argument.b) include = true; break;
+				case 'last': if (children.last() == el) include = true; break;
+				case 'only': if (children.length == 1) include = true; break;
+				case 'index': if (children[argument.a] == el) include = true;
 			}
 			return include;
 		}
@@ -393,14 +393,14 @@ new function() {
 				b = b - 1;
 				while (b < 1) b += a;
 				while (b >= a) b -= a;
-				switch(special) {
-				case 'n': return { a: a, b: b, special: 'n' };
-				case 'odd': return { a: 2, b: 0, special: 'n' };
-				case 'even': return { a: 2, b: 1, special: 'n' };
-				case 'first': return { a: 0, special: 'index' };
-				case 'last': return { special: 'last' };
-				case 'only': return { special: 'only' };
-				default: return { a: (a - 1), special: 'index' };
+				switch (special) {
+					case 'n': return { a: a, b: b, special: 'n' };
+					case 'odd': return { a: 2, b: 0, special: 'n' };
+					case 'even': return { a: 2, b: 1, special: 'n' };
+					case 'first': return { a: 0, special: 'index' };
+					case 'last': return { special: 'last' };
+					case 'only': return { special: 'only' };
+					default: return { a: (a - 1), special: 'index' };
 				}
 			},
 			handler: nth
