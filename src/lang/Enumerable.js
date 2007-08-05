@@ -21,17 +21,6 @@
 // Enumerable
 
 /**
- * A special constant, to be thrown by closures passed to each()
- * Inspired by Prototype.js
- *
- * $continue is not implemented, as the same functionality can achieved
- * by using return in the closure. In prototype, the implementation of $continue
- * also leads to a huge speed decrease, as the closure is wrapped in another
- * closure that does nothing else than handling $continue.
- */
-$break = {};
-
-/**
  * The Enumerable interface. To add enumerable functionality to any prototype,
  * just use Constructor.inject(Enumerable);
  * This adds the function .each() that can handle both arrays (detected through
@@ -67,8 +56,9 @@ Enumerable = new function() {
 			// bellow, a RegExp object, a Function or null may be passed.
 			if (!iter) iter = function(val) { return val };
 			else if (typeof iter != 'function') iter = function(val) { return val == iter };
-			/* FOR RegExp support, used this:
-			else switch ($typeof(iter)) {
+			/*
+			// For RegExp support, used this:
+			else switch (Base.type(iter)) {
 				case 'function': break;
 				case 'regexp': iter = function(val) { return iter.test(val) }; break;
 				default: iter = function(val) { return val == iter };
@@ -99,6 +89,16 @@ Enumerable = new function() {
 #endif// !SET_ITERATOR
 		};
 	};
+
+	/**
+	 * A special constant, to be thrown by closures passed to each()
+	 *
+	 * $continue / Base.next is not implemented, as the same functionality can achieved
+	 * by using return in the closure. In prototype, the implementation of $continue
+	 * also leads to a huge speed decrease, as the closure is wrapped in another
+	 * closure that does nothing else than handling $continue.
+	 */
+	Base.stop = {};
 
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
 		for (var i = 0, j = this.length; i < j; ++i)
@@ -144,41 +144,38 @@ Enumerable = new function() {
 		 */
 		each: ITERATE(function(iter, bind) {
 			try { (this.length != null ? each_Array : each_Object).call(this, iter, bind); }
-			catch (e) { if (e !== $break) throw e; }
+			catch (e) { if (e !== Base.stop) throw e; }
 			return bind;
 		}, '__each'),
 
 		/**
-		 * Searches the list for the first element where the condition of the
-		 * passed iterator is met and returns its key.
+		 * Searches the list for the first element where the passed iterator
+		 * does not return null and returns an object containing key, value and
+		 * iterator result for the given entry. This is used in find and remove.
 		 */
-		findKey: ITERATE(function(iter, bind, that) {
+		findEntry: ITERATE(function(iter, bind, that) {
 			return this.each(function(val, key) {
-				if (ITERATOR(iter, bind, val, key, that, __find)) {
+				this.result = ITERATOR(iter, bind, val, key, that, __findEntry);
+				if (this.result) {
 					this.key = key;
-					throw $break;
+					this.value = val;
+					throw Base.stop;
 				}
-			}, { key: null }).key;
-		}, '__find'),
-
-		find: function(iter, bind) {
-			return this[this.findKey(iter, bind)];
-		},
-
-		removeKey: function(key) {
-			var val = this[key];
-			delete this[key];
-			return val;
-		},
+			}, {});
+		}, '__findEntry'),
 
 		/**
-		 * Removes an element. Find is used to find the element fullfilling the
-		 * criteria, then removeKey is called, which has a different implementation
-		 * for Array.
-		 */ 
-		remove: function(iter) {
-			var key = this.findKey(iter);
-			if (key != null) return this.removeKey(key);
+		 * Calls the passed iterator for each element and returns the first
+		 * result of the iterator calls that is not null.
+		 */
+		find: function(iter, bind) {
+			return this.findEntry(iter, bind).result;
+		},
+
+		remove: function(iter, bind) {
+			var entry = this.findEntry(iter, bind);
+			delete this[entry.key];
+			return entry.value;
 		},
 
 		/**
@@ -188,9 +185,9 @@ Enumerable = new function() {
 		 * This is compatible with JS 1.5's .some, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		some: ITERATE(function(iter, bind) {
-			return this.findKey(iter, bind) != null;
-		}, '__some'),
+		some: function(iter, bind) {
+			return this.find(iter, bind) != null;
+		},
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -200,7 +197,7 @@ Enumerable = new function() {
 		 * regarding iterators (as defined in iterate())
 		 */
 		every: ITERATE(function(iter, bind, that) {
-			return this.findKey(function(val, i) {
+			return this.find(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)

@@ -16,46 +16,34 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Fx.Style
 
-Fx.Styles = Fx.Base.extend({
-	initialize: function(el, options) {
-		this.element = HtmlElement.get(el);
-		this.base(options);
-	},
-
+Fx.Styles = Fx.extend({
 	get: function() {
 		var that = this;
-		return Base.each(this.from, function(val, i) {
-			this[i] = that.css[i].compute(that.from[i], that.to[i], that);
+		return Base.each(this.from, function(val, key) {
+			this[key] = Fx.CSS.compute(that.from[key], that.to[key], that);
 		}, {});
 	},
 
 	set: function(to) {
-		var parsed = {};
-		this.css = {};
-		Base.each(to, function(val, i) {
-			this.css[i] = Fx.CSS.select(i, val);
-			parsed[i] = this.css[i].parse(val);
-		}, this);
-		return this.base(parsed);
+		return this.base(Base.each(to, function(val, key) {
+			this[key] = Fx.CSS.set(val);
+		}, {}));
 	},
 
 	start: function(obj) {
 		if (this.timer && this.options.wait) return this;
-		this.now = {};
-		this.css = {};
 		var from = {}, to = {};
-		Base.each(obj, function(val, i) {
-			var parsed = Fx.CSS.parse(this.element, i, val);
-			from[i] = parsed.from;
-			to[i] = parsed.to;
-			this.css[i] = parsed.css;
+		Base.each(obj, function(val, key) {
+			var parsed = Fx.CSS.start(this.element, key, val);
+			from[key] = parsed.from;
+			to[key] = parsed.to;
 		}, this);
 		return this.base(from, to);
 	},
 
 	update: function(val) {
-		Base.each(val, function(val, i) {
-			this.element.setStyle(i, this.css[i].get(val, this.options.unit));
+		Base.each(val, function(val, key) {
+			this.element.setStyle(key, Fx.CSS.get(val, this.options.unit));
 		}, this);
 	}
 

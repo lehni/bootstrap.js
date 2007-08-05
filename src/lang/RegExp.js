@@ -5,7 +5,7 @@
 // RegExp
 
 RegExp.inject({
-	// Tell $typeof what to return for regexps.
+	// Tell Base.type what to return for regexps.
 	_type: 'regexp'
 });
 

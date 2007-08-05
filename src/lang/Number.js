@@ -7,7 +7,7 @@
 #include "String.js"
 
 Number.inject({
-	// tell $typeof that number objects are numbers too.
+	// tell Base.type that number objects are numbers too.
 	_type: 'number',
 
 	toInt: String.prototype.toInt,

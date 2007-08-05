@@ -21,7 +21,7 @@ HtmlElement.inject({
 	setValue: function(name, val) {
 		var el = this.getElement(name);
 		if (!el) el = this.createInside('input', { type: 'hidden', id: name, name: name });
-		el.setValue(val);
+		return el.setValue(val);
 	},
 
 	getValues: function() {
@@ -32,11 +32,11 @@ HtmlElement.inject({
 	},
 
 	setValues: function(values) {
-		Base.each(values, function(val, name) {
+		return Base.each(values, function(val, name) {
 			this.setValue(name, val);
 		}, this);
 	}
-})
+});
 
 // TODO: Consider naming these FormElement, InputElement, TextAreaElement,
 // SelectElement and OptionElement. Also, think of ImageElement (with setSrc...).
@@ -67,6 +67,7 @@ FormElement = HtmlElement.extend({
 		var disabled = !enable && enable !== undefined;
 		if (disabled) this.$.blur();
 		this.$.disabled = disabled;
+		return this;
 	}
 });
 
@@ -87,6 +88,7 @@ Input = FormElement.extend({
 	setValue: function(val) {
 		if (/^(checkbox|radio)$/.test(this.$.type)) this.$.checked = this.$.value == val;
 		else this.$.value = val;
+		return this;
 	}
 });
 
@@ -113,7 +115,7 @@ Select = FormElement.extend({
 
 	setValue: function(values) {
 		this.$.selectedIndex = -1;
-		Base.each(values.length != null ? values : [values], function(val) {
+		return Base.each(values.length != null ? values : [values], function(val) {
 			val = DomElement.unwrap(val);
 			this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
 		}, this);

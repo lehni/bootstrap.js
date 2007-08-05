@@ -49,7 +49,7 @@ HtmlElement.inject(new function() {
 		// Do not set bounds, as arguments would then be modified, which we're
 		// referencing here:
 		return function(values) {
-			var vals = /^(object|array)$/.test($typeof(values)) ? values : arguments;
+			var vals = /^(object|array)$/.test(Base.type(values)) ? values : arguments;
 			if (offset) {
 				if (vals.x) vals.left = vals.x;
 				if (vals.y) vals.top = vals.y;

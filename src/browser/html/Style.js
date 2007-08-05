@@ -115,15 +115,15 @@ HtmlElement.inject(new function() {
 			default:
 				name = name.camelize();
 			}
-			var type = $typeof(value);
+			var type = Base.type(value);
 			if (value && type != 'string') {
 				var parts = styles.all[name] || ['@'], index = 0;
 				// Flatten arrays, e.g. for borderColor where it might be an
 				// array of four color arrays.
 				value = (type == 'array' ? value.flatten() : [value]).map(function(val) {
 					var part = parts[index++];
-					if (!part) throw $break;
-					return $typeof(val) == 'number' ? part.replace('@', Math.round(val)) : val;
+					if (!part) throw Base.stop;
+					return Base.type(val) == 'number' ? part.replace('@', Math.round(val)) : val;
 				}).join(' ');
 			}
 			el.style[name] = value;
@@ -137,7 +137,7 @@ HtmlElement.inject(new function() {
 		},
 
 		setStyles: function(styles) {
-			switch ($typeof(styles)) {
+			switch (Base.type(styles)) {
 			case 'object':
 				Base.each(styles, function(style, name) {
 					// only set styles that have a defined value (null !== undefined)

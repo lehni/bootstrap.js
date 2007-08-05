@@ -61,7 +61,7 @@ Callback = {
 
 	removeEvent: function(type, fn) {
 		if (this.events && this.events[type])
-			this.events[type].remove(fn);
+			this.events[type].remove(function(val) { return fn == val; });
 		return this;
 	},
 

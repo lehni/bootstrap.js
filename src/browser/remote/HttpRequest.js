@@ -24,7 +24,7 @@
 //   urlEncoded
 //   encoding
 
-HttpRequest = Base.extend(new function() {
+HttpRequest = Base.extend(Chain, Callback, new function() {
 	var unique = 0;
 
 	function createRequest(that) {
@@ -154,7 +154,7 @@ HttpRequest = Base.extend(new function() {
 			data = data || this.options.data;
 			this.running = true;
 			var method = this.options.method;
-			if ($typeof(data) == 'element') { // a form: use iframe
+			if (Base.type(data) == 'element') { // a form: use iframe
 		 		createFrame(this, DomElement.get(data));
 			} else {
 				createRequest(this);
@@ -230,7 +230,5 @@ HttpRequest = Base.extend(new function() {
 		}
 	};
 });
-
-HttpRequest.inject(Chain).inject(Callback);
 
 #endif // __browser_remote_HttpRequest__

@@ -15,38 +15,30 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Fx
 
-Fx = {};
+// Mootools uses #setNow to define the current value and #increase to set them
+// Bootstrap relies instead on #update that recieves a value to set and #get
+// to retrieve the current value. Any class extending Fx needs to define these.
 
-Fx.Transitions = {
-	linear: function(t, b, c, d) {
-		return c * t / d + b;
-	},
-
-	sineInOut: function(t, b, c, d) {
-		return -c / 2 * (Math.cos(Math.PI * t / d) - 1) + b;
-	}
-};
-
-Fx.Base = Base.extend({
+Fx = Base.extend(Chain, Callback, {
 	options: {
-		transition: Fx.Transitions.sineInOut,
+		transition: function(p) {
+			return -(Math.cos(Math.PI * p) - 1) / 2;
+		},
 		duration: 500,
-		unit: 'px',
+		unit: false,
 		wait: true,
 		fps: 50
 	},
 
-	initialize: function(opts) {
-		this.element = this.element || null;
-		this.setOptions(opts);
-		if (this.options.initialize)
-			this.options.initialize.call(this);
+	initialize: function(element, options) {
+		this.element = HtmlElement.get(element);
+		this.setOptions(options);
 	},
 
 	step: function() {
 		var time = new Date().getTime();
 		if (time < this.time + this.options.duration) {
-			this.delta = time - this.time;
+			this.delta = this.options.transition((time - this.time) / this.options.duration);
 			this.update(this.get());
 		} else {
 			this.stop(true);
@@ -58,6 +50,7 @@ Fx.Base = Base.extend({
 
 	set: function(to) {
 		this.update(to);
+		this.fireEvent('set', this.element);
 		return this;
 	},
 
@@ -66,7 +59,7 @@ Fx.Base = Base.extend({
 	},
 
 	compute: function(from, to) {
-		return this.options.transition(this.delta, from, (to - from), this.options.duration);
+		return (to - from) * this.delta + from;
 	},
 
 	start: function(from, to) {
@@ -77,6 +70,7 @@ Fx.Base = Base.extend({
 		this.time = new Date().getTime();
 		this.timer = this.step.periodic(Math.round(1000 / this.options.fps), this);
 		this.fireEvent('start', this.element);
+		// Make the first step now:
 		this.step();
 		return this;
 	},
@@ -89,7 +83,5 @@ Fx.Base = Base.extend({
 		return this;
 	}
 });
-
-Fx.Base.inject(Chain).inject(Callback);
 
 #endif // __browser_effects_Fx__
