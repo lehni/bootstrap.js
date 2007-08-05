@@ -80,8 +80,8 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 			this.options.isSuccess = this.options.isSuccess || this.isSuccess;
 			this.headers = new Hash();
 			if (this.options.urlEncoded && this.options.method == 'post') {
-				this.encoding = this.options.encoding ? '; charset=' + this.options.encoding : '';
-				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' + this.encoding);
+				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' +
+					(this.options.encoding ? '; charset=' + this.options.encoding : ''));
 			}
 			this.setHeader('X-Requested-With', 'XMLHttpRequest');
 			this.setHeader('Accept', 'text/javascript, text/html, application/xml, text/xml, */*');
@@ -183,9 +183,8 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 				if (this.frame.form)
 					this.frame.form.set({
 						target: this.frame.id, action: url, method: method,
-						// Firefox does not seem to support setting charset= 
-						// on enctype here, so ignore this.encoding here
-						enctype: method == 'get' ? 'application/x-www-form-urlencoded' : 'multipart/form-data'
+						enctype: method == 'get' ? 'application/x-www-form-urlencoded' : 'multipart/form-data',
+						'accept-charset': this.options.encoding || ''
 					}).submit();
 				else
 					this.frame.element.setProperty('src', url);
