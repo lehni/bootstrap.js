@@ -62,9 +62,9 @@ Base.inject({
 		type: function(obj) {
 #ifdef BROWSER
 			// Handle elements, as needed by DomElement.js
-			return obj && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element') || typeof obj) || null;
+			return (obj || obj === 0) && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element') || typeof obj) || null;
 #else // !BROWSER
-			return obj && (obj._type || typeof obj) || null;
+			return (obj || obj === 0) && (obj._type || typeof obj) || null;
 #endif // !BROWSER
 		}
 	}
