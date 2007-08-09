@@ -97,8 +97,6 @@ HtmlElement.inject(new function() {
 
 		setStyle: function(name, value) {
 			if (value == undefined) return this.setStyles(name);
-			// Convert multi params to array:
-			if (arguments.length > 2) value = Array.slice(arguments, 1);
 			var el = this.$;
 			switch (name) {
 				case 'visibility':
@@ -111,6 +109,11 @@ HtmlElement.inject(new function() {
 					return this.setStyle('visibility', !!value);
 				case 'float':
 					name = Browser.IE ? 'styleFloat' : 'cssFloat';
+					break;
+				case 'clip':
+					// Setting clip to true sets it to the current bounds
+					// TODO: Calculate only if Dimension.js is defined? add conditional macro?
+					if (value == true) value = [0, el.offsetWidth, el.offsetHeight, 0];
 					break;
 				default:
 					name = name.camelize();
