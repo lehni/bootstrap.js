@@ -68,8 +68,11 @@ Fx = Base.extend(Chain, Callback, {
 		this.from = from;
 		this.to = to;
 		this.time = new Date().getTime();
-		this.timer = this.step.periodic(Math.round(1000 / this.options.fps), this);
-		this.fireEvent('start', this.element);
+		// Fx.Elements allows effects to be run in slave mode.
+		if (!this.slave) {
+			this.timer = this.step.periodic(Math.round(1000 / this.options.fps), this);
+			this.fireEvent('start', this.element);
+		}
 		// Make the first step now:
 		this.step();
 		return this;

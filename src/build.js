@@ -38,6 +38,7 @@
 #include "browser/effects/Fx.CSS.js"
 #include "browser/effects/Fx.Style.js"
 #include "browser/effects/Fx.Styles.js"
+#include "browser/effects/Fx.Elements.js"
 #include "browser/effects/Fx.Transitions.js"
 
 #endif // BROWSER
