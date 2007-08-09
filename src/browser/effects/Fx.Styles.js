@@ -10,7 +10,6 @@
  */
 #endif
 
-#include "Fx.js"
 #include "Fx.CSS.js"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -19,8 +18,8 @@
 Fx.Styles = Fx.extend({
 	get: function() {
 		var that = this;
-		return Base.each(this.from, function(val, key) {
-			this[key] = Fx.CSS.compute(that.from[key], that.to[key], that);
+		return Base.each(this.from, function(from, key) {
+			this[key] = Fx.CSS.compute(from, that.to[key], that);
 		}, {});
 	},
 
