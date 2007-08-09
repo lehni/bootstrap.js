@@ -4,7 +4,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Document
 
-Document = DomElement.get(document);
+Document = DomElement.get(document).inject({
+	getTag: function() {
+		return 'document';
+	}
+});
 
 #ifdef DEFINE_GLOBALS
 

@@ -11,6 +11,10 @@ catch (e) {}
 @*/
 
 Window = DomElement.get(window).inject({
+	getTag: function() {
+		return 'window';
+	},
+
 	/**
 	 * Overrides window.open to allow more options in the third parameter.
 	 * If params is a string, the standard window.open is executed.
@@ -25,8 +29,7 @@ Window = DomElement.get(window).inject({
 		if (params && typeof params != 'string') {
 			if (params.confirm && !confirm(params.confirm))
 				return null;
-			(['toolbar', 'menubar', 'location', 'status', 'resizable', 
-				'scrollbars']).each(function(d) {
+			(['toolbar','menubar','location','status','resizable','scrollbars']).each(function(d) {
 				if (!params[d]) params[d] = 0;
 			});
 			if (params.width && params.height) {
