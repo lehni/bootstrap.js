@@ -61,15 +61,15 @@ DomElements = Array.extend(new function() {
 				// src can either be a function to be called, or a object literal.
 				return this.base(Base.each(src || {}, function(val, key) {
 					this[key] = typeof val != 'function' ? val : function() {
-						// Only collect values if calling a getter function,
-						// otherwise return this
-						var args = arguments, get = /^get/.test(key), values;
+						var args = arguments, values;
 						this.each(function(obj) {
 							// Try to use original method if it's there, in order
 							// to support base, as this will be the wrapper that
 							// sets it
 							var ret = (obj[key] || val).apply(obj, args);
-							if (get) {
+							// Only collect return values if defined and not
+							// returning 'this'.
+							if (ret !== undefined && ret != obj) {
 								values = values || (Base.type(ret) == 'element'
 									? new collection() : []);
 								values.push(ret);
@@ -139,6 +139,8 @@ DomElement = Base.extend(new function() {
 	}
 
 	function getConstructor(el) {
+		// Use DomElement as as the default, HtmlElement for anything with
+		// className !== undefined and special constructors based on tag names.
 		return el.tagName && constructors[el.tagName.toLowerCase()] ||
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
@@ -241,10 +243,11 @@ DomElement = Base.extend(new function() {
 			},
 
 			get: function(el) {
-				// Make sure we're using the right constructor. DomElement as 
-				// the default, HtmlElement for anything with className !== undefined
-				// and special constructors based on tag names.
-				return el ? el._wrapper || el._elements && el || new (getConstructor(el))(el, dont) : null;
+				return el ? typeof el == 'string'
+					? Document.getElement(el)
+					// Make sure we're using the right constructor.
+					: el._wrapper || el._elements && el || new (getConstructor(el))(el, dont)
+						: null;
 			},
 
 			unwrap: function(el) {
