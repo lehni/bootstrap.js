@@ -52,6 +52,14 @@ DomElements = Array.extend(new function() {
 			return this.length;
 		},
 
+		append: function(items) {
+			// For performance reasons in DomQuery code, use this.push here,
+			// since Array#append already loops through the list, and then calls
+			// push for each, which loops again. The gain is almost x2.
+			this.push.apply(this, items);
+			return this;
+		},
+
 		statics: {
 			inject: function(src) {
 				var collection = this;
@@ -91,7 +99,7 @@ DomElement = Base.extend(new function() {
 	// LUTs for tag and class based constructors. Bootstrap can automatically
 	// use sub prototype of DomElement for any given wrapped element based on
 	// its className Attribute. the sub prototype only needs to define _class
-	var tags = {}, classes;
+	var tags = {}, classes = {}, classCheck;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
@@ -146,8 +154,15 @@ DomElement = Base.extend(new function() {
 		// Use DomElement as as the default, HtmlElement for anything with
 		// className !== undefined and special constructors based on tag names.
 		// tags stores both upper-case and lower-case references for higher speed.
+		// classCheck only exists if HtmlElement was extended with prototypes
+		// defining _class. In this case, classCheck is a regular expression that
+		// checks className for the occurence of any of the prototype mapped 
+		// classes, and returns the first occurence, which is then used to
+		// decide for constructor. This allows using e.g. "window hidden" for
+		// element that should map to a window prototype.
+		var match;
 		return el.tagName && tags[el.tagName] ||
-			classes && el.className && classes[el.className] ||
+			classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
 
@@ -246,10 +261,20 @@ DomElement = Base.extend(new function() {
 				// If this is a prototype for a certain tag, store it in the LUT.
 				if (src) {
 					// tags stores both upper-case and lower-case references
-					// for higher speed.
+					// for higher speed in getConstructor, since tagName can
+					// be used for direct lookup, regardless of its case.
 					if (src._tag) tags[src._tag.toLowerCase()] = tags[src._tag.toUpperCase()] = ret;
-					// classes is null until a sub prototype defines _class
-					if (src._class) (classes = classes || {})[src._class] = ret;
+					// classCheck is null until a sub prototype defines _class
+					if (src._class) {
+						classes[src._class] = ret;
+						// Create a regular expression that allows detection of
+						// the first prototype mapped className. This needs to
+						// contain all defined classes. See getConstructor
+						// e.g.: /(^|\s)(post-it|window)(\s|$)/
+						classCheck = new RegExp('(^|\\s)(' + Base.each(classes, function(val, name) {
+							this.push(name);
+						}, []).join('|') + ')(\\s|$)');
+					}
 				}
 				return ret;
 			},
