@@ -87,7 +87,11 @@ DomElements = Array.extend(new function() {
 // DomElement
 
 DomElement = Base.extend(new function() {
-	var elements = [], constructors = {}, uniqueId = 0;
+	var elements = [];
+	// LUTs for tag and class based constructors. Bootstrap can automatically
+	// use sub prototype of DomElement for any given wrapped element based on
+	// its className Attribute. the sub prototype only needs to define _class
+	var tags = {}, classes;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
@@ -141,7 +145,9 @@ DomElement = Base.extend(new function() {
 	function getConstructor(el) {
 		// Use DomElement as as the default, HtmlElement for anything with
 		// className !== undefined and special constructors based on tag names.
-		return el.tagName && constructors[el.tagName.toLowerCase()] ||
+		// tags stores both upper-case and lower-case references for higher speed.
+		return el.tagName && tags[el.tagName] ||
+			classes && el.className && classes[el.className] ||
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
 
@@ -238,7 +244,13 @@ DomElement = Base.extend(new function() {
 				// When extending DomElement with a tag field specified, this 
 				// prototype will be used when wrapping elements of that type.
 				// If this is a prototype for a certain tag, store it in the LUT.
-				if (src && src._tag) constructors[src._tag] = ret;
+				if (src) {
+					// tags stores both upper-case and lower-case references
+					// for higher speed.
+					if (src._tag) tags[src._tag.toLowerCase()] = tags[src._tag.toUpperCase()] = ret;
+					// classes is null until a sub prototype defines _class
+					if (src._class) (classes = classes || {})[src._class] = ret;
+				}
 				return ret;
 			},
 
