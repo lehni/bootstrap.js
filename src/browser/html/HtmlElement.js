@@ -25,10 +25,10 @@ HtmlElements = Document._elements = DomElements.extend();
 HtmlElement = DomElement.extend({
 	_elements: HtmlElements,
 
-	initialize: function(el, props) {
-		var ret = this.base(el, props);
-		if (ret) return ret;
-		// TODO: Do we really need this.style? Otherwise initialize
+	initialize: function() {
+		// No need to call this.base, since DomElement has special code in extend
+		// to take care of this.
+		// TODO: Do we really want to expose this.style? Otherwise initialize
 		// would not need to be overridden.
 		this.style = this.$.style;
 	}

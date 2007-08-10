@@ -249,6 +249,16 @@ DomElement = Base.extend(new function() {
 			extend: function(src) {
 				// Do not pass src to base, as we weed to fix #inject first.
 				var ret = this.base();
+				// If initialize is defined, explicitely calls this.base(el, props)
+				// here. This is a specialy case for DomElement extension that does
+				// not require the user to call this, since it is used for _class
+				// stuff often.
+				var init = src.initialize;
+				if (init) src.initialize = function(el, props) {
+					var ret = this.base(el, props);
+					if (ret) return ret;
+					init.call(this);
+				}
 				// Undo overriding of the inject method above for subclasses,
 				// as only injecting into DomElement (not subclasses) shall also
 				// inject into DomElements!
@@ -274,6 +284,13 @@ DomElement = Base.extend(new function() {
 						classCheck = new RegExp('(^|\\s)(' + Base.each(classes, function(val, name) {
 							this.push(name);
 						}, []).join('|') + ')(\\s|$)');
+						// If the prototype defines an initialize method, force
+						// wrapping of these elements on domready, so that 
+						// initialize will be directly called and further
+						// manipulation can be done, e.g. adding shadows.
+						if (src.initialize) Window.addEvent('domready', function() {
+							Document.getElements('.' + src._class);
+						});
 					}
 				}
 				return ret;
