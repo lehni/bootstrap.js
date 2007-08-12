@@ -78,7 +78,7 @@ Input = FormElement.extend({
 
 	getValue: function() {
 		if (this.$.checked && /^(checkbox|radio)$/.test(this.$.type) ||
-			/^(hidden|text|password|button)$/.test(this.$.type))
+			/^(hidden|text|password|button|search)$/.test(this.$.type))
 			return this.$.value;
 	},
 
