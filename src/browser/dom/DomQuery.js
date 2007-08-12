@@ -21,7 +21,7 @@ new function() {
 	function getPseudo(pseudo, method) {
 		var match = pseudo.match(/^([\w-]+)(?:\((.*)\))?$/);
 		if (!match) throw 'Bad pseudo selector: ' + pseudo;
-		var name = match[1].split('-')[0];
+		var name = match[1];
 		var argument = match[2] || false;
 		var handler = DomElement.pseudos[name];
 		return {
@@ -133,7 +133,7 @@ new function() {
 					this.$ = el; // Point to the native elment for the call
 					var att = this.getProperty(name);
 					return att && (!operator || operator(att, value));
-				}, DomElement.prototype );
+				}, DomElement.prototype);
 				delete DomElement.prototype.$;
 			}
 			return items;
@@ -263,6 +263,7 @@ new function() {
 		]
 	};
 
+	// Producer for the group of contains based operators: *=, |=, ~=. See bellow.
 	function contains(sep) {
 		return [
 			function(a, v) {
@@ -318,7 +319,8 @@ new function() {
 		'~=': contains(' ')
 	};
 
-	var nth = [
+	// Handler for the nth-child group of pseudo operators.
+	var nthChild = [
 		function(argument) {
 			switch (argument.special) {
 				case 'n': return '[count(preceding-sibling::*) mod ' + argument.a + ' = ' + argument.b + ']';
@@ -337,58 +339,49 @@ new function() {
 				});
 				children.version = version;
 			}
-			var include = false;
 			switch (argument.special) {
-				case 'n': if (children.indexOf(el) % argument.a == argument.b) include = true; break;
-				case 'last': if (children.last() == el) include = true; break;
-				case 'only': if (children.length == 1) include = true; break;
-				case 'index': if (children[argument.a] == el) include = true;
+				case 'n': if (children.indexOf(el) % argument.a == argument.b) return true; break;
+				case 'last': if (children.last() == el) return true; break;
+				case 'only': if (children.length == 1) return true; break;
+				case 'index': if (children[argument.a] == el) return true;
 			}
-			return include;
+			return false;
 		}
 	];
 
-	DomElement.pseudos = {
-		enabled: [
-			function() {
-				return '[not(@disabled)]';
-			},
-			function(el) {
-				return !el.disabled;
-			}
-		],
-
-		empty: [
-		 	function() {
-				return '[not(node())]';
-			},
-			function(el) {
-				return Element.getText(el).length === 0;
-			}
-		],
-
-		contains: [
+	// Producer for both case-sensitive and caseless versions of the contains 
+	// pseudo operator.
+	function contains(caseless) {
+		// abc for lowercase translation.
+		var abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+		return [
 			function(argument) {
-				return '[contains(text(), "' + argument + '")]';
+				return '[contains(' + (caseless ? 'translate(text(), "' + abc
+					+ '", "' + abc.toLowerCase() + '")' : 'text()') + ', "'
+					+ (caseless && argument ? argument.toLowerCase() : argument) + '")]';
 			},
 			function(el, argument) {
+				if (caseless && argument) argument = argument.toLowerCase();
 				var nodes = el.childNodes;
 				for (var i = 0; i < nodes.length; ++i) {
 					var child = nodes[i];
 					if (child.nodeName && child.nodeType == 3 &&
-						child.nodeValue.contains(argument)) return true;
+						(caseless ? child.nodeValue.toLowerCase() : child.nodeValue).contains(argument))
+							return true;
 				}
 				return false;
 			}
-		],
+		];
+	}
 
-		nth: {
+	DomElement.pseudos = {
+		'nth-child': {
 			parser: function(argument) {
 				var match = argument ? argument.match(/^([+-]?\d*)?([nodev]+)?([+-]?\d*)?$/) : [null, 1, 'n', 0];
 				if (!match) throw 'Bad nth pseudo selector arguments: ' + argument;
 				var i = parseInt(match[1]);
 				var a = isNaN(i) ? 1 : i;
-				var special = match[2] || false;
+				var special = match[2];
 				var b = parseInt(match[3]) || 0;
 				b = b - 1;
 				while (b < 1) b += a;
@@ -403,33 +396,61 @@ new function() {
 					default: return { a: (a - 1), special: 'index' };
 				}
 			},
-			handler: nth
+			handler: nthChild
 		},
 
-		even: {
+		// Short-cut to nth-child(even) / nth-child(2n)
+		'even': {
 			parser: { a: 2, b: 1, special: 'n' },
-			handler: nth
+			handler: nthChild
 		},
 
-		odd: {
+		// Short-cut to nth-child(odd) / nth-child(2n+1)
+		'odd': {
 			parser: { a: 2, b: 0, special: 'n' },
-			handler: nth
+			handler: nthChild
 		},
 
-		first: {
+		'first-child': {
 			parser: { a: 0, special: 'index' },
-			handler: nth
+			handler: nthChild
 		},
 
-		last: {
+		'last-child': {
 			parser: { special: 'last' },
-			handler: nth
+			handler: nthChild
 		},
 
-		only: {
+		'only-child': {
 			parser: { special: 'only' },
-			handler: nth
-		}
+			handler: nthChild
+		},
+
+		'enabled': [
+			function() {
+				return '[not(@disabled)]';
+			},
+			function(el) {
+				return !el.disabled;
+			}
+		],
+
+		'empty': [
+		 	function() {
+				return '[not(node())]';
+			},
+			function(el) {
+				// TODO: Check if this works?
+				return el.nodeName && el.nodeType == 3 && el.nodeValue.length == 0;
+				// return HtmlElement.getText(el).length == 0;
+			}
+		],
+
+		'contains': contains(false),
+
+		// Extension of contains for case insensitive compare. This is very
+		// helpfull for on-site searches.
+		'contains-caseless': contains(true)
 	};
 
 	DomElement.inject({
