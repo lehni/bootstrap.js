@@ -105,9 +105,12 @@ DomEvent = Base.extend(new function() {
 				mouseenter: hover('mouseenter', 'mouseover'),
 				mouseleave: hover('mouseleave', 'mouseout'),
 				mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
-				domready: function(func) { // only used by Window.
+				domready: function(func) { // Only used by Window.
 					if (window.loaded) func.call(this);
-					else {
+					else if (!this.domReady) {
+						// Only install it once, since fireEvent calls all the
+						// handlers.
+						this.domReady = true;
 						var domReady = function() {
 							if (this.loaded) return;
 							this.loaded = true;
