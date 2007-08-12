@@ -62,7 +62,6 @@ DomElements = Array.extend(new function() {
 
 		statics: {
 			inject: function(src) {
-				var collection = this;
 				// For each function that is injected into DomElements, create a
 				// new function that iterates that calls the function on each of
 				// the collection's elements.
@@ -79,7 +78,7 @@ DomElements = Array.extend(new function() {
 							// returning 'this'.
 							if (ret !== undefined && ret != obj) {
 								values = values || (Base.type(ret) == 'element'
-									? new collection() : []);
+									? new obj._elements() : []);
 								values.push(ret);
 							}
 						});
@@ -161,8 +160,9 @@ DomElement = Base.extend(new function() {
 		// decide for constructor. This allows using e.g. "window hidden" for
 		// element that should map to a window prototype.
 		var match;
-		return el.tagName && tags[el.tagName] ||
-			classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
+		// check classCheck first, since it can override the _tag setting
+		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
+			el.tagName && tags[el.tagName] ||
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
 
