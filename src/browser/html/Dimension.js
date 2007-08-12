@@ -147,7 +147,7 @@ HtmlElement.inject(new function() {
 			return this.$['offset' + part];
 		};
 		fields['set' + part] = function(value) {
-			this.$.style[name] = value;
+			this.$.style[name] = value + 'px';
 		};
 	});
 
