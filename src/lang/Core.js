@@ -83,6 +83,10 @@ new function() { // bootstrap
 						return bind && dest[name].apply(bind,
 							Array.prototype.slice.call(arguments, 1));
 					}
+#ifdef RHINO
+					if (/\[native code/.test(val))
+						return;
+#endif // RHINO
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
 						if (val.valueOf() === prev.valueOf()) return;
@@ -323,7 +327,7 @@ new function() { // bootstrap
 			this.toString = function() {
 				return fn.toString();
 			}
-			this.valueOf= function() {
+			this.valueOf = function() {
 				return fn.valueOf();
 			}
 			return this;
