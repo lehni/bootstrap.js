@@ -73,7 +73,7 @@ FormElement = HtmlElement.extend({
 
 Input = FormElement.extend({
 	_tag: 'input',
-	_properties: ['type', 'checked', 'defaultChecked'],
+	_properties: ['type', 'checked', 'defaultChecked', 'readOnly', 'maxLength'],
 	_methods: ['click'],
 
 	getValue: function() {
