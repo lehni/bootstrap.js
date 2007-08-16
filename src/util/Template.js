@@ -871,7 +871,7 @@ Template.prototype = {
 #ifdef HIDDEN
 			 	var content = this.resource.getContent(getProperty("skinCharset"));
 			 	// Store the original lines:
-			 	var lines = content.split(/[\r\n]/mg);
+			 	var lines = content.split(/\n|\r\n|\r/mg);
 #endif // HIDDEN
 				// Use java.io.BufferedReader for reading the lines into a line array,
 				// as this is much faster than the regexp above
@@ -892,12 +892,12 @@ Template.prototype = {
 				reader.close();
 				this.lastModified = this.resource.lastModified();
 			} else if (this.content) {
-				lines = this.content.split(/[\r\n]/mg);
+				lines = this.content.split(/\n|\r\n|\r/mg);
 			} else {
 				lines = [];
 			}
 #else // !RHINO
-			var lines = this.content.split(/[\r\n]/mg);
+			var lines = this.content.split(/\n|\r\n|\r/mg);
 #endif // !RHINO
 			this.subTemplates = {};
 			// Keep a reference to all sub templates to be
