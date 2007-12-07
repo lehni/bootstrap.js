@@ -55,10 +55,10 @@ Fx.CSS = new function() {
 	return {
 		start: function(element, property, values) {
 			values = Array.create(values);
-			if (!Base.check(values[1])) {
-				values[1] = values[0];
-				values[0] = element.getStyle(property);
-			}
+			// If only one value is specified, use the current state as the
+			// starting point.
+			if (!Base.check(values[1]))
+				values = [ element.getStyle(property), values[0] ];
 			var parsed = values.map(Fx.CSS.set);
 			return { from: parsed[0], to: parsed[1] };
 		},
