@@ -103,10 +103,13 @@ DomEvent = Base.extend(new function() {
 		statics: {
 			events: new Hash({
 				mouseenter: hover('mouseenter', 'mouseover'),
+
 				mouseleave: hover('mouseleave', 'mouseout'),
+
 				mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
+
 				domready: function(func) { // Only used by Window.
-					if (window.loaded) func.call(this);
+					if (this.loaded) func.call(this);
 					else if (!this.domReady) {
 						// Only install it once, since fireEvent calls all the
 						// handlers.
@@ -122,12 +125,12 @@ DomEvent = Base.extend(new function() {
 								if (/^(loaded|complete)$/.test(document.readyState)) domReady();
 							}).periodic(50);
 						} else if (document.readyState && Browser.IE) { // IE
-							document.write('<script id=ie_ready defer src="'
+							document.write('<script id=ie_domready defer src="'
 								+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
 								+ '"><\/script>');
-							document.getElementById('ie_ready').onreadystatechange = function() {
-								if (window.readyState == 'complete') domReady();
-							};
+							$('ie_domready').addEvent('readystatechange', function() {
+								if (this.$.readyState == 'complete') domReady();
+							});
 						} else { // Others
 							Window.addEvent('load', domReady);
 							Document.addEvent('DOMContentLoaded', domReady);
@@ -159,7 +162,7 @@ DomElement.inject({
 			// want an event. Wrap it so it recieves a wrapped event, and
 			// bind it to that at the same time, as on PC IE, event listeners
 			// are not called bound to their objects.
-			var that = this, bound = (listener.parameters().length == 0)
+			var that = this, bound = listener.parameters().length == 0
 				? listener.bind(this)
 				: function(event) { 
 					event = new DomEvent(event);
