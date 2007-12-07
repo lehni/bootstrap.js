@@ -106,8 +106,14 @@ new function() {
 			if (tag) filter.push("hasTag(el, tag)");
 			for (var i = classNames.length; i;)
 				filter.push("el.className && (' ' + el.className + ' ').indexOf(' ' + classNames[" + (--i) + "] + ' ') != -1");
-			if (filter.length) // do not use new Function(), as this cannot access the local scope, while eval can
-				items = items.filter(eval('(function(el) { return ' + filter.join(' && ') + ' })'));
+			if (filter.length) {
+				// Do not use new Function(), as this cannot access the local scope, while eval can.
+				// We need to produce a named function since on IE, this does not work, as eval
+				// does not return the function:
+				// items = items.filter(eval('(function (el) {... })'));
+				eval('function func(el) { return ' + filter.join(' && ') + ' }');
+				items = items.filter(func);
+			}
 			for (i = pseudos.length; i;) {
 				var pseudo = getPseudo(pseudos[--i], FILTER), handler = pseudo.handler;
 				if (handler) {
