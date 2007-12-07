@@ -23,7 +23,7 @@ HtmlElement.inject(new function() {
 			fontSize: '@px', letterSpacing: '@px', lineHeight: '@px', textIndent: '@px',
 			margin: '@px @px @px @px', padding: '@px @px @px @px', border: '@px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @)',
 			borderWidth: '@px @px @px @px', borderStyle: '@ @ @ @', borderColor: 'rgb(@, @, @) rgb(@, @, @) rgb(@, @, @) rgb(@, @, @)',
-			clip: 'rect(@px, @px, @px, @px)'
+			clip: 'rect(@px, @px, @px, @px)', opacity: '@'
 		},
 		part: {
 			'margin': {}, 'padding': {}, 'border': {}, 'borderWidth': {}, 'borderStyle': {}, 'borderColor': {}
@@ -51,16 +51,17 @@ HtmlElement.inject(new function() {
 	});
 
 	var fields = {
-		getStyle: function(name, dontCompute) {
+		getStyle: function(name) {
 			if (name == undefined) return this.getStyles();
+			if (name == 'opacity') {
+				var op = this.opacity;
+				return op || op == 0 ? op : this.getVisibility() ? 1 : 0;
+			}
 			var el = this.$;
 			name = name.camelize();
 			var style = el.style[name];
-			if (!style && style != 0 || /auto|inherit/.test(style)) {
-				if (name == 'opacity') {
-					var op = this.opacity;
-					return op || op == 0 ? op : this.getVisible() ? 1 : 0;
-				}
+			if (!Base.check(style)) {
+//			if (!style && style != 0 || /auto|inherit/.test(style)) {
 				if (styles.part[name]) {
 					style = Hash.map(styles.part[name], function(val, key) {
 						return this.getStyle(key);
@@ -99,35 +100,44 @@ HtmlElement.inject(new function() {
 			if (value == undefined) return this.setStyles(name);
 			var el = this.$;
 			switch (name) {
-				case 'visibility':
-					el.style.visibility = typeof value == 'string' ? value : value ? 'visible' : 'hidden';
-					return this;
-				case 'opacity':
-					if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
-					if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
-					el.style.opacity = this.opacity = value;
-					return this.setStyle('visibility', !!value);
 				case 'float':
 					name = Browser.IE ? 'styleFloat' : 'cssFloat';
 					break;
 				case 'clip':
 					// Setting clip to true sets it to the current bounds
 					// TODO: Calculate only if Dimension.js is defined? add conditional macro?
-					if (value == true) value = [0, el.offsetWidth, el.offsetHeight, 0];
+					if (value == true)
+						value = [0, el.offsetWidth, el.offsetHeight, 0];
 					break;
 				default:
 					name = name.camelize();
 			}
 			var type = Base.type(value);
-			if (value && type != 'string') {
+			if (value != undefined && type != 'string') {
 				var parts = styles.all[name] || ['@'], index = 0;
 				// Flatten arrays, e.g. for borderColor where it might be an
 				// array of four color arrays.
 				value = (type == 'array' ? value.flatten() : [value]).map(function(val) {
 					var part = parts[index++];
 					if (!part) throw Base.stop;
-					return Base.type(val) == 'number' ? part.replace('@', Math.round(val)) : val;
+					return Base.type(val) == 'number' ? part.replace('@', name == 'opacity' ? val : Math.round(val)) : val;
 				}).join(' ');
+			}
+			switch (name) {
+				case 'visibility':
+				 	value = value == 'true' && 'visible' || value == 'false' && 'hidden' || value;
+					break;
+				case 'opacity':
+					this.opacity = value = parseFloat(value);
+					this.setStyle('visibility', !!value);
+					// Set opacity to 1 if it's 0 and set visibility to 0 instead,
+					// to fix a problem on Firefox on Mac, where antialiasing is affected
+					// otherwise... TODO: Find better solution?
+					if (!value) value = 1;
+					if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
+					if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
+					el.style.opacity = value;
+					return this;
 			}
 			el.style[name] = value;
 			return this;
