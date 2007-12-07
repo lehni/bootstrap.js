@@ -40,3 +40,9 @@
 #else // !SET_ITERATOR && !BROWSER_LEGACY
 #define AND_NAME_IS_VISIBLE(NAME)
 #endif // !SET_ITERATOR && !BROWSER_LEGACY
+
+#comment It appears that __proto__ is broken on IE browsers, so we even need it
+#comment for non legacy browsers:
+#ifndef RHINO
+#define FIX_PROTO
+#endif // !RHINO
