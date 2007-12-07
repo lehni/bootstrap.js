@@ -42,6 +42,10 @@ HtmlElement.inject = DomElement.inject;
 // Use the modified inject function from above which injects both into HtmlElement
 // and HtmlElements.
 HtmlElement.inject({
+	getClass: function() {
+		return this.$.className;
+	},
+
 	modifyClass: function(name, add) {
 		if (!this.hasClass(name) ^ !add) // xor
 			this.$.className = (add ? this.$.className + ' ' + name : 
