@@ -273,6 +273,16 @@ Array.inject(new function() {
 		},
 
 		/**
+		 * Removes all objects from this array that are not contained in items.
+		 */
+		intersect: function(items) {
+			for (var i = this.length - 1; i >= 0; i--)
+				if (!items.find(this[i]))
+					this.splice(i, 1);
+			return this;
+		},
+
+		/**
 		 * Creates an object containing the array's values associated to the
 		 * given keys.
 		 */
