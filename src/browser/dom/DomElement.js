@@ -37,26 +37,23 @@ DomElements = Array.extend(new function() {
 		},
 
 		/**
-		 * Only push wraps the added element in a DomElement. splice and unshift
-		 * are not overridden to do the same.
+		 * Only #push wraps the added element in a DomElement. splice and unshift
+		 * are NOT overridden to do the same.
 		 */
 		push: function() {
-			for (var i = 0, j = arguments.length; i < j; ++i) {
-				var el = arguments[i];
+			this.append(arguments);
+			return this.length;
+		},
+
+		append: function(items) {
+			for (var i = 0, j = items.length; i < j; ++i) {
+				var el = items[i];
 				// Try _wrapper first, for faster performance
 				if ((el = el && (el._wrapper || DomElement.get(el))) && el._unique != this._unique) {
 					el._unique = this._unique;
 					this[this.length++] = el;
 				}
 			}
-			return this.length;
-		},
-
-		append: function(items) {
-			// For performance reasons in DomQuery code, use this.push here,
-			// since Array#append already loops through the list, and then calls
-			// push for each, which loops again. The gain is almost x2.
-			this.push.apply(this, items);
 			return this;
 		},
 
@@ -315,7 +312,7 @@ DomElement = Base.extend(new function() {
 			isAncestor: function(el, parent) {
 				// TODO: See Ext for a faster implementation
 				if (parent != document)
-					for (el = el.parentNode; el != parent; el = el.parentNode)
+					for (el = el && el.parentNode; el != parent; el = el.parentNode)
 						if (!el) return false;
 				return true;
 			},
