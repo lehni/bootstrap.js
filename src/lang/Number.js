@@ -17,6 +17,11 @@ Number.inject({
 	times: function(func, bind) {
 		for (var i = 0; i < this; ++i) func.call(bind, i);
 		return bind || this;
+	},
+
+	toPaddedString: function(length, base) {
+		var str = this.toString(base || 10);
+		return '0'.times(length - str.length) + str;
 	}
 });
 
