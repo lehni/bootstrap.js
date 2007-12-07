@@ -23,7 +23,9 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Core (inject / extend)
 
-#ifdef BROWSER_LEGACY
+// It appears that __proto__ is broken on all IE browsers, so we even need it
+// for non legacy browsers:
+// #ifdef BROWSER_LEGACY
 // Fix __proto__ for browsers where it is not implemented. Do this before 
 // anything else, for "var i in" to work.
 if (!this.__proto__) {
@@ -32,6 +34,7 @@ if (!this.__proto__) {
 		fix[i].prototype.__proto__ = fix[i].prototype;
 }
 
+#ifdef BROWSER_LEGACY
 // define undefined ;)
 undefined = this.undefined;
 #endif // BROWSER_LEGACY
@@ -159,10 +162,12 @@ new function() { // bootstrap
 		// Create the constructor for the new prototype that calls initialize
 		// if it is defined.
 		function ctor(dont) {
-#ifdef BROWSER_LEGACY
+// It appears that __proto__ is broken on all IE browsers, so we even need it
+// for non legacy browsers:
+// #ifdef BROWSER_LEGACY
 			// Fix __proto__
-			this.__proto__ = obj;
-#endif
+			if (!this.__proto__) this.__proto__ = obj;
+// #endif
 			// Call the constructor function, if defined and we're not inheriting
 			// in which case ctor.dont would be set, see further bellow.
 			if (this.initialize && dont !== ctor.dont)
