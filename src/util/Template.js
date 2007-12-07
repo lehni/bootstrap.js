@@ -375,6 +375,30 @@ Template.prototype = {
 			}
 		}
 
+#ifdef HELMA
+		function parseParam(param) {
+			// Support for old-style data access in Helma
+			var data = param.match(/^(param|response|request|session|properties)\.(.*)$/);
+			if (data) {
+				// Allow lookup to session.user, everything else goes to session.data
+				if (!/^session\.user\b/.test(data)) {
+					// Use  arrays of strings for each pseudo parameter. The name
+					// will be inserted at position 1 and the result will be joined.
+					// This allows both getProperty("name") and session.data.name
+					var buf = {
+						response: ['res.data.'], request: ['req.data.'], 
+						session: ['session.data.'], param: ['param.'],
+						properties: ['getProperty("', '")']
+					}[data[1]];
+					// Now insert the name at position 1
+					buf.splice(1, 0, data[2]);
+					return buf.join('');
+				}
+			}
+			return param;
+		}
+#endif // HELMA
+
 		// TODO: macro is not the right name here, as it is also filters: functional units between |...
 		var macros = [], macro = null, isMain = true;
 
@@ -417,18 +441,12 @@ Template.prototype = {
 					macro.isControl = allowControls && /^(foreach|if|elseif|else|end)$/.test(next);
 					// Is this a data macro?
 #ifdef HELMA
-					// Support for old-style data access in Helma
-					var data = macro.command.match(/^(param|response|request|session)\.(.*)$/);
-					if (data) {
-						// allow lookup to session.user, everything else goes to session.data
-						if (!/^session\.user\b/.test(macro.command))
-							macro.command = {
-								response: "res.data.", request: "req.data.", 
-								session: "session.data.", param: "param."
-							}[data[1]] + data[2];
-					}
+					var param = parseParam(macro.command);
 					// Tell the parseMacro code to simply output the value
-					macro.isData = isEqualTag || data;
+					// If parseParam produces a result different from macro.command,
+					// we are using a pseudo parameter which is data as well:
+					macro.isData = isEqualTag || param != macro.command;
+					macro.command = param;
 #else // !HELMA
 					macro.isData = isEqualTag;
 #endif // !HELMA
@@ -445,7 +463,11 @@ Template.prototype = {
 				value = "param_" + (macroParam++) + "";
 				code.push("var " + value + " = " + that.parseMacro(nested, code, stack, false, true) + ";");
 			}
+#ifdef HELMA
+			return parseParam(value);
+#else // !HELMA
 			return value;
+#endif // !HELMA
 		}
 
 		// Now do the main parsing of the parts
