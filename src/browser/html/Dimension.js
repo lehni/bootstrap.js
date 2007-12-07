@@ -147,7 +147,8 @@ HtmlElement.inject(new function() {
 			return this.$['offset' + part];
 		};
 		fields['set' + part] = function(value) {
-			this.$.style[name] = value + 'px';
+			// Check for isNaN since it might be values like 'auto' too:
+			this.$.style[name] = isNaN(value) ? value : value + 'px';
 		};
 	});
 
