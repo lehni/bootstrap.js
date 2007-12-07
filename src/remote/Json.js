@@ -5,18 +5,20 @@
 // Json
 
 Json = new function() {
+#ifndef RHINO
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', '\\': '\\\\' };
 
 	function replace(chr) {
 		return special[chr] || '\\u00' + Math.floor(chr.charCodeAt() / 16).toString(16) + (chr.charCodeAt() % 16).toString(16);
 	}
+#else // !RHINO
 
 	return {
 		encode: function(obj) {
 #ifdef RHINO
 			var str = uneval(obj);
 			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
-#else // !RHINO			
+#else // !RHINO
 			switch (Base.type(obj)) {
 				case 'string':
 					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
