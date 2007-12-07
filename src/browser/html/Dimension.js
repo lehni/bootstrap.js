@@ -65,11 +65,11 @@ HtmlElement.inject(new function() {
 	var getCumulative = cumulate('offset', 'offsetParent', Browser.WEBKIT ? function(cur, next) {
 		// Safari returns margins on body which is incorrect if the
 		// child is absolutely positioned.
-		return next != document.body || cur.getStyle('position') != 'absolute';
+		return next.$ != document.body || cur.getStyle('position') != 'absolute';
 	} : null, true);
 
 	var getPositioned = cumulate('offset', 'offsetParent', function(cur, next) {
-		return next != document.body && !/^(relative|absolute)$/.test(next.getStyle('position'));
+		return next.$ != document.body && !/^(relative|absolute)$/.test(next.getStyle('position'));
 	});
 
 	var fields = {
