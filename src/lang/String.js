@@ -69,7 +69,12 @@ String.inject({
 
 	contains: function(string, s) {
 		return (s ? (s + this + s).indexOf(s + string + s) : this.indexOf(string)) != -1;
-	}
+	},
+
+	times: function(count) {
+		// Nice trick from Prototype:
+		return count < 1 ? '' : new Array(count + 1).join(this);
+	},
 });
 
 #ifdef BROWSER_LEGACY
