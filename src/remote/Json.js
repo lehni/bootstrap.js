@@ -11,7 +11,7 @@ Json = new function() {
 	function replace(chr) {
 		return special[chr] || '\\u00' + Math.floor(chr.charCodeAt() / 16).toString(16) + (chr.charCodeAt() % 16).toString(16);
 	}
-#else // !RHINO
+#endif // !RHINO
 
 	return {
 		encode: function(obj) {
