@@ -66,6 +66,18 @@ Base.inject({
 #else // !BROWSER
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
 #endif // !BROWSER
+		},
+
+		/**
+		 * Returns the first argument that is defined.
+		 * Null is counted as defined too, since !== undefined is used for
+		 * comparisons. In this it differs from Mootools!
+		 */
+		pick: function() {
+			for (var i = 0, l = arguments.length; i < l; i++)
+				if (arguments[i] !== undefined)
+					return arguments[i];
+			return null;
 		}
 	}
 #ifdef EXTEND_OBJECT
