@@ -24,6 +24,12 @@
 #define HIDE
 #endif // !DONT_ENUM && !HELMA
 
+#comment It appears that __proto__ is broken on IE browsers, so we even need it
+#comment for non legacy browsers:
+#ifndef RHINO
+#define FIX_PROTO
+#endif // !RHINO
+
 #comment When setting iterator functions without using dontEnum or when using
 #comment the legacy workaround for Function#apply, we need to check the field
 #comment names to see if they are to be hidden. Anything starting with __ is
@@ -40,9 +46,3 @@
 #else // !SET_ITERATOR && !BROWSER_LEGACY
 #define AND_NAME_IS_VISIBLE(NAME)
 #endif // !SET_ITERATOR && !BROWSER_LEGACY
-
-#comment It appears that __proto__ is broken on IE browsers, so we even need it
-#comment for non legacy browsers:
-#ifndef RHINO
-#define FIX_PROTO
-#endif // !RHINO

@@ -109,6 +109,11 @@ Array.inject(new function() {
 	// methods from #inject, since they define _hide!
 	// ( var fields = Hash.create(Enumerable, {...}) )
 	// Instead, use the generics in Hash to fill a normal object.
+	
+	// TODO: There is a problem on browsers when using EXTEND_OBJECT and DONT:ENUM
+	// here, since Base#clone will then be dontEnumed and Hash.merge will therefore
+	// not iterate over the new definiton bellow...
+
 	var fields = Hash.merge({}, Enumerable, {
 		_generics: true,
 		// tell Base.type what to return for arrays.
