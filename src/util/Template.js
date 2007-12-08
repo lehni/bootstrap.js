@@ -505,7 +505,9 @@ Template.prototype = {
 					macro.unnamed.push(part);
 					// Appending to macro opcode not allowed after first parameter
 					append = false;
-				} else if (append) { // appending to the opcode...
+				} else if (append) { // Appending to the opcode...
+					if (macro.isSetter) // Add support of nested macros in setters too
+						part = nestedMacro(this, part, code, stack);
 					macro.opcode.push(part);
 				} else {
 					throw "Syntax error: '" + part + "'";
@@ -823,6 +825,13 @@ Template.prototype = {
 					// Add a reference to this template and the param
 					// object of the template as the parent to inherit from.
 					var prm = args[0];
+					// If a macro sets param=, all the fields from this object
+					// are to be merged into its param object. But only if they
+					// are not defined already:
+					if (prm.param)
+						for (var i in prm.param)
+							if (prm[i] === undefined)
+								prm[i] = prm.param[i];
 					prm.__template__ = this.parent || this;
 					prm.__param__ = param;
 					// Also pass __out__, so if a macro wants to directly render
