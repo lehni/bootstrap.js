@@ -19,9 +19,11 @@ DomElement.operators = new function() {
 	// Producer for the group of contains based operators: *=, |=, ~=. See bellow.
 	function contains(sep) {
 		return [
+			// XPATH
 			function(a, v) {
 				return '[contains(' + (sep ? 'concat("' + sep + '", @' + a + ', "' + sep + '")' : '@' + a) + ', "' + sep + v + sep + '")]';
 			},
+			// FILTER
 			function(a, v) {
 				return a.contains(v, sep);
 			}
@@ -30,36 +32,44 @@ DomElement.operators = new function() {
 
 	return {
 		'=': [
+			// XPATH
 			function(a, v) {
 				return '[@' + a + '="' + v + '"]';
 			},
+			// FILTER
 			function(a, v) {
 				return a == v;
 			}
 		],
 
 		'^=': [
+			// XPATH
 	 		function(a, v) {
 				return '[starts-with(@' + a + ', "' + v + '")]';
 			},
+			// FILTER
 			function(a, v) {
 				return a.substr(0, v.length) == v;
 			}
 		],
 
 		'$=': [
+			// XPATH
 			function(a, v) {
 				return '[substring(@' + a + ', string-length(@' + a + ') - ' + v.length + ' + 1) = "' + v + '"]';
 			},
+			// FILTER
 			function(a, v) {
 				return a.substr(a.length - v.length) == v;
 			}
 		],
 
 		'!=': [
+			// XPATH
 			function(a, v) {
 				return '[@' + a + '!="' + v + '"]';
 			},
+			// FILTER
 			function(a, v) {
 				return a != v;
 			}
