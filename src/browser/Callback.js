@@ -25,7 +25,7 @@ Chain = {
 	callChain: function() {
 		// TODO: delay needed?
 		if (this.chains && this.chains.length)
-			this.chains.shift().delay(1, this);
+			this.chains.shift().delay(0.01, this);
 	},
 
 	clearChain: function() {
