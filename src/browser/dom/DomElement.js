@@ -46,7 +46,7 @@ DomElements = Array.extend(new function() {
 		},
 
 		append: function(items) {
-			for (var i = 0, j = items.length; i < j; ++i) {
+			for (var i = 0, l = items.length; i < l; ++i) {
 				var el = items[i];
 				// Try _wrapper first, for faster performance
 				if ((el = el && (el._wrapper || DomElement.get(el))) && el._unique != this._unique) {
@@ -95,7 +95,7 @@ DomElement = Base.extend(new function() {
 	// LUTs for tag and class based constructors. Bootstrap can automatically
 	// use sub prototype of DomElement for any given wrapped element based on
 	// its className Attribute. the sub prototype only needs to define _class
-	var tags = {}, classes = {}, classCheck;
+	var tags = {}, classes = {}, classCheck, unique = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
@@ -107,13 +107,14 @@ DomElement = Base.extend(new function() {
 	            if (el) {
 					var obj = el._wrapper;
 					if (obj && obj.dispose) obj.dispose();
-					el._wrapper = el._children = null;
+					el._wrapper = el._unique = null;
 				}
 				if (!force) elements.splice(i, 1);
 	        }
 		}
 	}
-	dispose.periodic(30000);
+	// TODO: this seems to cause problems. Turn off for now.
+	// dispose.periodic(30000);
 
 	// Private inject function for DomElement. It adds support for
 	// _methods and _properties declarations, which forward calls and define
@@ -307,6 +308,13 @@ DomElement = Base.extend(new function() {
 
 			collect: function(el) {
 				elements.push(el);
+			},
+
+			unique: function(el) {
+				if (!el._unique) {
+					DomElement.collect(el);
+					el._unique = ++unique;
+				}
 			},
 
 			isAncestor: function(el, parent) {

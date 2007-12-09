@@ -17,11 +17,15 @@
 #include "browser/Browser.js"
 
 #include "browser/dom/DomElement.js"
-#include "browser/dom/DomQuery.js"
 #include "browser/dom/DomEvent.js"
 #include "browser/dom/Document.js"
 #include "browser/dom/Window.js"
 #include "browser/dom/Drag.js"
+
+#include "browser/dom/query/Selectors.js"
+#include "browser/dom/query/Separators.js"
+#include "browser/dom/query/Operators.js"
+#include "browser/dom/query/Pseudos.js"
 
 #include "browser/html/HtmlElement.js"
 #include "browser/html/Style.js"
