@@ -67,9 +67,8 @@ DomElement.inject(new function() {
 				}
 				for (var i = 0, l = items.length; i < l; i++)
 					separator(items[i], params, add);
-				// Clear matcher if tag changed
 				if (params.clearTag)
-					params.tag = params.match = params.clearTag = null;
+					params.tag = params.clearTag = null;
 				return found;
 			}
 			if (params.id) {
@@ -78,13 +77,13 @@ DomElement.inject(new function() {
 				// TODO: getDocument()
 				var el = document.getElementById(params.id);
 				// Clear as it is already filtered by getElementById
-				params.id = params.match = null;
+				params.id = null;
 				return el && DomElement.isAncestor(el, context)
 					&& match(el, params, data) ? [el] : null;
 			} else {
 				items = context.getElementsByTagName(tag);
 				// Clear as it is already filtered by getElementsByTagName
-				params.tag = params.match = null;
+				params.tag = null;
 				for (var i = 0, l = items.length; i < l; i++)
 					if (match(items[i], params, data))
 						found.push(items[i]);
