@@ -18,6 +18,7 @@
 DomElement.pseudos = new function() {
 	// Handler for the nth-child group of pseudo operators.
 	var nthChild = [
+		// XPATH
 		function(argument) {
 			switch (argument.special) {
 				case 'n': return '[count(preceding-sibling::*) mod ' + argument.a + ' = ' + argument.b + ']';
@@ -27,7 +28,7 @@ DomElement.pseudos = new function() {
 				case 'index': return '[count(preceding-sibling::*) = ' + argument.a + ']';
 			}
 		},
-
+		// FILTER
 		function(el, argument, data) {
 			var count = 0;
 			switch (argument.special) {
@@ -81,11 +82,13 @@ DomElement.pseudos = new function() {
 		// abc for lowercase translation.
 		var abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 		return [
+			// XPATH
 			function(argument) {
 				return '[contains(' + (caseless ? 'translate(text(), "' + abc
 					+ '", "' + abc.toLowerCase() + '")' : 'text()') + ', "'
 					+ (caseless && argument ? argument.toLowerCase() : argument) + '")]';
 			},
+			// FILTER
 			function(el, argument) {
 				if (caseless && argument) argument = argument.toLowerCase();
 				var nodes = el.childNodes;
@@ -152,18 +155,22 @@ DomElement.pseudos = new function() {
 		},
 
 		'enabled': [
+			// XPATH
 			function() {
 				return '[not(@disabled)]';
 			},
+			// FILTER
 			function(el) {
 				return !el.disabled;
 			}
 		],
 
 		'empty': [
+			// XPATH
 		 	function() {
 				return '[not(node())]';
 			},
+			// FILTER
 			function(el) {
 				return !(el.innerText || el.textContent || '').length;
 			}

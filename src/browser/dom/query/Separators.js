@@ -17,8 +17,9 @@
 
 DomElement.separators = {
 	'~': [
+		// XPATH
 		'/following-sibling::',
-
+		// FILTER
 		function(item, params, add) {
 			while (item = item.nextSibling)
 				if (item.nodeType == 1 && add(item))
@@ -27,8 +28,9 @@ DomElement.separators = {
 	],
 
 	'+': [
+		// XPATH
 		'/following-sibling::*[1]/self::',
-
+		// FILTER
 		function(item, params, add) {
 			while (item = item.nextSibling) {
 				if (item.nodeType == 1) {
@@ -40,8 +42,9 @@ DomElement.separators = {
 	],
 
 	'>': [
+		// XPATH
 	 	'/',
-
+		// FILTER
 		function(item, params, add) {
 			var children = item.childNodes;
 			for (var i = 0, l = children.length; i < l; i++)
@@ -51,8 +54,9 @@ DomElement.separators = {
 	],
 
 	' ': [
+		// XPATH
 		'//',
-
+		// FILTER
 		function(item, params, add) {
 			var children = item.getElementsByTagName(params.tag);
 			params.clearTag = true;

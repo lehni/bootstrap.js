@@ -17,7 +17,7 @@ DomElement.inject(new function() {
 	// Method indices:
 	var XPATH= 0, FILTER = 1;
 
-	var methods = [{ // XPath: 
+	var methods = [{ // XPATH
 		getParam: function(items, separator, context, params) {
 			var str = context.namespaceURI ? 'xhtml:' + params.tag : params.tag;
 			if (separator && (separator = DomElement.separators[separator]))
@@ -40,13 +40,16 @@ DomElement.inject(new function() {
 		},
 
 		getElements: function(items, elements, context) {
+			function resolver(prefix) {
+				return prefix == 'xhtml' ? 'http://www.w3.org/1999/xhtml' : false;
+			}
 			// TODO: getDocument!
 			var res = document.evaluate('.//' + items.join(''), context,
 				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 			for (var i = 0, j = res.snapshotLength; i < j; ++i)
 				elements.push(res.snapshotItem(i));
 		}
-	}, { // Filter:
+	}, { // FILTER
 		getParam: function(items, separator, context, params, data) {
 			var found = [];
 			var tag = params.tag;
@@ -93,10 +96,6 @@ DomElement.inject(new function() {
 			elements.append(items);
 		}
 	}];
-
-	function resolver(prefix) {
-		return prefix == 'xhtml' ? 'http://www.w3.org/1999/xhtml' : false;
-	}
 
 	function parse(selector) {
 		var params = { tag: '*', id: null, classes: [], attributes: [], pseudos: [] };
@@ -162,13 +161,14 @@ DomElement.inject(new function() {
 		return true;
 	}
 
-	function evaluate(items, selector, context, elements, data) {
+	function filter(items, selector, context, elements, data) {
 		// XPATH does not properly match selected attributes in option elements
 		// Force filter code when the selectors contain "option["
 		// Also, use FILTER when filtering a previously filled list of items,
 		// as used by getParents()
-		var method = methods[!Browser.XPATH || typeof selector == 'string' &&
-			selector.contains('option[') || items.length ? FILTER : XPATH];
+		var method = methods[!Browser.XPATH || items.length ||
+			typeof selector == 'string' && selector.contains('option[')
+			? FILTER : XPATH];
 		var separators = [];
 		selector = selector.trim().replace(/\s*([+>~\s])[a-zA-Z#.*\s]/g, function(match) {
 			if (match.charAt(2)) match = match.trim();
@@ -195,7 +195,7 @@ DomElement.inject(new function() {
 			for (var i = 0, l = selectors.length; i < l; ++i) {
 				var selector = selectors[i];
 				if (Base.type(selector) == 'element') elements.push(selector);
-				else evaluate([], selector, this.$, elements, {});
+				else filter([], selector, this.$, elements, {});
 			}
 			return elements;
 		},
@@ -225,7 +225,7 @@ DomElement.inject(new function() {
 			var parents = [];
 			for (var el = this.$.parentNode; el; el = el.parentNode)
 				parents.push(el);
-			return evaluate(parents, selector, this.$, new this._elements(), {});
+			return filter(parents, selector, this.$, new this._elements(), {});
 		},
 
 		getParent: function(selector) {
@@ -242,7 +242,7 @@ DomElement.inject(new function() {
 		},
 
 		filter: function(elements, selector) {
-			return evaluate(elements, selector, this.$, new this._elements(), {});
+			return filter(elements, selector, this.$, new this._elements(), {});
 		}
 	};
 });
