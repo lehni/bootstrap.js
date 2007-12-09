@@ -27,7 +27,11 @@
 // Fix __proto__ for browsers where it is not implemented. Do this before 
 // anything else, for "var i in" to work.
 if (!this.__proto__) {
+#ifdef EXTEND_OBJECT
 	var fix = [Object, Function, Number, Boolean, String, Array, Date, RegExp];
+#else // !EXTEND_OBJECT
+	var fix = [Function, Number, Boolean, String, Array, Date, RegExp];
+#endif // !EXTEND_OBJECT
 	for (var i in fix)
 		fix[i].prototype.__proto__ = fix[i].prototype;
 }
