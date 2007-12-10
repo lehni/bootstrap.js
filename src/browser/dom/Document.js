@@ -13,11 +13,11 @@ Document = DomElement.get(document).inject({
 #ifdef DEFINE_GLOBALS
 
 function $(selector, root) {
-	return DomElement.get(root || Document).getElement(selector);
+	return (DomElement.get(root) || Document).getElement(selector);
 }
 
 function $$(selector, root) {
-	return DomElement.get(root || Document).getElements(selector);
+	return (DomElement.get(root) || Document).getElements(selector);
 }
 
 #endif // DEFINE_GLOBALS
