@@ -536,6 +536,17 @@ DomElement.inject(new function() {
 
 		createInside: create('Inside'),
 
+		wrap: function() {
+			var el = this.create(arguments), last;
+			el.insertBefore(this);
+			do {
+				last = el;
+				el = el.getFirst();
+			} while(el);
+			last.appendChild(this);
+			return last;
+		},
+
 		remove: function() {
 			if (this.$.parentNode)
 				this.$.parentNode.removeChild(this.$);
