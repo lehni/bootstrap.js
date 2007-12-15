@@ -81,9 +81,11 @@ DomElement.inject(new function() {
 				return el && DomElement.isAncestor(el, context)
 					&& match(el, params, data) ? [el] : null;
 			} else {
-				items = context.getElementsByTagName(tag);
-				// Clear as it is already filtered by getElementsByTagName
-				params.tag = null;
+				if (!items.length) {
+					items = context.getElementsByTagName(tag);
+					// Clear as it is already filtered by getElementsByTagName
+					params.tag = null;
+				}
 				for (var i = 0, l = items.length; i < l; i++)
 					if (match(items[i], params, data))
 						found.push(items[i]);
@@ -221,10 +223,11 @@ DomElement.inject(new function() {
 		},
 
 		getParents: function(selector) {
-			var parents = [];
-			for (var el = this.$.parentNode; el; el = el.parentNode)
+			var parents = [], doc = this.$.ownerDocument;
+			for (var el = this.$.parentNode; el && el != doc; el = el.parentNode)
 				parents.push(el);
-			return filter(parents, selector, this.$, new this._elements(), {});
+			// The context of getParents is the document, not the current node
+			return filter(parents, selector, doc, new this._elements(), {});
 		},
 
 		getParent: function(selector) {
@@ -237,7 +240,7 @@ DomElement.inject(new function() {
 		},
 
 		match: function(selector) {
-			return !selector || match(this, parse(selector), {});
+			return !selector || match(this.$, parse(selector), {});
 		},
 
 		filter: function(elements, selector) {
