@@ -59,6 +59,10 @@ String.inject({
 #endif // !BROWSER_LEGACY
 	},
 
+	escapeRegExp: function(){
+		return this.replace(/([-.*+?^${}()|[\]\/\\])/g, '\\$1');
+	},
+
 	trim: function() {
 		return this.replace(/^\s+|\s+$/g, '');
 	},
@@ -74,7 +78,7 @@ String.inject({
 	times: function(count) {
 		// Nice trick from Prototype:
 		return count < 1 ? '' : new Array(count + 1).join(this);
-	},
+	}
 });
 
 #ifdef BROWSER_LEGACY
