@@ -96,7 +96,7 @@ HtmlElement.inject({
 			} else
 				this.$.innerHTML = text;
 		} else
-			this[this.innerText !== undefined ? 'innerText' : 'textContent'] = text;
+			this.$[this.$.innerText !== undefined ? 'innerText' : 'textContent'] = text;
 		return this;
 	}
 });
