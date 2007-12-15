@@ -361,11 +361,8 @@ DomElement.inject(new function() {
 		var list = handlers[prefix];
 		// First see if there is a getter / setter for the given property
 		var fn = name == 'events' && prefix == 'set' ? that.addEvents : list[name];
-		// Do not call capitalize, as this is time critical and executes
-		// faster (we only need to capitalize the first char here).
 		if (fn === undefined)
-			fn = list[name] = that[prefix +
-				name.charAt(0).toUpperCase() + name.substring(1)] || null;
+			fn = list[name] = that[prefix + name.capitalize()] || null;
 		// If the passed value is an array, use it as the argument
 		// list for the call.
 		if (fn) return fn[val && val.push ? 'apply' : 'call'](that, val);
