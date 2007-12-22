@@ -94,7 +94,7 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 				try {
 					this.status = this.transport.status;
 					delete this.transport.onreadystatechange;
-				} catch(e) {}
+				} catch (e) {}
 				if (this.options.isSuccess.call(this, this.status)) {
 					this.response = {
 						text: this.transport.responseText,
@@ -120,7 +120,7 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 		getHeader: function(name) {
 			try {
 				if (this.transport) return this.transport.getResponseHeader(name);
-			} catch(e) {}
+			} catch (e) {}
 			return null;
 		},
 
@@ -197,7 +197,7 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 					this.headers.merge(this.options.headers).each(function(header, name) {
 						try{
 							this.transport.setRequestHeader(name, header);
-						} catch(e) {
+						} catch (e) {
 							this.fireEvent('exception', [e, name, header]);
 						}
 					}, this);
@@ -205,7 +205,7 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 					this.transport.send(data);
 					if (!this.options.async)
 						this.onStateChange();
-				} catch(e) {
+				} catch (e) {
 					this.fireEvent('failure', e);
 				}
 			}

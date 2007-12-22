@@ -82,7 +82,7 @@ Function.inject(new function() {
 			return function() {
 				try {
 					return that.apply(obj, args.concat(Array.create(arguments)));
-				} catch(e) {
+				} catch (e) {
 					return e;
 				}
 			}
