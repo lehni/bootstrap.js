@@ -48,7 +48,7 @@ Json = new function() {
 					(secure && !/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(
 						string.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '')))
 					? null : eval('(' + string + ')');
-			} catch(e) {
+			} catch (e) {
 				return null;
 			}
 		}
