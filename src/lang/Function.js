@@ -16,9 +16,9 @@ Function.inject(new function() {
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
 		Function.timers[id] = fn;
-		var f = "Function.timers[" + id + "]", call = f + "();";
+		var f = 'Function.timers[' + id + ']', call = f + '();';
 		// directly erase non-periodic timers
-		if (type[0] == 'T') call += " delete " + f;
+		if (type[0] == 'T') call += ' delete ' + f;
 		var timer = window['set' + type](call, ms);
 #else // !BROWSER_LEGACY
 		var timer = window['set' + type](fn, ms);

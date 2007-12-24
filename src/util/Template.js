@@ -70,7 +70,7 @@ function Template(object, name) {
 			object = new java.io.File(object.getPath());
 		if (object instanceof java.io.File) {
 			if (!object.exists())
-				throw "Cannot find template " + object;
+				throw 'Cannot find template ' + object;
 			// it's a file, so create the resource directly here:
 			this.resource = new Packages.helma.framework.repository.FileResource(object);
 			this.resourceName = this.resource.getShortName();
@@ -85,20 +85,20 @@ function Template(object, name) {
 			this.resourceName = object.getName();
 			this.pathName = object.getPath();
 #endif // !HELMA
-		} else if (typeof object == "string") {
+		} else if (typeof object == 'string') {
 			this.content = object;
-			this.resourceName = name ? name : "string";
+			this.resourceName = name ? name : 'string';
 			this.pathName = this.resourceName;
 #ifdef HELMA
 		} else {
 			this.resourceContainer = object;
-			this.resourceName = name + ".jstl";
+			this.resourceName = name + '.jstl';
 			this.findResource();
 #endif // HELMA
 		}
 #else // !RHINO
 		this.content = object;
-		this.resourceName = name ? name : "string";
+		this.resourceName = name ? name : 'string';
 		this.pathName = this.resourceName;
 #endif // !RHINO
 		this.compile();
@@ -130,7 +130,7 @@ Template.prototype = {
 		} catch (e) {
 			// In case the exception happened in a finished template,
 			// output the error for the template
-			if (typeof e != "string") {
+			if (typeof e != 'string') {
 				this.throwError(e);
 			} else {
 				// Just throw it, for debugging of renderTemplate
@@ -153,7 +153,7 @@ Template.prototype = {
 	 */
 	renderSubTemplate: function(object, name, param, out) {
 		var template = this.subTemplates[name];
-		if (!template) throw "Unknown sub template: " + name;
+		if (!template) throw 'Unknown sub template: ' + name;
 		return template.render(object, param, out);
 	},
 
@@ -176,7 +176,7 @@ Template.prototype = {
 		// String buffer, joined with '' to retrieve the concatenated string
 		var buffer = [];
 		// Container for the generated code lines.
-		var code = [ "this.__render__ = function(param, template, out) {" ];
+		var code = [ 'this.__render__ = function(param, template, out) {' ];
 #ifdef RHINO
 		var lineBreak = java.lang.System.getProperty('line.separator');
 #else
@@ -198,7 +198,7 @@ Template.prototype = {
 					// there on some browsers...
 					// Unfortunatelly, part.replace(/["'\n\r]/mg, "\\$&") does
 					// not work on Safari. TODO: Report bug:
-					code.push('out.write("' + part.replace(/(["'\n\r])/mg, "\\$1") + '");');
+					code.push('out.write("' + part.replace(/(["'\n\r])/mg, '\\$1') + '");');
 #endif // !RHINO
 				buffer.length = 0;
 			}
@@ -210,11 +210,11 @@ Template.prototype = {
 				while (true) {
 					// Search start and end of macro tag, keep lines:
 					if (tagCounter == 0) {
-						start = line.indexOf("<%", end);
+						start = line.indexOf('<%', end);
 						if (start != -1) { // Found the begining of a macro
 							if (start > end) // There was some text before it
 								buffer.push(line.substring(end, start));
-							// Skip <, the % is skiped bellow in line.indexOf("%", end + 1);
+							// Skip <, the % is skiped bellow in line.indexOf('%', end + 1);
 							end = start + 1;
 							tagCounter++;
 							append();
@@ -228,7 +228,7 @@ Template.prototype = {
 						}
 					} else {
 						while (tagCounter != 0) {
-							end = line.indexOf("%", end + 1); // skip %
+							end = line.indexOf('%', end + 1); // skip %
 							if (end == -1) break;
 							if (line[end - 1] == '<') tagCounter++;
 							if (line[end + 1] == '>') tagCounter--;
@@ -265,12 +265,12 @@ Template.prototype = {
 				}
 			}
 			if (tagCounter) { // Report the tag that was left open
-				throw "Tag is not closed";
+				throw 'Tag is not closed';
 			} else if (stack.control.length) {
 				// Resize code back to the error, so throwError() picks
 				// the right line in the catch block bellow.
 				code.length = stack.control.pop().lineNumber;
-				throw "Control tag is not closed";
+				throw 'Control tag is not closed';
 			} else {
 				// Write out the rest
 				append();
@@ -281,8 +281,8 @@ Template.prototype = {
 			for (var i = 0; i < this.renderTemplates.length; i++) {
 				var template = this.renderTemplates[i];
 				// Trim at render-time, if required:
-				code.splice(1, 0, "var $" + template.name + " = template.renderSubTemplate(this, '" +
-					template.name + "', param)" + (template.trim ? ".trim()" : ""));
+				code.splice(1, 0, 'var $' + template.name + ' = template.renderSubTemplate(this, "' +
+					template.name + '", param)' + (template.trim ? '.trim()' : ''));
 				// Shift tags as well, so line numbers are still right
 				this.tags.unshift(null);
 			}
@@ -384,7 +384,7 @@ Template.prototype = {
 				if (!/^session\.user\b/.test(data)) {
 					// Use  arrays of strings for each pseudo parameter. The name
 					// will be inserted at position 1 and the result will be joined.
-					// This allows both getProperty("name") and session.data.name
+					// This allows both getProperty('name') and session.data.name
 					var buf = {
 						response: ['res.data.'], request: ['req.data.'], 
 						session: ['session.data.'], param: ['param.'],
@@ -405,7 +405,7 @@ Template.prototype = {
 		function nextMacro(next) {
 			if (macro) {
 				if (!macro.command)
-					throw "Syntax error";
+					throw 'Syntax error';
 				macro.opcode = macro.opcode.join(' ');
 				if (macro.isControl) {
 					// Strip away ()
@@ -460,8 +460,8 @@ Template.prototype = {
 			if (/^<%/.test(value)) {
 				// A nested macro: render it, then set the result to a variable
 				var nested = value;
-				value = "param_" + (macroParam++) + "";
-				code.push("var " + value + " = " + that.parseMacro(nested, code, stack, false, true) + ";");
+				value = 'param_' + (macroParam++) + '';
+				code.push('var ' + value + ' = ' + that.parseMacro(nested, code, stack, false, true) + ';');
 			}
 #ifdef HELMA
 			return parseParam(value);
@@ -554,12 +554,12 @@ Template.prototype = {
 		// <%= tags cannot have unnamed parameters
 		var macro = this.parseMacroParts(tag, code, stack, allowControls);
 		if (!macro)
-			throw "Invalid tag";
+			throw 'Invalid tag';
 		var values = macro.values, result;
 		var postProcess = values.prefix || values.suffix || values.filters;
 		var codeIndexBefore = code.length;
 		if (macro.isData) { // param, response, request, session, or a <%= %> tag
-			result = this.parseLoopVariables(macro.command + " " + macro.opcode, stack);
+			result = this.parseLoopVariables(macro.command + ' ' + macro.opcode, stack);
 		} else if (macro.isControl) {
 			var open = false, close = false;
 			var prevControl = stack.control[stack.control.length - 1];
@@ -568,40 +568,40 @@ Template.prototype = {
 				throw "Syntax error: 'else' requiers 'if' or 'elseif'";
 			} else {
 				switch (macro.command) {
-				case "foreach":
+				case 'foreach':
 					var match = macro.opcode.match(/^\s*(\$[\w_]+)\s*in\s*(.+)$/);
-					if (!match) throw "Syntax error";
+					if (!match) throw 'Syntax error';
 					open = true;
 					var variable = match[1], value = match[2];
 					// separator means post processing too:
 					postProcess = postProcess || values.separator;
 					var suffix = '_' + (this.listId++);
-					var list = "list" + suffix, length = "length" + suffix;
-					var index = "i" + suffix, first = "first" + suffix;
+					var list = 'list' + suffix, length = 'length' + suffix;
+					var index = 'i' + suffix, first = 'first' + suffix;
 					// Use stacks per variable name, in case two loops use the same variable name
 					var loopStack = stack.loop[variable] = stack.loop[variable] || [];
 					loopStack.push({ list: list, index: index, length: length, first: first });
 					// Store variable in macro, so it can be retrieved from
-					// the control stack in "end".
+					// the control stack in 'end'.
 					macro.variable = variable;
-					code.push(						"var " + list + " = " + value + "; ",
-													"if (" + list + ") {",
+					code.push(						'var ' + list + ' = ' + value + '; ',
+													'if (' + list + ') {',
 #ifdef HELMA
 						// The check for HopObject is only necessary if it's a
 						// variable reference and not an explicit string / array / etc.
-						!(/^["'[]/.test(value))	?	"	if (" + list + " instanceof HopObject) " + list + " = " + list + ".list();" : null,
+						!(/^["'[]/.test(value))	?	'	if (' + list + ' instanceof HopObject) ' + list + ' = ' + list + '.list();' : null,
 #endif // HELMA
 						// TODO: finish toList support!
 						// Problem: There is currently no easy way to retrieve the key for values...
 						// Possibilities: Store pairs as { key: , value: } in toList...
-													"	if (" + list + ".length == undefined) " + list + " = template.toList(" + list + ");",
-													"	var " + length + " = " + list + ".length" + (values.separator ? ", " + first + " = true" : "") + ";",
-													"	for (var " + index + " = 0; " + index + " < " + length + "; " + index + "++) {",
-													"		var " + variable + " = " + list + "[" + index + "];",
-						values.separator		?	"		out.push();" : null);
+													'	if (' + list + '.length == undefined) ' + list + ' = template.toList(' + list + ');',
+													'	var ' + length + ' = ' + list + '.length' + (values.separator ? ', ' + first + ' = true' : '') + ';',
+													'	for (var ' + index + ' = 0; ' + index + ' < ' + length + '; ' + index + '++) {',
+													'		var ' + variable + ' = ' + list + '[' + index + '];',
+						values.separator		?	'		out.push();' : null);
 					break;
-				case "end":
-					if (macro.opcode) throw "Syntax error";
+				case 'end':
+					if (macro.opcode) throw 'Syntax error';
 					if (!prevControl || !/^else|^if$|^foreach$/.test(prevControl.macro.command))
 						throw "Syntax error: 'end' requiers 'if', 'else', 'elseif' or 'foreach'";
 					close = true;
@@ -609,32 +609,32 @@ Template.prototype = {
 						// Pop the current loop from the stack.
 						var loop = stack.loop[prevControl.macro.variable].pop();
 						// If the loop defines a separator, process it now.
-						// The first part of this (out.push()) happen in "foreach"
+						// The first part of this (out.push()) happen in 'foreach'
 						var separator = prevControl.postProcess && prevControl.postProcess.separator;
 						if (separator)
-							code.push(				"		var val = out.pop();",
-													"		if (val != null && val !== '') {",
-													"			if (" + loop.first + ") " + loop.first + " = false;",
-													"			else out.write(" + separator + ");",
-													"			out.write(val);",
-													"		}");
-						code.push(					"	}");
+							code.push(				'		var val = out.pop();',
+													'		if (val != null && val !== "") {',
+													'			if (' + loop.first + ') ' + loop.first + ' = false;',
+													'			else out.write(' + separator + ');',
+													'			out.write(val);',
+													'		}');
+						code.push(					'	}');
 					}
-					code.push(						"}");
+					code.push(						'}');
 					break;
-				case "elseif":
+				case 'elseif':
 					close = true;
-					// More in "if" (no break here)
-				case "if":
-					if (!macro.opcode) throw "Syntax error";
+					// More in 'if' (no break here)
+				case 'if':
+					if (!macro.opcode) throw 'Syntax error';
 					open = true;
-					code.push(						(close ? "} else if (" : "if (") + this.parseLoopVariables(macro.opcode, stack) + ") {");
+					code.push(						(close ? '} else if (' : 'if (') + this.parseLoopVariables(macro.opcode, stack) + ') {');
 					break;
-				case "else":
-					if (macro.opcode) throw "Syntax error";
+				case 'else':
+					if (macro.opcode) throw 'Syntax error';
 					close = true;
 					open = true;
-					code.push(						"} else {");
+					code.push(						'} else {');
 					break;
 				}
 				if (close) {
@@ -644,7 +644,7 @@ Template.prototype = {
 					if (control.postProcess) {
 						values = control.postProcess;
 						postProcess = true;
-						result = "out.pop()";
+						result = 'out.pop()';
 					}
 				}
 				if (open) {
@@ -653,53 +653,53 @@ Template.prototype = {
 					 		postProcess: postProcess ? values : null });
 					// Add out.push() before the block if it needs postProcessing
 					if (postProcess)
-						code.splice(codeIndexBefore, 0,	"out.push();");
+						code.splice(codeIndexBefore, 0,	'out.push();');
 				}
 			}
 		} else { // A normal <% %> macro
 			if (macro.opcode) {
 				// Setting a value? If not, this is a syntax error.
 				if (macro.isSetter)
-					code.push(						"var " + macro.command + " " + this.parseLoopVariables(macro.opcode, stack) + ";");
+					code.push(						'var ' + macro.command + ' ' + this.parseLoopVariables(macro.opcode, stack) + ';');
 				else
-					throw "Syntax error"; // No opcodes allowed in macros
+					throw 'Syntax error'; // No opcodes allowed in macros
 			} else {
 				var object = macro.object;
 #ifdef HELMA
 				// At runtime, first determine the object.
 				// it might be a res.handler.
 				if (!/^(global|this|root)$/.test(object))
-					code.push(						"try {",
-													"	var obj = " + object + ";",
-													"} catch (e) {",
-													"	var obj = res.handlers['" + object + "'];",
-													"}");
+					code.push(						'try {',
+													'	var obj = ' + object + ';',
+													'} catch (e) {',
+													'	var obj = res.handlers["' + object + '"];',
+													'}');
 				else
-					code.push(						"var obj = " + object + ";");
-				object = "obj";
+					code.push(						'var obj = ' + object + ';');
+				object = 'obj';
 #endif // HELMA
 				// Macros can both write to res and return a value. prefix / suffix / filter applies to both,
 				// encoding / default only to the value returned.
 				// TODO: Compare with Helma, to see if that is really true. E.g. what happens when default is set
 				// and the macro returns no value, but does write to res?
-				code.push(		postProcess		?	"out.push();" : null,
-													"var val = template.renderMacro('" + macro.command + "', " + object + ", '" +
-															macro.name + "', param, " + macro.arguments + ", out);",
-								postProcess		?	"template.write(out.pop(), " + values.filters + ", " + values.prefix + ", " +
-															values.suffix + ", null, out);" : null);
-				result = "val";
+				code.push(		postProcess		?	'out.push();' : null,
+													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' +
+															macro.name + '", param, ' + macro.arguments + ', out);',
+								postProcess		?	'template.write(out.pop(), ' + values.filters + ', ' + values.prefix + ', ' +
+															values.suffix + ', null, out);' : null);
+				result = 'val';
 			}
 		}
 		if (result) { // Write the value out
 			// Strip away possible ; at the end:
 			result = result.match(/^(.*?);?$/)[1];
 			if (values.encoder)
-				result = values.encoder + "(" + result + ")";
+				result = values.encoder + '(' + result + ')';
 			// Optimizations: Only call template.write if post processing is necessary.
 			// Write out directly if it's all easy.
 			if (postProcess)
-				code.push(							"template.write(" + result + ", " + values.filters + ", " + values.prefix + ", " +
-															values.suffix + ", " + values['default']  + ", out);");
+				code.push(							'template.write(' + result + ', ' + values.filters + ', ' + values.prefix + ', ' +
+															values.suffix + ', ' + values['default']  + ', out);');
 			else {
 				if (toString) {
 					// This is needed for nested macros. Whenn there is no post processing,
@@ -708,14 +708,14 @@ Template.prototype = {
 				} else {
 					// Dereference to local variable if it's a call, a lookup, or a more complex construct (containg whitespaces)
 					if (/[.()\s]/.test(result)) {
-						code.push(					"var val = " + result + ";");
-						result = "val";
+						code.push(					'var val = ' + result + ';');
+						result = 'val';
 					}
-					code.push(						"if (" + result + " != null && " + result + " !== '')",
-													"	out.write(" + result + ");");
+					code.push(						'if (' + result + ' != null && ' + result + ' !== "")',
+													'	out.write(' + result + ');');
 					if (values['default'])
-						code.push(					"else",
-													"	out.write(" + values['default'] + ");");
+						code.push(					'else',
+													'	out.write(' + values['default'] + ');');
 				}
 			}
 		}
@@ -723,8 +723,8 @@ Template.prototype = {
 			// This is needed for nested macros. Insert out.push() before the 
 			// rendering code and return out.pop(). Due to the post processing
 			// we cannot simply return a variable...
-			code.splice(codeIndexBefore, 0,		"out.push();");
-			return "out.pop()";
+			code.splice(codeIndexBefore, 0,		'out.push();');
+			return 'out.pop()';
 		}
 		// Tell parse() wether to swallow the line break or not.
 		if (!toString)
@@ -741,12 +741,12 @@ Template.prototype = {
 			var loopStack = stack.loop[variable], loop = loopStack && loopStack[loopStack.length - 1];
 			if (loop) {
 				switch (suffix) {
-				case "index": return loop.index;
-				case "length": return loop.length;
-				case "isFirst": return "(" + loop.index + " == 0)";
-				case "isLast": return "(" + loop.index + " == " + loop.length + " - 1)";
-				case "isEven": return "((" + loop.index + " & 1) == 0)";
-				case "isOdd": return "((" + loop.index + " & 1) == 1)";
+				case 'index': return loop.index;
+				case 'length': return loop.length;
+				case 'isFirst': return '(' + loop.index + ' == 0)';
+				case 'isLast': return '(' + loop.index + ' == ' + loop.length + ' - 1)';
+				case 'isEven': return '((' + loop.index + ' & 1) == 0)';
+				case 'isOdd': return '((' + loop.index + ' & 1) == 1)';
 				}
 			}
 			return part;
@@ -774,7 +774,7 @@ Template.prototype = {
 			if (match[1] == '$')
 				this.renderTemplates.push({ name: name, trim: end == '-' });
 		} else
-			throw "Syntax error in template";
+			throw 'Syntax error in template';
 	},
 
 	/**
@@ -787,7 +787,7 @@ Template.prototype = {
 			if (filters) {
 				for (var i = 0; i < filters.length; i++) {
 					var filter = filters[i];
-					var func = filter.object && filter.object[filter.name + "_filter"];
+					var func = filter.object && filter.object[filter.name + '_filter'];
 					if (func) {
 						if (func.apply) // filter function
 							value = func.apply(filter.object, [value].concat(filter.arguments));
@@ -819,7 +819,7 @@ Template.prototype = {
 		var unhandled = false, value;
 		if (object) {
 			// See  if there's a macro with that name, and if not, assume a property
-			var macro = object[name + "_macro"];
+			var macro = object[name + '_macro'];
 			if (macro) {
 				try {
 					// Add a reference to this template and the param
@@ -900,14 +900,14 @@ Template.prototype = {
 			var lines;
 			if  (this.resource) {
 #ifdef HIDDEN
-			 	var content = this.resource.getContent(getProperty("skinCharset"));
+			 	var content = this.resource.getContent(getProperty('skinCharset'));
 			 	// Store the original lines:
 			 	var lines = content.split(/\n|\r\n|\r/mg);
 #endif // HIDDEN
 				// Use java.io.BufferedReader for reading the lines into a line array,
 				// as this is much faster than the regexp above
 #ifdef HELMA
-				var charset = getProperty("skinCharset");
+				var charset = getProperty('skinCharset');
 				var reader = new java.io.BufferedReader(
 					charset ? new java.io.InputStreamReader(this.resource.getInputStream(), charset) :
 						new java.io.InputStreamReader(this.resource.getInputStream())
@@ -998,12 +998,12 @@ Template.prototype = {
 	 */
 	throwError: function(error, line) {
 		var tag = line ? this.getTagFromCodeLine(line) : this.getTagFromException(error);
-		var message = "Template error in " + this.pathName;
+		var message = 'Template error in ' + this.pathName;
 		// if this error already comes from throwError, do not generate message again
-		if (typeof error == "string" && error.indexOf(message) == 0)
+		if (typeof error == 'string' && error.indexOf(message) == 0)
 			throw error;
 		if (tag) {
-		 	message += ", line: " + (tag.lineNumber + 1) + ', in ' +
+		 	message += ', line: ' + (tag.lineNumber + 1) + ', in ' +
 #ifdef HELMA
 		 		encode(tag.content);
 			// Encode errors, as they are passed through to Jetty and appear
@@ -1016,8 +1016,8 @@ Template.prototype = {
 #ifdef RHINO
 			var details = null;
 			if (error.fileName && error.fileName != this.pathName) {
-				details = "Error in " + error.fileName + ", line " +
-					error.lineNumber + ": " + error;
+				details = 'Error in ' + error.fileName + ', line ' +
+					error.lineNumber + ': ' + error;
 			} else {
 				details = error;
 			}
@@ -1028,9 +1028,9 @@ Template.prototype = {
 				details += '\nStacktrace:\n' + sw.toString();
 			}
 			if (details)
-				message += ": " + details;
+				message += ': ' + details;
 #else // !RHINO
-			message += ": " + error;
+			message += ': ' + error;
 #endif // !RHINO
 		}
 		throw message;
@@ -1138,7 +1138,7 @@ Template.methods = new function() {
 			if (!template)
 				template = templates[name] = new Template(
 #ifdef RHINO
-					new java.io.File(baseDir + "/templates/" + name + ".jstl"));
+					new java.io.File(baseDir + '/templates/' + name + '.jstl'));
 #else
 					name);
 #endif

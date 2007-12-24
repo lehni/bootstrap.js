@@ -49,7 +49,7 @@ String.inject({
 	capitalize: function() {
 #ifdef BROWSER_LEGACY
 		// MACIE does not seem to know \b in Regexps
-		return (" " + this).replace(/\s[a-z]/g, function(match) {
+		return (' ' + this).replace(/\s[a-z]/g, function(match) {
 			return match.toUpperCase();
 		}).substring(1);
 #else // !BROWSER_LEGACY
