@@ -60,7 +60,7 @@ new function() { // bootstrap
 		// sometimes would not be present when this meaningless emtpy string 
 		// literal diappears... A theory is that defining an unassigned string
 		// here pulls the extend String prototype into the scope...
-		"";
+		'';
 #endif // BROWSER_LEGACY
 		/**
 		 * Private function that injects one field with given name

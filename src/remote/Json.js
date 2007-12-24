@@ -36,7 +36,7 @@ Json = new function() {
 					}).compact() + '}';
 				*/
 				default:
-					return obj + "";
+					return obj + '';
 			}
 			return null;
 #endif // !RHINO

@@ -131,8 +131,8 @@ HttpRequest = Base.extend(Chain, Callback, new function() {
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
 				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
 				// First tag in IE ends up in <head>, safe it
-				// res.text = res.text.replace(/<title><\/title>/gi, "")
-				//	.replace(/^(<head>([\s\S]*)<\/head>\s*<body>|<body>)([\s\S]*)<\/body>$/gi, "$2$3");
+				// res.text = res.text.replace(/<title><\/title>/gi, '')
+				//	.replace(/^(<head>([\s\S]*)<\/head>\s*<body>|<body>)([\s\S]*)<\/body>$/gi, '$2$3');
 				var head = Browser.IE && doc.getElementsByTagName('head')[0];
 				text = (head && head.innerHTML || '') + text;
 				this.response = { text: text };
