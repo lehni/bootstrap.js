@@ -30,6 +30,7 @@
 #define FIX_PROTO
 #endif // !RHINO
 
+#ifndef DONT_ENUM
 #comment When setting iterator functions without using dontEnum or when using
 #comment the legacy workaround for Function#apply, we need to check the field
 #comment names to see if they are to be hidden. Anything starting with __ is
@@ -40,9 +41,25 @@
 #if defined(BROWSER_LEGACY)
 #comment Allways filter out __ fields on legacy browsers, as they are used both
 #comment for emulating Function#apply/#call and for faking __proto__
-#define AND_NAME_IS_VISIBLE(NAME) && NAME.indexOf('__') != 0 && NAME != 'constructor'
+#define CHECK_NAME(name) name.indexOf('__') != 0 && name != 'constructor'
 #elif defined(SET_ITERATOR)
-#define AND_NAME_IS_VISIBLE(NAME) && NAME.indexOf('__') != 0
+#define CHECK_NAME(name) name.indexOf('__') != 0
 #else // !SET_ITERATOR && !BROWSER_LEGACY
-#define AND_NAME_IS_VISIBLE(NAME)
+#comment CHECK_NAME is not needed, since we are not adding anything to the
+#comment objects themselves, only to their prototypes, and thats filtered out
+#comment already.
 #endif // !SET_ITERATOR && !BROWSER_LEGACY
+
+#ifdef CHECK_NAME
+#define NAME_IS_VISIBLE(name, condition) condition && CHECK_NAME(name)
+#define IF_NAME_IS_VISIBLE(name, command) if (CHECK_NAME(name)) command
+#else // !CHECK_NAME
+#comment CHECK_NAME is not defined -> !SET_ITERATOR && !BROWSER_LEGACY
+#comment No need to even check the name, since nothing will be set on objects
+#comment and the policy to compare with the value from __proto__ is enough to
+#comment filter out fields that are not supposed to iterate.
+#define NAME_IS_VISIBLE(name, condition) condition
+#define IF_NAME_IS_VISIBLE(name, command) command
+#endif // !CHECK_NAME
+
+#endif // !DONT_ENUM
