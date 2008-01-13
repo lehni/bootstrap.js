@@ -63,24 +63,37 @@ DomElements = Array.extend(new function() {
 				// new function that iterates that calls the function on each of
 				// the collection's elements.
 				// src can either be a function to be called, or a object literal.
+				var proto = this.prototype;
 				return this.base(Base.each(src || {}, function(val, key) {
-					this[key] = typeof val != 'function' ? val : function() {
-						var args = arguments, values;
-						this.each(function(obj) {
-							// Try to use original method if it's there, in order
-							// to support base, as this will be the wrapper that
-							// sets it
-							var ret = (obj[key] || val).apply(obj, args);
-							// Only collect return values if defined and not
-							// returning 'this'.
-							if (ret !== undefined && ret != obj) {
-								values = values || (Base.type(ret) == 'element'
-									? new obj._elements() : []);
-								values.push(ret);
-							}
-						});
-						return values || this;
+					if (typeof val == 'function') {
+						var func = val, prev = proto[key];
+						var count = func.parameters().length, prevCount = prev && prev.parameters().length;
+						val = function() {
+							var args = arguments, values;
+							// If there was a previous implementation under this name
+							// and the arguments match better, use that one instead.
+							// The strategy is very basic, if more arguments are used
+							// than the function provides and the previous implementation
+							// expects more, use that one.
+							if (prev && args.length > count && args.length <= prevCount)
+								return prev.apply(this, args);
+							this.each(function(obj) {
+								// Try to use original method if it's there, in order
+								// to support base, as this will be the wrapper that
+								// sets it
+								var ret = (obj[key] || func).apply(obj, args);
+								// Only collect return values if defined and not
+								// returning 'this'.
+								if (ret !== undefined && ret != obj) {
+									values = values || (Base.type(ret) == 'element'
+										? new obj._elements() : []);
+									values.push(ret);
+								}
+							});
+							return values || this;
+						}
 					}
+					this[key] = val; 
 				}, {}));
 			}
 		}
@@ -495,7 +508,7 @@ DomElement.inject(new function() {
 		create: function(arg) {
 			var items = Base.type(arg) == 'array' ? arg : arguments;
 			var elements = new this._elements();
-			for (var i = 0, j = items.length; i < j; i ++) {
+			for (var i = 0, l = items.length; i < l; i ++) {
 				var item = items[i];
 				// items are arrays of any of these forms:
 				// [tag, properties, content]
