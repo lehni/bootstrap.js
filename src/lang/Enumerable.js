@@ -110,7 +110,7 @@ Enumerable = new function() {
 		// We use for-in here, but need to filter out what should not be iterated.
 		// Object#dontEnum defines a method to flag such a fields, and Object#has
 		// a way to find out for any given key if it is enumerable or not.
-		// The loop here uses an inline version of Object#has (See Core).  
+		// The loop here uses an inline version of Object#has (See Core.js).  
 		var entries = this._dontEnum || {};
 		for (var i in this) {
 			var val = this[i], entry = entries[i];
@@ -121,12 +121,28 @@ Enumerable = new function() {
 		}
 #elif !defined(HELMA)
 		// We use for-in here, but need to filter out what should not be iterated.
-		// The loop here uses an inline version of Object#has (See Core).
+		// The loop here uses an inline version of Object#has (See Core.js).
+#ifdef EXTEND_OBJECT
 		for (var i in this) {
 			var val = this[i];
-			if (val !== this.__proto__[i]AND_NAME_IS_VISIBLE(i))
+			if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
 				ITERATOR(iter, bind, val, i, this, __each);
 		}
+#else // !EXTEND_OBJECT
+		// Object.prototype is untouched, so we cannot assume __proto__ to always
+		// be defined on legacy browsers. Use two versions of the loops for 
+		// better performance here:
+		if (!this.__proto__) {
+			for (var i in this)
+				IF_NAME_IS_VISIBLE(i, ITERATOR(iter, bind, this[i], i, this, __each);)
+		} else {
+			for (var i in this) {
+				var val = this[i];
+				if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
+					ITERATOR(iter, bind, val, i, this, __each);
+			}
+		}
+#endif // !EXTEND_OBJECT
 #else // HELMA
 		// No need to check when not extending Object and when on Helma as
 		// dontEnum is always used to hide fields there.

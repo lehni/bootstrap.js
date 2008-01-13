@@ -216,7 +216,15 @@ new function() { // bootstrap
 		// of the prototypes, not the object itself.
 		// Also, key starting with __ are filtered out, as they are
 		// iterators or legacy browser's function objects.
-		return obj[name] !== obj.__proto__[name]AND_NAME_IS_VISIBLE(name);
+#ifdef EXTEND_OBJECT
+		// We're extending Object, so we can assume __proto__ to always be there,
+		// even when it's simulated on legacy browsers.
+		return NAME_IS_VISIBLE(name, obj[name] !== obj.__proto__[name]);
+#else // !EXTEND_OBJECT
+		// Object.prototype is untouched, so we cannot assume __proto__ to always
+		// be defined on legacy browsers.
+		return NAME_IS_VISIBLE(name, (!obj.__proto__ || obj[name] !== obj.__proto__[name]));
+#endif // !EXTEND_OBJECT
 #else // HELMA
 		return name in obj;
 #endif // HELMA
@@ -286,7 +294,7 @@ new function() { // bootstrap
 			// If there are more than one argument, loop through them and call
 			// inject again. Do not simple inline the above code in one loop,
 			// since each of the passed objects might override this.inject.
-			for (var i = 1, j = arguments.length; i < j; i++)
+			for (var i = 1, l = arguments.length; i < l; i++)
 				this.inject(arguments[i]);
 			return this;
 		},
@@ -416,7 +424,7 @@ new function() { // bootstrap
 		 * Injects the fields from the given object, adding base functionality
 		 */
 		inject: function(/* src, ... */) {
-			for (var i = 0, j = arguments.length; i < j; i++)
+			for (var i = 0, l = arguments.length; i < l; i++)
 				inject(this, arguments[i]);
 			return this;
 		},
