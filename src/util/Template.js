@@ -233,10 +233,10 @@ Template.prototype = {
 							if (line[end - 1] == '<') tagCounter++;
 							if (line[end + 1] == '>') tagCounter--;
 						}
-						if (end != -1) { // found the end of the macro
-							end += 2; // include tag end as well
+						if (end != -1) { // Found the end of the macro
+							end += 2; // Include tag end as well
 							buffer.push(line.substring(start, end));
-							// parse it:
+							// Parse it:
 							var tag = buffer.join('');
 							// Keep track of line numbers. this.tags links code line numbers
 							// to template line numbers
@@ -300,7 +300,7 @@ Template.prototype = {
 	parseMacroParts: function(tag, code, stack, allowControls) {
 		var match = tag.match(/^<%(=?)\s*(.*?)\s*(-?)%>$/);
 		if (!match)	return null;
-		// iI the tag ends with -%>, the line break after it should be swallowed,
+		// If the tag ends with -%>, the line break after it should be swallowed,
 		// if there is any. By default all control macros swallow line breaks.
 		var isEqualTag = match[1] == '=', content = match[2], swallow = match[3];
 
@@ -320,7 +320,7 @@ Template.prototype = {
 				if (/\s/.test(ch)) {
 					var ret = getPart();
 					if (ret) return ret;
-					// find end of white space using regexp
+					// Find end of white space using regexp
 					var nonWhite = /\S/g;
 					nonWhite.lastIndex = pos + 1;
 					pos = (end = nonWhite.exec(content)) ? end.index : content.length;

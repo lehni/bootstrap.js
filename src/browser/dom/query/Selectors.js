@@ -46,7 +46,7 @@ DomElement.inject(new function() {
 			// TODO: getDocument!
 			var res = document.evaluate('.//' + items.join(''), context,
 				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-			for (var i = 0, j = res.snapshotLength; i < j; ++i)
+			for (var i = 0, l = res.snapshotLength; i < l; ++i)
 				elements.push(res.snapshotItem(i));
 		}
 	}, { // FILTER

@@ -17,7 +17,7 @@
 if (!Array.prototype.push) {
 	Array.inject({
 		push: function() {
-			for (var i = 0, j = arguments.length; i < j; ++i)
+			for (var i = 0, l = arguments.length; i < l; ++i)
 				this[this.length++] = arguments[i];
 			return this.length;
 		},
@@ -32,7 +32,7 @@ if (!Array.prototype.push) {
 
 		shift: function() {
 			var old = this[0];
-			for (var i = 0, j = this.length - 1; i < j; ++i)
+			for (var i = 0, l = this.length - 1; i < l; ++i)
 				this[i] = this[i + 1];
 			delete this[this.length - 1];
 			this.length--;
@@ -58,7 +58,7 @@ if (!Array.prototype.push) {
 			if (num > 0) del -= num;
 			if (del > 0) {
 				// Move the entries up by the amount of entries to remove.
-				for (i = start, j = len - del; i < j; i ++)
+				for (i = start, l = len - del; i < l; i ++)
 					this[i] = this[i + del];
 				// Delete the entries that are not used any more.
 				// This is needed for pseudo arrays.
@@ -110,7 +110,7 @@ Array.inject(new function() {
 	// ( var fields = Hash.create(Enumerable, {...}) )
 	// Instead, use the generics in Hash to fill a normal object.
 	
-	// TODO: There is a problem on browsers when using EXTEND_OBJECT and DONT:ENUM
+	// TODO: There is a problem on browsers when using EXTEND_OBJECT and DONT_ENUM
 	// here, since Base#clone will then be dontEnumed and Hash.merge will therefore
 	// not iterate over the new definiton bellow...
 
@@ -125,7 +125,7 @@ Array.inject(new function() {
 		indexOf: proto.indexOf || function(obj, i) {
 			i = i || 0;
 			if (i < 0) i = Math.max(0, this.length + i);
-			for (var j = this.length; i < j; ++i)
+			for (var l = this.length; i < l; ++i)
 				if (this[i] == obj) return i;
 			return -1;
 		},
@@ -147,7 +147,7 @@ Array.inject(new function() {
 		 */
 		filter: ITERATE(proto.filter || function(iter, bind, that) {
 			var res = [];
-			for (var i = 0, j = this.length; i < j; ++i)
+			for (var i = 0, l = this.length; i < l; ++i)
 				if (ITERATOR(iter, bind, this[i], i, that, __filter))
 					res[res.length] = this[i];
 			return res;
@@ -155,20 +155,20 @@ Array.inject(new function() {
 
 		map: ITERATE(proto.map || function(iter, bind, that) {
 			var res = new Array(this.length);
-			for (var i = 0, j = this.length; i < j; ++i)
+			for (var i = 0, l = this.length; i < l; ++i)
 				res[i] = ITERATOR(iter, bind, this[i], i, that, __map);
 			return res;
 		}, '__map'),
 
 		every: ITERATE(proto.every || function(iter, bind, that) {
-			for (var i = 0, j = this.length; i < j; ++i)
+			for (var i = 0, l = this.length; i < l; ++i)
 				if (!ITERATOR(iter, bind, this[i], i, that, __every))
 					return false;
 			return true;
 		}, '__every'),
 
 		some: ITERATE(proto.some || function(iter, bind, that) {
-			for (var i = 0, j = this.length; i < j; ++i)
+			for (var i = 0, l = this.length; i < l; ++i)
 				if (ITERATOR(iter, bind, this[i], i, that, __some))
 					return true;
 			return false;
@@ -262,7 +262,7 @@ Array.inject(new function() {
 			// It would be nice if calling push with the items of the array
 			// as arguments would work, but it does not for non-arrays:
 			// this.push.apply(this, items);
-			for (var i = 0, j = items.length; i < j; ++i)
+			for (var i = 0, l = items.length; i < l; ++i)
 				this.push(items[i]);
 			return this;
 		},
@@ -271,7 +271,7 @@ Array.inject(new function() {
 		 * Removes all objects contained in items.
 		 */
 		subtract: function(items) {
-			for (var i = 0, j = items.length; i < j; ++i)
+			for (var i = 0, l = items.length; i < l; ++i)
 				// TODO: Conflict between Array#remove and DomElement(s)#remove. Resolve!
 				Array.remove(this, items[i]);
 			return this;
@@ -370,7 +370,7 @@ Array.inject(new function() {
 					return list.toArray();
 				if (list.length != null) {
 					var res = [];
-					for (var i = 0, j = list.length; i < j; ++i)
+					for (var i = 0, l = list.length; i < l; ++i)
 						res[i] = list[i];
 				} else {
 					res = [list];
