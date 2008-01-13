@@ -125,6 +125,9 @@ HtmlElement.inject(new function() {
 			}
 			switch (name) {
 				case 'visibility':
+					// Convert 0 to false, 1 to true before converting to visible / hidden
+					if (!isNaN(value)) value = !!value.toInt() + '';
+					// Convert true -> visible, false -> hidden, everything else remains unchanged
 				 	value = value == 'true' && 'visible' || value == 'false' && 'hidden' || value;
 					break;
 				case 'opacity':
