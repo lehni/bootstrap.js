@@ -54,6 +54,12 @@ Hash = Base.extend(Enumerable, {
 		});
 	},
 
+	length: function() {
+		return this.each(function() {
+			this.length++;
+		}, { length: 0 }).length;
+	},
+
 	/**
 	 * Does the same as toArray(), but renamed to go together with keys()
 	 */
