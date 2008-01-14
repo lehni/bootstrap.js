@@ -159,7 +159,7 @@ Enumerable = new function() {
 		 * The core of all Enumerable functions. TODO: document
 		 */
 		each: ITERATE(function(iter, bind) {
-			try { (this.length != null ? each_Array : each_Object).call(this, iter, bind); }
+			try { (typeof this.length == 'number' ? each_Array : each_Object).call(this, iter, bind); }
 			catch (e) { if (e !== Base.stop) throw e; }
 			return bind;
 		}, '__each'),
