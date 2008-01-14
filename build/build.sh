@@ -37,14 +37,18 @@ fi
 #./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DEXTEND_OBJECT -DDONT_ENUM -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
 #./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DEXTEND_OBJECT -DDONT_ENUM -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
+#./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
+#./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-#./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
-#./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
+#./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
+#./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
+
+./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DDEBUG -DDEFINE_GLOBALS" $MODE
+
 if [ -d ../src/tests/ ]
 then
 #./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY -DEXTEND_OBJECT -DDONT_ENUM -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
