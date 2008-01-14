@@ -62,7 +62,7 @@ TemplateWriter.prototype = {
  * template with the given name from
  * @name the name of the resource in the object
  */
-function Template(object, name) {
+function Template(object, name, parent) {
 	if (object) {
 #ifdef RHINO
 #ifdef HELMA
@@ -101,6 +101,10 @@ function Template(object, name) {
 		this.resourceName = name ? name : 'string';
 		this.pathName = this.resourceName;
 #endif // !RHINO
+		if (parent) {
+			parent.subTemplates[name] = this;
+			this.parent = parent;
+		}
 		this.compile();
 	}
 }
@@ -457,11 +461,21 @@ Template.prototype = {
 
 		var macroParam = 0;
 		function nestedMacro(that, value, code, stack) {
-			if (/^<%/.test(value)) {
-				// A nested macro: render it, then set the result to a variable
+			if (/<%/.test(value)) {
 				var nested = value;
-				value = 'param_' + (macroParam++) + '';
-				code.push('var ' + value + ' = ' + that.parseMacro(nested, code, stack, false, true) + ';');
+				value = 'param_' + (macroParam++);
+				if (/^<%/.test(nested)) {
+					// A nested macro: render it, then set the result to a variable
+					code.push('var ' + value + ' = ' + that.parseMacro(nested, code, stack, false, true) + ';');
+				} else if (/^['"]/.test(nested)) {
+					// TODO: Check if this is dangerous? Not more than the rest probably, right?
+					// Since nested is in encoded form, eval it so we get its value.
+					eval('nested = ' + nested);
+					new Template(nested, value, that);
+					code.push('var ' + value + ' = template.renderSubTemplate(this, "' + value + '", param);');
+				} else {
+					throw 'Syntax error: ' + nested;
+				}
 			}
 #ifdef HELMA
 			return parseParam(value);
@@ -684,7 +698,7 @@ Template.prototype = {
 				// and the macro returns no value, but does write to res?
 				code.push(		postProcess		?	'out.push();' : null,
 													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' +
-															macro.name + '", param, ' + macro.arguments + ', out);',
+															macro.name + '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ', out);',
 								postProcess		?	'template.write(out.pop(), ' + values.filters + ', ' + values.prefix + ', ' +
 															values.suffix + ', null, out);' : null);
 				result = 'val';
@@ -736,7 +750,7 @@ Template.prototype = {
 	 * and replaces them with the proper code.
 	 */
 	parseLoopVariables: function(str, stack) {
-		return str.replace(/(\$[\w_]+)\#(\w+)/, function(part, variable, suffix) {
+		return str.replace(/(\$[\w_]+)\#(\w+)/g, function(part, variable, suffix) {
 			// Use the last loop.
 			var loopStack = stack.loop[variable], loop = loopStack && loopStack[loopStack.length - 1];
 			if (loop) {
@@ -767,8 +781,7 @@ Template.prototype = {
 			// If it ends with +%>, keep the whitespaces.
 			if (!end) content = content.match(/^\s*[\n\r]?([\s\S]*)[\n\r]?\s*$/)[1];
 			else if (end == '-') content = content.trim();
-			var template = this.subTemplates[name] = new Template(content, name);
-			template.parent = this;
+			new Template(content, name, this);
 			// If it is a variable, push it onto renderTemplates, so it is
 			// rendered at the beginning of the generated render function.
 			if (match[1] == '$')
