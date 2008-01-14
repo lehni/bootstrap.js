@@ -231,7 +231,13 @@ DomElement.inject(new function() {
 		},
 
 		getParent: function(selector) {
-			return !selector ? this.base() : this.getParents(selector)[0];
+			if (!selector) return this.base();
+			var params = parse(selector), doc = this.$.ownerDocument;
+			for (var el = this.$.parentNode; el && el != doc; el = el.parentNode)
+				if (match(el, params, {}))
+					return DomElement.get(el);
+			return null;
+//			return !selector ? this.base() : this.getParents(selector)[0];
 		},
 
 		hasParent: function(selector) {
