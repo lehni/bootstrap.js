@@ -57,7 +57,7 @@ Function.inject(new function() {
 		 * Returns the function's body as a string, excluding the surrounding { }
 		 */
 		body: function() {
-			return this.toString().match(/^\s*function[^\{]*\{([\s\S]*)\}\s*$/)[1];
+			return this.toString().match(/^\s*function[^\{]*\{([\u0000-\uffff]*)\}\s*$/)[1];
 		},
 
 #ifdef BROWSER
