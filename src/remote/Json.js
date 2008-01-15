@@ -5,7 +5,7 @@
 // Json
 
 Json = new function() {
-#ifndef RHINO
+#ifndef __RHINO // TODO: see bellow
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', '\\': '\\\\' };
 
 	function replace(chr) {
@@ -15,7 +15,7 @@ Json = new function() {
 
 	return {
 		encode: function(obj) {
-#ifdef RHINO
+#ifdef __RHINO // TODO: uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
 			var str = uneval(obj);
 			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
 #else // !RHINO
