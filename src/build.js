@@ -33,8 +33,7 @@
 #include "browser/html/Form.js"
 #include "browser/html/Selection.js"
 
-#include "browser/remote/HttpRequest.js"
-#include "browser/remote/Ajax.js"
+#include "browser/remote/Request.js"
 #include "browser/remote/Asset.js"
 #include "browser/remote/Cookie.js"
 
