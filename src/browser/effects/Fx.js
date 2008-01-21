@@ -43,14 +43,14 @@ Fx = Base.extend(Chain, Callback, {
 		} else {
 			this.stop(true);
 			this.update(this.to);
-			this.fireEvent('complete', this.element);
+			this.fireEvent('complete', [this.element]);
 			this.callChain();
 		}
 	},
 
 	set: function(to) {
 		this.update(to);
-		this.fireEvent('set', this.element);
+		this.fireEvent('set', [this.element]);
 		return this;
 	},
 
@@ -71,7 +71,7 @@ Fx = Base.extend(Chain, Callback, {
 		// Fx.Elements allows effects to be run in slave mode.
 		if (!this.slave) {
 			this.timer = this.step.periodic(Math.round(1000 / this.options.fps), this);
-			this.fireEvent('start', this.element);
+			this.fireEvent('start', [this.element]);
 		}
 		// Make the first step now:
 		this.step();
@@ -81,7 +81,7 @@ Fx = Base.extend(Chain, Callback, {
 	stop: function(end) {
 		if (this.timer) {
 			this.timer = this.timer.clear();
-			if (!end) this.fireEvent('cancel', this.element);
+			if (!end) this.fireEvent('cancel', [this.element]);
 		}
 		return this;
 	}

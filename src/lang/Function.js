@@ -11,17 +11,21 @@ Function.inject(new function() {
 	var timerId = 0;
 
 #endif // BROWSER_LEGACY
-	function timer(that, type, args, ms) {
-		var fn = that.bind.apply(that, Array.slice(args, 1));
+	function timer(that, type, delay, bind, args) {
+		// If delay is not defined, execute right away and return the result
+		// of the function. This is used in fireEvent.
+		if (delay == undefined)
+			return that.apply(bind, args);
+		var fn = that.bind(bind, args);
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
 		Function.timers[id] = fn;
 		var f = 'Function.timers[' + id + ']', call = f + '();';
 		// directly erase non-periodic timers
 		if (type[0] == 'T') call += ' delete ' + f;
-		var timer = window['set' + type](call, ms);
+		var timer = window['set' + type](call, delay);
 #else // !BROWSER_LEGACY
-		var timer = window['set' + type](fn, ms);
+		var timer = window['set' + type](fn, delay);
 #endif // !BROWSER_LEGACY
 		fn.clear = function() {
 			clearTimeout(timer);
@@ -61,27 +65,27 @@ Function.inject(new function() {
 		},
 
 #ifdef BROWSER
-		delay: function(ms) {
-			return timer(this, 'Timeout', arguments, ms);
+		delay: function(delay, bind, args) {
+			return timer(this, 'Timeout', delay, bind, args);
 		},
 
-		periodic: function(ms) {
-			return timer(this, 'Interval', arguments, ms);
+		periodic: function(delay, bind, args) {
+			return timer(this, 'Interval', delay, bind, args);
 		},
 #endif // !BROWSER
 
-		bind: function(obj) {
-			var that = this, args = Array.slice(arguments, 1);
+		bind: function(bind, args) {
+			var that = this;
 			return function() {
-				return that.apply(obj, args.concat(Array.create(arguments)));
+				return that.apply(bind, args && args.concat(Array.create(arguments)) || arguments);
 			}
 		},
 
-		attempt: function(obj) {
-			var that = this, args = Array.slice(arguments, 1);
+		attempt: function(bind, args) {
+			var that = this;
 			return function() {
 				try {
-					return that.apply(obj, args.concat(Array.create(arguments)));
+					return that.apply(bind, args && args.concat(Array.create(arguments)) || arguments);
 				} catch (e) {
 					return e;
 				}

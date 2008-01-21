@@ -47,12 +47,12 @@ Asset = new function() {
 						this.fireEvent('load');
 				})
 				.insertInside(Document.getElement('head'));
-			// On Safari < 3, execute a HttpRequest for the same resource at
+			// On Safari < 3, execute a Request for the same resource at
 			// the same time. The resource will only be loaded once, and the
-			// HttpRequest will recieve a notification, while the script does not.
+			// Request will recieve a notification, while the script does not.
 			if (Browser.WEBKIT2)
-				new HttpRequest(src, { method: 'get' }).addEvent('success', function() {
-					script.fireEvent.bind(script, 'load').delay(1);
+				new Request({ url: src, method: 'get' }).addEvent('success', function() {
+					script.fireEvent.delay(1, script, ['load']);
 				}).send();
 			return script;
 		},
@@ -76,7 +76,7 @@ Asset = new function() {
 				});
 			});
 			if (image.width && image.height)
-				element.fireEvent.bind(element, 'load').delay(1);
+				element.fireEvent.delay(1, element, ['load']);
 			return element.setProperties(getProperties(props));
 		},
 
