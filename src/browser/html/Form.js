@@ -35,6 +35,10 @@ HtmlElement.inject({
 		return Base.each(values, function(val, name) {
 			this.setValue(name, val);
 		}, this);
+	},
+
+	toQueryString: function() {
+		return Base.toQueryString(this.getValues());
 	}
 });
 

@@ -32,6 +32,16 @@ Base.inject({
 		}, new this.constructor());
 	},
 
+	toQueryString: function() {
+		return Base.each(this, function(val, key) {
+#ifdef BROWSER
+			this.push(key + '=' + encodeURIComponent(val));
+#else // !BROWSER
+			this.push(key + '=' + escape(val));
+#endif // !BROWSER
+		}, []).join('&');
+	},
+
 	statics: {
 #ifndef EXTEND_OBJECT
 		inject: function() {
@@ -55,6 +65,11 @@ Base.inject({
 		},
 
 #endif // !EXTEND_OBJECT
+/*		// Make a faster generic for this since it's used often:
+		each: function(iter, bind) {
+			return Enumerable.each.call(this, iter, bind);
+		},
+*/
 		check: function(obj) {
 			return !!(obj || obj === 0);
 		},
@@ -62,7 +77,11 @@ Base.inject({
 		type: function(obj) {
 #ifdef BROWSER
 			// Handle elements, as needed by DomElement.js
-			return (obj || obj === 0) && ((obj._type || obj.nodeName && obj.nodeType == 1 && 'element') || typeof obj) || null;
+			return (obj || obj === 0) && (
+				(obj._type || obj.nodeName && (
+					obj.nodeType == 1 && 'element' ||
+					obj.nodeType == 3 && ((/\S/).test(obj.nodeValue) ? 'textnode' : 'whitespace')
+				)) || typeof obj) || null;
 #else // !BROWSER
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
 #endif // !BROWSER
