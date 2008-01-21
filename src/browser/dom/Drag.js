@@ -16,7 +16,7 @@ DomEvent.add(new function() {
 		if (object != this) {
 			event.type = 'dragstart';
 			last = event.page;
-			this.fireEvent('dragstart', event);
+			this.fireEvent('dragstart', [event]);
 			// dragstart might stop the event, check here
 			if (!event.stopped) {
 				event.stop();
@@ -34,14 +34,14 @@ DomEvent.add(new function() {
 			y: event.page.y - last.y
 		}
 		last = event.page;
-		object.fireEvent('drag', event);
+		object.fireEvent('drag', [event]);
 		event.preventDefault();
 	}
 
 	function dragEnd(event) {
 		if (object) {
 			event.type = 'dragend';
-			object.fireEvent('dragend', event);
+			object.fireEvent('dragend', [event]);
 			event.preventDefault();
 			Document.removeEvent('mousemove', drag);
 			Document.removeEvent('mouseup', dragEnd);

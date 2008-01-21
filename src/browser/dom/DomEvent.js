@@ -35,7 +35,7 @@ DomEvent = Base.extend(new function() {
 			type: type,
 			listener: function(event) {
 				if (event.relatedTarget != this && !this.hasChild(event.relatedTarget))
-					this.fireEvent(name, event);
+					this.fireEvent(name, [event]);
 			}
 		}
 	}
@@ -249,13 +249,15 @@ DomElement.inject({
 		return this;
 	},
 
-	fireEvent: function(type, event) {
+	fireEvent: function(type, args, delay) {
 		var entries = (this.events || {})[type];
 		if (entries) {
 			// Make sure we pass already wrapped events through
-			if (event) event = event.event ? event : new DomEvent(event);
+			var event = args && args[0];
+			if (event)
+				args[0] = event.event ? event : new DomEvent(event);
 			entries.each(function(entry) {
-				entry.func.call(this, event);
+				entry.func.delay(delay, this, args);
 			}, this);
 		}
 		// Return true if event was fired, false otherwise

@@ -18,18 +18,19 @@
  */
 Chain = {
 	chain: function(fn) {
-		(this.chains = this.chains || []).push(fn);
+		(this._chain = this._chain || []).push(fn);
 		return this;
 	},
 
 	callChain: function() {
-		// TODO: delay needed?
-		if (this.chains && this.chains.length)
-			this.chains.shift().delay(0.01, this);
+		if (this._chain && this._chain.length)
+			this._chain.shift().apply(this, arguments);
+		return this;
 	},
 
 	clearChain: function() {
-		this.chains = [];
+		this._chain = [];
+		return this;
 	}
 };
 
@@ -52,10 +53,9 @@ Callback = {
 		}, this);
 	},
 
-	fireEvent: function(type) {
-		var args = Array.slice(arguments, 1);
+	fireEvent: function(type, args, delay) {
 		return (this.events && this.events[type] || []).each(function(fn) {
-			fn.apply(this, args);
+			fn.delay(delay, this, args);
 		}, this);
 	},
 
