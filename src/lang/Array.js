@@ -331,7 +331,8 @@ Array.inject(new function() {
 		 * sub-array into the main array.
 		 */
 		flatten: function() {
-			return this.each(function(val) {
+			// Make it generics friendly through Array.each
+			return Array.each(function(val) {
 				if (val != null && val.flatten) this.append(val.flatten());
 				else this.push(val);
 			}, []);
