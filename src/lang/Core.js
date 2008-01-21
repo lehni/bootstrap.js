@@ -68,59 +68,72 @@ new function() { // bootstrap
 		function field(name, generics) {
 			var val = src[name], res = val, prev = dest[name];
 			if (val !== Object.prototype[name]) {
-				if (typeof val == 'function') {
+				switch (typeof val) {
+					case 'function':
 #ifdef GETTER_SETTER
-					// Check if the function defines a getter or setter by looking
-					// at its name. TODO: measure speed decrease of inject due to this!
-					var match;
-					if (match = name.match(/(.*)_(g|s)et$/)) {
-						dest['__define' + match[2].toUpperCase() + 'etter__'](match[1], val);
-						return;
-					}
+						// Check if the function defines a getter or setter by looking
+						// at its name. TODO: measure speed decrease of inject due to this!
+						var match;
+						if (match = name.match(/(.*)_(g|s)et$/)) {
+							dest['__define' + match[2].toUpperCase() + 'etter__'](match[1], val);
+							return;
+						}
 #endif // !GETTER_SETTER
-					// Make generics first, as we might jump out bellow in the
-					// val.valueOf() === prev.valueOf() check,
-					// e.g. when explicitely reinjecting Array.prototype methods
-					// to produce generics of them.
-					if (generics) generics[name] = function(bind) {
-						// Do not call Array.slice generic here, as on Safari,
-						// this seems to confuse scopes (calling another
-						// generic from generic-producing code).
-						return bind && dest[name].apply(bind,
-							Array.prototype.slice.call(arguments, 1));
-					}
+						// Make generics first, as we might jump out bellow in the
+						// val.valueOf() === prev.valueOf() check,
+						// e.g. when explicitely reinjecting Array.prototype methods
+						// to produce generics of them.
+						if (generics) generics[name] = function(bind) {
+							// Do not call Array.slice generic here, as on Safari,
+							// this seems to confuse scopes (calling another
+							// generic from generic-producing code).
+							return bind && dest[name].apply(bind,
+								Array.prototype.slice.call(arguments, 1));
+						}
 #ifdef RHINO
-					if (/\[native code/.test(val))
-						return;
+						if (/\[native code/.test(val))
+							return;
 #endif // RHINO
-					if (prev && /\bthis\.base\b/.test(val)) {
+						if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
-						if (val.valueOf() === prev.valueOf()) return;
-						// If the base function has already the _version field set, 
-						// it is a function previously defined through inject. 
-						// In this case, the value of _version decides what to do:
-						// If we're in the same compilation cicle, Aspect behavior
-						// is used.
-						// Otherwise, fromBase is set to true, causing the closure
-						// to look up the base value each time.
-						var fromBase = base && base[name] == prev || prev._version && prev._version != version;
+							if (val.valueOf() === prev.valueOf()) return;
+							// If the base function has already the _version field set, 
+							// it is a function previously defined through inject. 
+							// In this case, the value of _version decides what to do:
+							// If we're in the same compilation cicle, Aspect behavior
+							// is used.
+							// Otherwise, fromBase is set to true, causing the closure
+							// to look up the base value each time.
+							var fromBase = base && base[name] == prev || prev._version && prev._version != version;
 #else // !HELMA
-						var fromBase = base && base[name] == prev;
+							var fromBase = base && base[name] == prev;
 #endif // !HELMA
-						res = (function() {
-							var tmp = this.base;
-							// Look up the base function each time if we can,
-							// to reflect changes to the base class after 
-							// inheritance.
-							this.base = fromBase ? base[name] : prev;
-							try { return val.apply(this, arguments); }
-							finally { this.base = tmp; }
-						}).pretend(val);
+							res = (function() {
+								var tmp = this.base;
+								// Look up the base function each time if we can,
+								// to reflect changes to the base class after 
+								// inheritance.
+								this.base = fromBase ? base[name] : prev;
+								try { return val.apply(this, arguments); }
+								finally { this.base = tmp; }
+							}).pretend(val);
 #ifdef HELMA
-						// If versioning is used, set the new version now.
-						if (version) res._version = version;
+							// If versioning is used, set the new version now.
+							if (version) res._version = version;
 #endif // HELMA
-					}
+						}
+						break;
+					case 'hash':
+					case 'object':
+						// Merge hashes and objects
+#ifdef HELMA // TODO: remove after debugging
+						if (prev && prev != val)
+							app.log(name + ' ' + prev + ' ' + val + ' ' + (val instanceof Object));
+#endif // HELMA
+						// Make sure it's a simple object and not something native
+						if (prev && prev != val && val instanceof Object)
+							res = Hash.merge({}, prev, val);
+						break;
 				}
 				dest[name] = res;
 #if defined(DONT_ENUM) || defined(HELMA)
@@ -313,7 +326,7 @@ new function() { // bootstrap
 			// constructors or constructors not created through .extend,
 			// this.dont will be undefined and no value will be passed to the
 			// constructor that would not know what to do with it.
-			ctor.dont = {};
+			ctor.dont = '';
 			// Copy over static fields, as prototype-like inheritance
 			// is not possible for static fields.
 			// TODO: This needs fixing for versioning on the server!
