@@ -466,6 +466,12 @@ DomElement.inject(new function() {
 			return this;
 		},
 
+		appendChildren: function() {
+			return Array.flatten(arguments).each(function(el) {
+				this.appendChild($(DomElement.get(el)));
+			}, this);
+		},
+
 		insertBefore: function(el) {
 			if (el = DomElement.get(el)) {
 				// See appendChild
