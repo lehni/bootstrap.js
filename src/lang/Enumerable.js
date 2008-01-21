@@ -153,6 +153,10 @@ Enumerable = new function() {
 
 	return {
 		HIDE
+		// Base.each is used mostly so functions can be generalized.
+		// But that's not enough, since find and others are still called
+		// on this.
+		// TODO: Find a workaround for this problem!
 		_generics: true,
 
 		/**
@@ -170,7 +174,7 @@ Enumerable = new function() {
 		 * iterator result for the given entry. This is used in find and remove.
 		 */
 		findEntry: ITERATE(function(iter, bind, that) {
-			return this.each(function(val, key) {
+			return Base.each(this, function(val, key) {
 				this.result = ITERATOR(iter, bind, val, key, that, __findEntry);
 				if (this.result) {
 					this.key = key;
@@ -222,17 +226,32 @@ Enumerable = new function() {
 		}, '__every'),
 
 		/**
-		 * Collects the result of the given iterator applied to each of the
-		 * elements in an array and returns it.
+		 * Maps the result of the given iterator applied to each of the
+		 * elements to an array and returns it.
 		 * If no iterator is passed, the value is used directly.
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
 		map: ITERATE(function(iter, bind, that) {
-			return this.each(function(val, i) {
+			return Base.each(this, function(val, i) {
 				this[this.length] = ITERATOR(iter, bind, val, i, that, __map);
 			}, []);
 		}, '__map'),
+
+		/**
+		 * Collects the result of the given iterator applied to each of the
+		 * elements to an array and returns it.
+		 * The difference to map is that it does not add null / undefined values. 
+		 * If no iterator is passed, the value is used directly.
+		 * This is compatible with JS 1.5's .map, but adds more flexibility
+		 * regarding iterators (as defined in iterate())
+		 */
+		collect: ITERATE(function(iter, bind, that) {
+			return Base.each(this, function(val, i) {
+			 	val = ITERATOR(iter, bind, val, i, that, __map);
+				if (val != null) this[this.length] = val;
+			}, []);
+		}, '__collect'),
 
 		/**
 		 * Collects all elements for which the condition of the passed iterator
@@ -244,7 +263,7 @@ Enumerable = new function() {
 		 * TOOD: See if collect and filter could be joined somehow
 		 */
 		filter: ITERATE(function(iter, bind, that) {
-			return this.each(function(val, i) {
+			return Base.each(this, function(val, i) {
 				if (ITERATOR(iter, bind, val, i, that, __filter))
 					this[this.length] = val;
 			}, []);
@@ -256,7 +275,7 @@ Enumerable = new function() {
 		 * If no iterator is passed, the value is used directly.
 		 */
 		max: ITERATE(function(iter, bind, that) {
-			return this.each(function(val, i) {
+			return Base.each(this, function(val, i) {
 				val = ITERATOR(iter, bind, val, i, that, __max);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
@@ -268,7 +287,7 @@ Enumerable = new function() {
 		 * If no iterator is passed, the value is used directly.
 		 */
 		min: ITERATE(function(iter, bind, that) {
-			return this.each(function(val, i) {
+			return Base.each(this, function(val, i) {
 				val = ITERATOR(iter, bind, val, i, that, __min);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
