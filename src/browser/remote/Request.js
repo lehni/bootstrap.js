@@ -197,11 +197,9 @@ Request = Base.extend(Chain, Callback, new function() {
 			if (window.execScript) {
 				window.execScript(script);
 			} else {
-				new HtmlElement('script')
-					.setProperty('type', 'text/javascript')
-					.setProperty('text', script)
-					.insertInside(Document.getElement('head'))
-					.remove();
+				Document.getElement('head').createInside('script', {
+					type: 'text/javascript', text: script
+				}).remove();
 			}
 		},
 
