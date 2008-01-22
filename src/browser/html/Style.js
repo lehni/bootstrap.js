@@ -52,7 +52,7 @@ HtmlElement.inject(new function() {
 
 	var fields = {
 		getStyle: function(name) {
-			if (name == undefined) return this.getStyles();
+			if (name === undefined) return this.getStyles();
 			if (name == 'opacity') {
 				var op = this.opacity;
 				return op || op == 0 ? op : this.getVisibility() ? 1 : 0;
@@ -97,7 +97,7 @@ HtmlElement.inject(new function() {
 		},
 
 		setStyle: function(name, value) {
-			if (value == undefined) return this.setStyles(name);
+			if (value === undefined) return this.setStyles(name);
 			var el = this.$;
 			switch (name) {
 				case 'float':
