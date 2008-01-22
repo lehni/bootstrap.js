@@ -113,8 +113,8 @@ HtmlElement.inject(new function() {
 
 		// TODO: rename? (e.g. setScroll?)
 		scrollTo: function(x, y) {
-			this.scrollLeft = x;
-			this.scrollTop = y;
+			this.$.scrollLeft = x;
+			this.$.scrollTop = y;
 		},
 		
 		statics: {
