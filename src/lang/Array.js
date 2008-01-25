@@ -262,8 +262,10 @@ Array.inject(new function() {
 			// It would be nice if calling push with the items of the array
 			// as arguments would work, but it does not for non-arrays:
 			// this.push.apply(this, items);
+			// this.length is explicitely altered, so non-array sub-prototypes
+			// can use it too.
 			for (var i = 0, l = items.length; i < l; ++i)
-				this.push(items[i]);
+				this[this.length++] = items[i];
 			return this;
 		},
 
@@ -386,7 +388,6 @@ Array.inject(new function() {
 				// Simulate extending of Array, by actually extending Base and
 				// injecting the Array fields, which explicitely contain the
 				// native functions too (see bellow).
-				// Not supported: concat (Safari breaks it)
 				var ret = Base.extend(extend, src);
 				// The subclass can use the normal extend again:
 				ret.extend = Function.extend;
@@ -400,15 +401,38 @@ Array.inject(new function() {
 	['push','pop','shift','unshift','sort','reverse','join','slice','splice','concat'].each(function(name) {
 		fields[name] = proto[name];
 	});
-	var extend = Base.clone(fields);
+	// Now produce the extend object, which contains the fields to be injected into
+	// sub-prototypes from Array. See Array.extend for more explanation.
+	var extend = Hash.merge({}, fields, {
+		/**
+		 * Clears the array.
+		 * For non-array sub-prototypes, setting this.length = 0 does not clear
+		 * the array. Exlicit delete is needed. For sub-prototypes.
+		 */
+		clear: function() {
+			for (var i = 0, l = this.length; i < l; i++)
+				delete this[i];
+			this.length = 0;
+		},
+
+#ifdef BROWSER
+		// Safari breaks native concat on sub classes of arrays. Simulate it here.
+		conact: function(list) {
+			return Browser.WEBKIT
+				? new Array(this.length + list.length).append(this).append(list)
+				: Array.concat(this, list);
+		},
+#endif // BROWSER
+
+		// The native toString does not work for classes inheriting from Array.
+		// but luckily join does the same and works.
+		toString: proto.join
+	});
 	// length is set so instances of array have it set to 0 to begin with.
 	// (any length modifying operation on them like #push will then
 	// define / modify the length field in the insance). We cannot set it in the
 	// Hash above, as this would make Base.each believe it's an array like object.
 	extend.length = 0;
-	// The native toString does not work for classes inheriting from Array.
-	// but luckily join does the same and works.
-	extend.toString = proto.join;
 	return fields;
 });
 
