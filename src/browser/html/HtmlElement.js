@@ -23,15 +23,7 @@ HtmlElements = Document._elements = DomElements.extend();
 // HtmlElement
 
 HtmlElement = DomElement.extend({
-	_elements: HtmlElements,
-
-	initialize: function() {
-		// No need to call this.base, since DomElement has special code in extend
-		// to take care of this.
-		// TODO: Do we really want to expose this.style? Otherwise initialize
-		// would not need to be overridden.
-		this.style = this.$.style;
-	}
+	_elements: HtmlElements
 });
 
 // DomElement.extend sets inject to the version that does not alter
@@ -93,11 +85,135 @@ HtmlElement.inject({
 			if (Browser.IE) {
 				if (tag == 'style') this.$.styleSheet.cssText = text;
 				else this.setProperty('text', text);
-			} else
+			} else {
 				this.$.innerHTML = text;
-		} else
+			}
+		} else {
 			this.$[this.$.innerText !== undefined ? 'innerText' : 'textContent'] = text;
+		}
 		return this;
+	}
+});
+
+////////////////////////////////////////////////////////////////////////////////
+// toElement conversion for Array and String
+
+Array.inject({
+	toElement: function(doc) {
+		doc = DomElement.get(doc) || Document;
+		// This handles arrays of any of these forms:
+		// [tag, properties, content] -> single element is returned
+		// [tag, properties] -> single element is returned
+		// [tag, content] -> single element is returned
+		// [content] -> elements are returned in list
+
+		// content can be:
+		// [[tag (,...)], [tag (,...)], [tag (,...)]]
+		// [tag (,...)], [tag (,...)], [tag (,...)]
+
+		// Suport both nested and unnested arrays:
+		//	['div', { margin: 10 },
+		//		['span', { html: 'hello ' }],
+		//		['span', { html: 'world!' }]
+		//	]
+		//	['div', { margin: 10 }, [
+		//		['span', { html: 'hello ' }],
+		//		['span', { html: 'world!' }]
+		//	]]
+
+		var tag = this[0];
+		if (typeof tag == 'string') {
+			var next = this[1], props = null, index = 1;
+			if (/^(object|hash)$/.test(Base.type(next))) {
+				props = next;
+				index++;
+			}
+			var element = doc.createElement(tag, props);
+			var content = this[index];
+			if (content) {
+				// Assume content is an array.
+				var children = typeof content[0] == 'array' ?
+					content : this.slice(index, this.length);
+				for (var i = 0, l = children.length; i < l; i++)
+					children[i].toElement().insertBottom(element);
+			}
+			return element;
+		} else {
+			// Produce a collection of elements, no parent.
+			var elements = new HtmlElements();
+			for (var i = 0, l = this.length; i < l; i++)
+				elements.push(this[i].toElement());
+			return elements;
+		}
+	}
+});
+
+String.inject({
+	toElement: function(doc) {
+		doc = doc || Document;
+		// See if it contains tags. If so, produce nodes, otherwise execute
+		// the string as a selector
+		var match = /^[^<]*(<(.|\s)+>)[^>]*$/.exec(this);
+		if (match) {
+			// Html code. Conversion to HtmlElements ported from jQuery
+			// Trim whitespace, otherwise indexOf won't work as expected
+			var str = this.trim().toLowerCase();
+			// doc can be native or wrapped:
+			var div = DomElement.unwrap(doc.createElement('div'));
+
+			var wrap =
+				 // option or optgroup
+				!str.indexOf('<opt') &&
+				[1, '<select>', '</select>'] ||
+				
+				!str.indexOf('<leg') &&
+				[1, '<fieldset>', '</fieldset>'] ||
+				
+				(!str.indexOf('<thead') || !str.indexOf('<tbody') || !str.indexOf('<tfoot') || !str.indexOf('<colg')) &&
+				[1, '<table>', '</table>'] ||
+				
+				!str.indexOf('<tr') &&
+				[2, '<table><tbody>', '</tbody></table>'] ||
+				
+			 	// <thead> matched above
+				(!str.indexOf('<td') || !str.indexOf('<th')) &&
+				[3, '<table><tbody><tr>', '</tr></tbody></table>'] ||
+				
+				!str.indexOf('<col') &&
+				[2, '<table><colgroup>', '</colgroup></table>'] ||
+				
+				[0,'',''];
+
+			// Go to html and back, then peel off extra wrappers
+			div.innerHTML = wrap[1] + this + wrap[2];
+			
+			// Move to the right depth
+			while (wrap[0]--)
+				div = div.firstChild;
+			
+			// Remove IE's autoinserted <tbody> from table fragments
+			if (Browser.IE) {
+				var els = [];
+				if (!str.indexOf('<table') && str.indexOf('<tbody') < 0) {
+					// String was a <table>, *may* have spurious <tbody>
+					els = div.firstChild && div.firstChild.childNodes;
+				} else if (wrap[1] == '<table>' && str.indexOf('<tbody') < 0) {
+					// String was a bare <thead> or <tfoot>
+					els = div.childNodes;
+				}
+				for (var i = els.length - 1; i >= 0 ; --i) {
+					var el = els[i];
+					if (el.nodeName.toLowerCase() == 'tbody' && !el.childNodes.length)
+						el.parentNode.removeChild(el);
+				}
+			}
+			var elements = new HtmlElements(div.childNodes);
+			return elements.length == 1 ? elements[0] : elements;
+		} else {
+			// Simply execute string as dom selector.
+			// Make sure doc is wrapped.
+			return DomElement.get(doc).getElement(this);
+		}
 	}
 });
 
