@@ -80,7 +80,8 @@ Base.inject({
 			return (obj || obj === 0) && (
 				(obj._type || obj.nodeName && (
 					obj.nodeType == 1 && 'element' ||
-					obj.nodeType == 3 && ((/\S/).test(obj.nodeValue) ? 'textnode' : 'whitespace')
+					obj.nodeType == 3 && ((/\S/).test(obj.nodeValue) ? 'textnode' : 'whitespace') ||
+					obj.nodeType == 9 && 'document'
 				)) || typeof obj) || null;
 #else // !BROWSER
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
