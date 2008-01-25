@@ -143,7 +143,7 @@ DomEvent = Base.extend(new function() {
 								script = doc.getElement('#ie_domready');
 							}
 							if (!check(script))
-								script.addEvent('readystatechange', check.bind(null, script));
+								script.addEvent('readystatechange', check.bind(null, [script]));
 						} else { // Others
 							view.addEvent('load', domReady);
 							doc.addEvent('DOMContentLoaded', domReady);

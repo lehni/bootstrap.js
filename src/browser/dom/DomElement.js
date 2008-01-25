@@ -112,8 +112,8 @@ DomElements = Array.extend(new function() {
 DomElement = Base.extend(new function() {
 	var elements = [];
 	// LUTs for tag and class based constructors. Bootstrap can automatically
-	// use sub prototype of DomElement for any given wrapped element based on
-	// its className Attribute. the sub prototype only needs to define _class
+	// use sub-prototype of DomElement for any given wrapped element based on
+	// its className Attribute. the sub-prototype only needs to define _class
 	var names = {}, classes = {}, classCheck, unique = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
@@ -228,8 +228,14 @@ DomElement = Base.extend(new function() {
 			this.$ = el;
 			// Store a reference in the native element to the wrapper. 
 			// Needs to be cleaned up by garbage collection. See above
-			el._wrapper = this;
-			elements[elements.length] = el;
+			// Not all elements allow setting of values. E.g. on IE, textnodes don't
+			// Now text nodes should not even be wrapped here, but they are needed
+			// in #getChildren / getChildren.remove(). TODO: find a solution?
+			// Until then, we just ingore them and do not store the wrapper.
+			try {
+				el._wrapper = this;
+				elements[elements.length] = el;
+			} catch (e) {} // Ignore error
 			if (props) this.set(props);
 		},
 
@@ -300,7 +306,7 @@ DomElement = Base.extend(new function() {
 					// be used for direct lookup, regardless of its case.
 					if (src._name)
 						names[src._name.toLowerCase()] = names[src._name.toUpperCase()] = ret;
-					// classCheck is null until a sub prototype defines _class
+					// classCheck is null until a sub-prototype defines _class
 					if (src._class) {
 						classes[src._class] = ret;
 						// Create a regular expression that allows detection of

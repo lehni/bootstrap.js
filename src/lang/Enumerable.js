@@ -125,20 +125,32 @@ Enumerable = new function() {
 #ifdef EXTEND_OBJECT
 		for (var i in this) {
 			var val = this[i];
+#ifdef FIX_PROTO
+			// Since __proto__ is faked, it is be iterated and therefore 
+			// we need to check for that one too:
+			if (NAME_IS_VISIBLE(i, val !== this.__proto__ && val !== this.__proto__[i]))
+#else // !FIX_PROTO
 			if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
+#endif // !FIX_PROTO
 				ITERATOR(iter, bind, val, i, this, __each);
 		}
 #else // !EXTEND_OBJECT
 		// Object.prototype is untouched, so we cannot assume __proto__ to always
 		// be defined on legacy browsers. Use two versions of the loops for 
 		// better performance here:
-		if (!this.__proto__) {
+		if (this.__proto__ == null) {
 			for (var i in this)
 				IF_NAME_IS_VISIBLE(i, ITERATOR(iter, bind, this[i], i, this, __each);)
 		} else {
 			for (var i in this) {
 				var val = this[i];
+#ifdef FIX_PROTO
+				// Since __proto__ is faked, it is be iterated and therefore 
+				// we need to check for that one too:
+				if (NAME_IS_VISIBLE(i, val !== this.__proto__ && val !== this.__proto__[i]))
+#else // !FIX_PROTO
 				if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
+#endif // !FIX_PROTO
 					ITERATOR(iter, bind, val, i, this, __each);
 			}
 		}
