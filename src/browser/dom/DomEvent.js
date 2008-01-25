@@ -108,32 +108,45 @@ DomEvent = Base.extend(new function() {
 
 				mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
 
-				domready: function(func) { // Only used by Window.
-					if (this.loaded) func.call(this);
+				domready: function(func) {
+					if (Browser.loaded) func.call(this);
 					else if (!this.domReady) {
 						// Only install it once, since fireEvent calls all the
 						// handlers.
 						this.domReady = true;
 						var domReady = function() {
-							if (this.loaded) return;
-							this.loaded = true;
-							if (this.timer) this.timer = this.timer.clear();
-							this.fireEvent('domready');
+							if (!Browser.loaded) {
+								Browser.loaded = true;
+								this.fireEvent('domready');
+							}
 						}.bind(this);
-						if (document.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
-							this.timer = (function() {
-								if (/^(loaded|complete)$/.test(document.readyState)) domReady();
-							}).periodic(50);
-						} else if (document.readyState && Browser.IE) { // IE
-							document.write('<script id=ie_domready defer src="'
-								+ (window.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
-								+ '"><\/script>');
-							$('ie_domready').addEvent('readystatechange', function() {
-								if (this.$.readyState == 'complete') domReady();
-							});
+
+						var view = this.getView(), doc = this.getDocument();
+
+						function check(obj) {
+							if (/^(loaded|complete)$/.test(obj.$.readyState)) {
+								domReady();
+								return true;
+							}
+						}
+						if (doc.$.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
+							(function() {
+								if (!check(doc))
+									arguments.callee.delay(50);
+							})();
+						} else if (doc.$.readyState && Browser.IE) { // IE
+							var script = doc.getElement('#ie_domready');
+							if (!script) {
+								doc.write('<script id=ie_domready defer src="'
+									+ (view.$.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
+									+ '"><\/script>');
+								script = doc.getElement('#ie_domready');
+							}
+							if (!check(script))
+								script.addEvent('readystatechange', check.bind(null, script));
 						} else { // Others
-							Window.addEvent('load', domReady);
-							Document.addEvent('DOMContentLoaded', domReady);
+							view.addEvent('load', domReady);
+							doc.addEvent('DOMContentLoaded', domReady);
 						}
 					}
 				}

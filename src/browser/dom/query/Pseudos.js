@@ -36,7 +36,7 @@ DomElement.pseudos = new function() {
 					data.indices = data.indices || {};
 					if (!data.indices[el._unique]) {
 						var children = el.parentNode.childNodes;
-						for (var i = 0, l = children.length; i < l; i++){
+						for (var i = 0, l = children.length; i < l; i++) {
 							var child = children[i];
 							if (child.nodeType == 1) {
 								if (!child._unique)

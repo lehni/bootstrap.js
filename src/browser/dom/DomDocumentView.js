@@ -1,18 +1,18 @@
-#ifndef __browser_dom_Window__
-#define __browser_dom_Window__
+#ifndef __browser_dom_DomDocumentView__
+#define __browser_dom_DomDocumentView__
 
 ////////////////////////////////////////////////////////////////////////////////
-// Window
+// DomDocumentView
 
-// Fix background flickering on IE.
-/*@cc_on
-try { document.execCommand('BackgroundImageCache', false, true); }
-catch (e) {}
-@*/
+DomDocumentView = DomElement.extend({
+	_type: 'view',
 
-Window = DomElement.get(window).inject({
-	toString: function() {
-		return 'window';
+	getDocument: function() {
+		return DomElement.get(this.document);
+	},
+	
+	getView: function() {
+		return this;
 	},
 
 	/**
@@ -45,12 +45,10 @@ Window = DomElement.get(window).inject({
 					this.push(n + '=' + p);
 			}, []).join(',');
 		}
-		var win = window.open(url, title.replace(/\s+|\.+|-+/gi, ''), params);
+		var win = this.$.open(url, title.replace(/\s+|\.+|-+/gi, ''), params);
 		if (win && focus) win.focus();
 		return win;
 	}
 });
 
-Window.addEvent('unload', DomElement.dispose);
-
-#endif // __browser_dom_Window__
+#endif // __browser_dom_DomDocumentView__

@@ -27,11 +27,4 @@ Browser = new function() {
 	return ret;
 };
 
-#ifdef BROWSER_LEGACY
-if (!this.encodeURIComponent) {
-	encodeURIComponent = escape;
-	decodeURIComponent = unescape;
-}
-#endif // BROWSER_LEGACY
-
 #endif // __browser_Browser__

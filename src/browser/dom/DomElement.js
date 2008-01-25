@@ -23,7 +23,7 @@ DomElements = Array.extend(new function() {
 	var unique = 0;
 	
 	return {
-		initialize: function(elements, doc) {
+		initialize: function(elements) {
 			// Define this collections's unique ID. Elements that are added to it
 			// get that field set too, in order to detect multiple additions of
 			// elements in one go. Notice that this does not work when elements
@@ -114,7 +114,7 @@ DomElement = Base.extend(new function() {
 	// LUTs for tag and class based constructors. Bootstrap can automatically
 	// use sub prototype of DomElement for any given wrapped element based on
 	// its className Attribute. the sub prototype only needs to define _class
-	var tags = {}, classes = {}, classCheck, unique = 0;
+	var names = {}, classes = {}, classCheck, unique = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
@@ -169,7 +169,8 @@ DomElement = Base.extend(new function() {
 	function getConstructor(el) {
 		// Use DomElement as as the default, HtmlElement for anything with
 		// className !== undefined and special constructors based on tag names.
-		// tags stores both upper-case and lower-case references for higher speed.
+		// names stores both upper-case and lower-case references for higher
+		// speed.
 		// classCheck only exists if HtmlElement was extended with prototypes
 		// defining _class. In this case, classCheck is a regular expression that
 		// checks className for the occurence of any of the prototype mapped 
@@ -177,10 +178,16 @@ DomElement = Base.extend(new function() {
 		// decide for constructor. This allows using e.g. "window hidden" for
 		// element that should map to a window prototype.
 		var match;
-		// check classCheck first, since it can override the _tag setting
+		// Check classCheck first, since it can override the _name setting
 		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
-			el.tagName && tags[el.tagName] ||
-			(el.className === undefined ? DomElement : HtmlElement)
+			// Check _name settings for prototypes bound to nodeNames, e.g. #document, form, etc
+			el.nodeName && names[el.nodeName] ||
+			// Check views / windows
+			el.location && el.frames && el.history && DomDocumentView ||
+			// Basic Html elements
+			el.className !== undefined && HtmlElement ||
+			// Everything else
+			DomElement;
 	}
 
 	var dont = '';
@@ -192,11 +199,11 @@ DomElement = Base.extend(new function() {
 
 		initialize: function(el, props, doc) {
 			// Support element creating constructors on subclasses of DomElement
-			// that define prototype._tag and can take one argument, which 
+			// that define prototype._name and can take one argument, which 
 			// defines the properties to be set:
-			if (this._tag && Base.type(el) == 'object') {
+			if (this._name && Base.type(el) == 'object') {
 				props = el;
-				el = this._tag;
+				el = this._name;
 			}
 			// doc is only used when producing an element from a string.
 			if (typeof(el) == 'string') {
@@ -288,10 +295,11 @@ DomElement = Base.extend(new function() {
 				// prototype will be used when wrapping elements of that type.
 				// If this is a prototype for a certain tag, store it in the LUT.
 				if (src) {
-					// tags stores both upper-case and lower-case references
-					// for higher speed in getConstructor, since tagName can
+					// names stores both upper-case and lower-case references
+					// for higher speed in getConstructor, since nodeName can
 					// be used for direct lookup, regardless of its case.
-					if (src._tag) tags[src._tag.toLowerCase()] = tags[src._tag.toUpperCase()] = ret;
+					if (src._name)
+						names[src._name.toLowerCase()] = names[src._name.toUpperCase()] = ret;
 					// classCheck is null until a sub prototype defines _class
 					if (src._class) {
 						classes[src._class] = ret;
@@ -306,7 +314,7 @@ DomElement = Base.extend(new function() {
 						// wrapping of these elements on domready, so that 
 						// initialize will be directly called and further
 						// manipulation can be done, e.g. adding shadows.
-						if (src.initialize) Window.addEvent('domready', function() {
+						if (src.initialize) Document.addEvent('domready', function() {
 							Document.getElements('.' + src._class);
 						});
 					}
@@ -442,6 +450,14 @@ DomElement.inject(new function() {
 			return this.$.id;
 		},
 
+		getDocument: function() {
+			return DomElement.get(this.ownerDocument);
+		},
+
+		getView: function() {
+			return this.getDocument().getView();
+		},
+
 		getPrevious: function() {
 			return walk(this.$, 'previousSibling');
 		},
@@ -575,7 +591,8 @@ DomElement.inject(new function() {
 		},
 
 		toString: function() {
-			return this.$.nodeName.toLowerCase() + (this.$.id ? '#' + this.$.id : '');
+			return (this.$.nodeName || this._type).toLowerCase() +
+				(this.$.id ? '#' + this.$.id : '');
 		},
 
 		toElement: function() {
