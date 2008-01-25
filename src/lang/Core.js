@@ -180,7 +180,7 @@ new function() { // bootstrap
 		function ctor(dont) {
 #ifdef FIX_PROTO
 			// Fix __proto__
-			if (!this.__proto__) this.__proto__ = obj;
+			this.__proto__ = obj;
 #endif // FIX_PROTO
 			// Call the constructor function, if defined and we're not inheriting
 			// in which case ctor.dont would be set, see further bellow.

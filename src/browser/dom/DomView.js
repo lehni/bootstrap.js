@@ -8,7 +8,7 @@ DomView = DomElement.extend({
 	_type: 'view',
 
 	getDocument: function() {
-		return DomElement.get(this.document);
+		return DomElement.get(this.$.document);
 	},
 	
 	getView: function() {

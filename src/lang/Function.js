@@ -15,7 +15,9 @@ Function.inject(new function() {
 		// If delay is not defined, execute right away and return the result
 		// of the function. This is used in fireEvent.
 		if (delay == undefined)
-			return that.apply(bind, args);
+			// IE seems to not support passing undefined for args in apply,
+			// so make sure it's always defined:
+			return that.apply(bind, args ? args : []);
 		var fn = that.bind(bind, args);
 #ifdef BROWSER_LEGACY
 		var id = timerId++;
