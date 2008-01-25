@@ -46,7 +46,7 @@ Asset = new function() {
 							this.fireEvent('load');
 					}
 				},
-				src: src,
+				src: src
 			}, getProperties(props)));
 			// On Safari < 3, execute a Request for the same resource at
 			// the same time. The resource will only be loaded once, and the
