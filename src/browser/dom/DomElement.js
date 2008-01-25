@@ -183,7 +183,7 @@ DomElement = Base.extend(new function() {
 			// Check _name settings for prototypes bound to nodeNames, e.g. #document, form, etc
 			el.nodeName && names[el.nodeName] ||
 			// Check views / windows
-			el.location && el.frames && el.history && DomDocumentView ||
+			el.location && el.frames && el.history && DomView ||
 			// Basic Html elements
 			el.className !== undefined && HtmlElement ||
 			// Everything else

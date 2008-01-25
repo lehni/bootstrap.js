@@ -1,10 +1,10 @@
-#ifndef __browser_dom_DomDocumentView__
-#define __browser_dom_DomDocumentView__
+#ifndef __browser_dom_DomView__
+#define __browser_dom_DomView__
 
 ////////////////////////////////////////////////////////////////////////////////
-// DomDocumentView
+// DomView
 
-DomDocumentView = DomElement.extend({
+DomView = DomElement.extend({
 	_type: 'view',
 
 	getDocument: function() {
@@ -51,4 +51,4 @@ DomDocumentView = DomElement.extend({
 	}
 });
 
-#endif // __browser_dom_DomDocumentView__
+#endif // __browser_dom_DomView__
