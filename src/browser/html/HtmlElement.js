@@ -153,7 +153,7 @@ String.inject({
 		doc = doc || Document;
 		// See if it contains tags. If so, produce nodes, otherwise execute
 		// the string as a selector
-		var match = /^[^<]*(<(.|\s)+>)[^>]*$/.exec(this);
+		var match = /^[^<]*(<(.|\s)+>)[^>]*$/.exec(this), elements;
 		if (match) {
 			// Html code. Conversion to HtmlElements ported from jQuery
 			// Trim whitespace, otherwise indexOf won't work as expected
@@ -207,13 +207,13 @@ String.inject({
 						el.parentNode.removeChild(el);
 				}
 			}
-			var elements = new HtmlElements(div.childNodes);
-			return elements.length == 1 ? elements[0] : elements;
+			elements = new HtmlElements(div.childNodes);
 		} else {
 			// Simply execute string as dom selector.
 			// Make sure doc is wrapped.
-			return DomElement.get(doc).getElement(this);
+			elements = DomElement.get(doc).getElements(this);
 		}
+		return elements.length == 1 ? elements[0] : elements;
 	}
 });
 
