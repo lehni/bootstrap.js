@@ -78,6 +78,11 @@ String.inject({
 	times: function(count) {
 		// Nice trick from Prototype:
 		return count < 1 ? '' : new Array(count + 1).join(this);
+	},
+
+	isHtml: function() {
+		// From jQuery:
+		return /^[^<]*(<(.|\s)+>)[^>]*$/.test(this);
 	}
 });
 
