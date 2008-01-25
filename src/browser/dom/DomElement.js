@@ -451,7 +451,7 @@ DomElement.inject(new function() {
 		},
 
 		getDocument: function() {
-			return DomElement.get(this.ownerDocument);
+			return DomElement.get(this.$.ownerDocument);
 		},
 
 		getView: function() {
@@ -662,7 +662,7 @@ DomElement.inject(new function() {
 		if (arguments.length > 0)
 			element = Array.create(arguments);
 		// toElement can either return a single DomElement or a DomElements array.
-		var result = element && (element.toElement && element.toElement() || DomElement.get(element)) || null;
+		var result = element && (element.toElement && element.toElement(this.getDocument()) || DomElement.get(element)) || null;
 		return {
 			result: result,
 			// Make sure it's always an array, for single handling in inserters below
