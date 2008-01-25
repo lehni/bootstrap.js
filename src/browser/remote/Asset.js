@@ -38,15 +38,16 @@ Asset = new function() {
 	return {
 		script: function(src, props) {
 			 // onLoad can be null
-			var script = new HtmlElement('script')
-				.addEvent('load', props.onLoad)
-				.setProperty('src', src)
-				.setProperties(getProperties(props))
-				.addEvent('readystatechange', function() {
-					if (/loaded|complete/.test(this.$.readyState))
-						this.fireEvent('load');
-				})
-				.insertInside(Document.getElement('head'));
+			var script = Document.getElement('head').injectBottom('script', Hash.merge({
+				events: {
+					load: props.onLoad,
+					readystatechange: function() {
+						if (/loaded|complete/.test(this.$.readyState))
+							this.fireEvent('load');
+					}
+				},
+				src: src,
+			}, getProperties(props)));
 			// On Safari < 3, execute a Request for the same resource at
 			// the same time. The resource will only be loaded once, and the
 			// Request will recieve a notification, while the script does not.

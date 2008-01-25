@@ -5,8 +5,23 @@
 // Document
 
 Document = DomElement.get(document).inject({
-	getTag: function() {
-		return 'document';
+	createElement: function(tag, props) {
+		// Call DomElement.create, the internal creation helper. This does not
+		// fully set props, only the one needed for the IE workaround.
+		// set(props) is called after for all the others.
+		return DomElement.get(DomElement.create(tag, props, this.$)).set(props);
+	},
+
+	createTextNode: function(text) {
+		return this.$.createTextNode(text);
+	},
+
+	getDocument: function() {
+		return this;
+	},
+
+	getWindow: function() {
+		return DomElement.get(this.defaultView || this.parentWindow);
 	}
 });
 

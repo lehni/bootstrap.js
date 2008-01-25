@@ -44,11 +44,16 @@ Request = Base.extend(Chain, Callback, new function() {
 	function createFrame(that, form) {
 		var id = 'request_' + unique++, onLoad = that.onFrameLoad.bind(that);
 		// IE Fix: Setting load event on iframes does not work, use onreadystatechange
-		var div = Document.getElement('body').createInside(
-			'div', { styles: { position: 'absolute', top: '0', marginLeft: '-10000px' }}, [
-				'iframe', { name: id, id: id, events: { load: onLoad }, onreadystatechange: onLoad }
-			]
+		var div = Document.getElement('body').injectBottom('div', {
+				styles: {
+					position: 'absolute', top: '0', marginLeft: '-10000px'
+				}
+			},
+			['iframe', {
+				name: id, id: id, events: { load: onLoad }, onreadystatechange: onLoad
+			}]
 		);
+
 		that.frame = {
 			id: id, div: div, form: form,
 			iframe: window.frames[id] || document.getElementById(id),
@@ -197,7 +202,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			if (window.execScript) {
 				window.execScript(script);
 			} else {
-				Document.getElement('head').createInside('script', {
+				Document.getElement('head').injectBottom('script', {
 					type: 'text/javascript', text: script
 				}).remove();
 			}

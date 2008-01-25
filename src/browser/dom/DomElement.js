@@ -23,17 +23,18 @@ DomElements = Array.extend(new function() {
 	var unique = 0;
 	
 	return {
-		initialize: function(els) {
+		initialize: function(elements, doc) {
 			// Define this collections's unique ID. Elements that are added to it
 			// get that field set too, in order to detect multiple additions of
 			// elements in one go. Notice that this does not work when elements
 			// are added to another collection, then again to this one.
 			// But for Dom Query functions, this is enough.
 			this._unique = unique++;
-			// Do not use els.push to detect arrays, as we're passing pseudo
+			// Do not use elements.push to detect arrays, as we're passing pseudo
 			// arrays here too (e.g. childNodes). But Option defines .length too,
 			// so rul that out by checking nodeType as well.
-			this.append(els && els.length != null && !els.nodeType ? els : arguments);
+			this.append(elements && elements.length != null && !elements.nodeType
+				? elements : arguments);
 		},
 
 		/**
@@ -54,6 +55,11 @@ DomElements = Array.extend(new function() {
 					this[this.length++] = el;
 				}
 			}
+			return this;
+		},
+
+		toElement: function() {
+			// return the DomElements array itself. See inserters comments further bellow
 			return this;
 		},
 
@@ -177,14 +183,14 @@ DomElement = Base.extend(new function() {
 			(el.className === undefined ? DomElement : HtmlElement)
 	}
 
-	var dont = {};
+	var dont = '';
 
 	return {
 		// Tells Base.type the type to return when encountering an element.
 		_type: 'element',
 		_elements: DomElements,
 
-		initialize: function(el, props) {
+		initialize: function(el, props, doc) {
 			// Support element creating constructors on subclasses of DomElement
 			// that define prototype._tag and can take one argument, which 
 			// defines the properties to be set:
@@ -192,18 +198,19 @@ DomElement = Base.extend(new function() {
 				props = el;
 				el = this._tag;
 			}
+			// doc is only used when producing an element from a string.
 			if (typeof(el) == 'string') {
-				if (Browser.IE && props && (props.name || props.type))
-					el = '<' + el
-						+ (props.name ? ' name="' + props.name + '"' : '')
-						+ (props.type ? ' type="' + props.type + '"' : '') + '>';
-				el = document.createElement(el);
-			} else {
+				// Call the internal creation helper. This does not fully set props,
+				// only the one needed for the IE workaround. set(props) is called
+				// further bellow.
+				el = DomElement.create(el, props, doc);
+			} else if (el._wrapper) {
 				// Does the DomElement wrapper for this element already exist?
-				if (el._wrapper) return el._wrapper;
+				return el._wrapper;
 			}
-			if (props == dont) props = null;
-			else {
+			if (props === dont) {
+				props = null;
+			} else {
 				// Check if we're using the right constructor, if not, construct
 				// with the right one:
 				var ctor = getConstructor(el);
@@ -315,6 +322,28 @@ DomElement = Base.extend(new function() {
 						: null;
 			},
 
+			/**
+			 * This is only a helper method that's used both in Document and DomElement.
+			 * It does not fully set props, only the values needed for a IE workaround.
+			 * It also returns an unwrapped object, that needs to further initalization
+			 * and setting of props.
+			 * This is needed to avoid production of two objects to match the proper
+			 * prototype when using new HtmlElement(name, props).
+			 */
+			create: function(name, props, doc) {
+				if (Browser.IE && props) {
+					['name', 'type', 'checked'].each(function(key) {
+						if (props[key]) {
+							name += ' ' + key + '="' + props[key] + '"';
+							if (key != 'checked')
+								delete props[key];
+						}
+					});
+					name = '<' + name + '>';
+				}
+				return (DomElement.unwrap(doc) || document).createElement(name);
+			},
+
 			unwrap: function(el) {
 				return el && el.$ || el;
 			},
@@ -366,11 +395,11 @@ DomElement.inject(new function() {
 	// See handle()
 	var handlers = { get: {}, set: {} };
 
-	// handle() handles both get and set calls for any given property name.
+	// handleProperty() handles both get and set calls for any given property name.
 	// prefix is either set or get, and is used for lookup of getter / setter
 	// methods. get/setProperty is used as a fallback.
 	// See DomElement#get/set
-	function handle(that, prefix, name, val) {
+	function handle(that, prefix, name, value) {
 		var list = handlers[prefix];
 		// First see if there is a getter / setter for the given property
 		var fn = name == 'events' && prefix == 'set' ? that.addEvents : list[name];
@@ -378,8 +407,8 @@ DomElement.inject(new function() {
 			fn = list[name] = that[prefix + name.capitalize()] || null;
 		// If the passed value is an array, use it as the argument
 		// list for the call.
-		if (fn) return fn[val && val.push ? 'apply' : 'call'](that, val);
-		else return that[prefix + 'Property'](name, val);
+		if (fn) return fn[value && value.push ? 'apply' : 'call'](that, value);
+		else return that[prefix + 'Property'](name, value);
 	}
 
 	function walk(el, name, start) {
@@ -388,20 +417,14 @@ DomElement.inject(new function() {
 		return DomElement.get(el);
 	}
 
-	function create(where) {
-		return function() {
-			return this.create(arguments)['insert' + where](this);
-		}
-	}
-
-	return {
+	var fields = {
 		set: function(name, value) {
 			switch (Base.type(name)) {
 				case 'string':
 					return handle(this, 'set', name, value);
 				case 'object':
-					return Base.each(name, function(val, key) {
-						handle(this, 'set', key, val);
+					return Base.each(name, function(value, key) {
+						handle(this, 'set', key, value);
 					}, this);
 			}
 			return this;
@@ -457,100 +480,32 @@ DomElement.inject(new function() {
 
 		appendChild: function(el) {
 			if (el = DomElement.get(el)) {
+#ifdef BROWSER_LEGACY
 				// Fix a bug on Mac IE when inserting Option elements to Select 
 				// elements, where the text on these objects is lost after insertion
-				var text = Browser.IE && el.$.text;
-		 		this.$.appendChild(el.$);
-				if (text) el.$.text = text;
+				// -> inserters.before does the same.
+				var text = Browser.IE && el.text;
+#endif // BROWSER_LEGACY
+				this.$.appendChild(el.$);
+#ifdef BROWSER_LEGACY
+				if (text) this.$.text = text;
+#endif // BROWSER_LEGACY
 			}
 			return this;
 		},
 
+		// TODO: Consider naming this append
 		appendChildren: function() {
 			return Array.flatten(arguments).each(function(el) {
 				this.appendChild($(DomElement.get(el)));
 			}, this);
 		},
 
-		insertBefore: function(el) {
-			if (el = DomElement.get(el)) {
-				// See appendChild
-				var text = Browser.IE && el.text;
-				el.$.parentNode.insertBefore(this.$, el.$);
-				if (text) this.$.text = text;
-			}
-			return this;
-		},
-
-		insertAfter: function(el) {
-			if (el = DomElement.get(el)) {
-				var next = el.getNext();
-				if (next) this.insertBefore(next);
-				else el.getParent().appendChild(this);
-			}
-			return this;
-		},
-
-		insertFirst: function(el) {
-			if (el = DomElement.get(el)) {
-				var first = el.getFirst();
-				if (first) this.insertBefore(first);
-				else el.appendChild(this);
-			}
-			return this;
-		},
-
-		insertInside: function(el) {
-			if (el = DomElement.get(el))
-				el.appendChild(this);
-			return this;
-		},
-
 		appendText: function(text) {
+			// TODO: document
 			this.$.appendChild(document.createTextNode(text));
 			return this;
 		},
-
-		create: function(arg) {
-			var items = Base.type(arg) == 'array' ? arg : arguments;
-			var elements = new this._elements();
-			for (var i = 0, l = items.length; i < l; i ++) {
-				var item = items[i];
-				// items are arrays of any of these forms:
-				// [tag, properties, content]
-				// [tag, properties]
-				// [tag, content]
-				// content is either an array of other items, or a string, in 
-				// which case it is appended as a string
-				var props = item[1], content = item[2];
-				if (!content && Base.type(props) != 'object') {
-					content = props;
-					props = null;
-				}
-				// Calling the DomElement constructor will automatically call
-				// the constructor of the right subclass.
-				var el = new DomElement(item[0], props);
-				if (content) {
-					// If the content array is only one item, wrap it in another
-					// array, to create the items array.
-					if (content.push) this.create(Base.type(content[0]) == 'string'
-						? [content] : content).insertInside(el);
-					else el.appendText(content);
-				}
-				elements.push(el);
-			}
-			// Return the element only if we're creating one, otherwise return a
-			// elements array.
-			return elements.length > 1 ? elements : elements[0];
-		},
-
-		createBefore: create('Before'),
-
-		createAfter: create('After'),
-
-		createFirst: create('First'),
-
-		createInside: create('Inside'),
 
 		wrap: function() {
 			var el = this.create(arguments), last;
@@ -614,15 +569,123 @@ DomElement.inject(new function() {
 		},
 
 		setProperties: function(src) {
-			return Base.each(src, function(val, name) {
-				this.setProperty(name, val);
+			return Base.each(src, function(value, name) {
+				this.setProperty(name, value);
 			}, this);
 		},
 
 		toString: function() {
-			return this.getTag() + (this.$.id ? '#' + this.$.id : '');
+			return this.$.nodeName.toLowerCase() + (this.$.id ? '#' + this.$.id : '');
+		},
+
+		toElement: function() {
+			return this;
 		}
+	};
+
+	// Inserters are only used internally and can assume the source and dest
+	// elements to be wrapped elements.
+	var inserters = {
+		/**
+		 * Inserts the source element before the dest element in the DOM.
+		 */
+		before: function(source, dest) {
+			if (source && dest && dest.$.parentNode) {
+#ifdef BROWSER_LEGACY
+				// Fix a bug on Mac IE when inserting Option elements to Select 
+				// elements, where the text on these objects is lost after insertion.
+				// -> DomElement#appendChild does the same.
+				var text = Browser.IE && dest.$.text;
+#endif // BROWSER_LEGACY
+				dest.$.parentNode.insertBefore(source.$, dest.$);
+#ifdef BROWSER_LEGACY
+				if (text) source.$.text = text;
+#endif // BROWSER_LEGACY
+			}
+		},
+
+		/**
+		 * Inserts the source element after the dest element in the DOM.
+		 */
+		after: function(source, dest) {
+			if (source && dest && dest.$.parentNode) {
+				var next = dest.getNext();
+				// Do not use the native methods since these do not include the
+				// workaround for legacy browsers above. Once that part is
+				// deprecated, we can change strategy here. Might be bit faster.
+				if (next) source.insertBefore(next);
+				else dest.getParent().appendChild(source);
+			}
+		},
+
+		/**
+		 * Inserts the source element at the bottom of the dest element's children.
+		 */
+		bottom: function(source, dest) {
+			if (source && dest)
+				dest.appendChild(source);
+		},
+
+		/**
+		 * Inserts the source element at the top of the dest element's children.
+		 */
+		top: function(source, dest) {
+			if (source && dest) {
+				var first = dest.getFirst();
+				if (first) source.insertBefore(first);
+				else dest.appendChild(source);
+			}
+		}
+	};
+
+	inserters.inside = inserters.bottom;
+
+	function toElements(element) {
+		// Support passing things without the first wrapping array
+		if (arguments.length > 0)
+			element = Array.create(arguments);
+		// toElement can either return a single DomElement or a DomElements array.
+		var result = element && (element.toElement && element.toElement() || DomElement.get(element)) || null;
+		return {
+			result: result,
+			// Make sure it's always an array, for single handling in inserters below
+			array: result ? (Base.type(result) == 'array' ? result : [result]) : [],
+			created: result && Base.type(element) != 'element'
+		};
 	}
+
+	// Now add the various inserters
+
+	// Important: The inseters return this if the object passed is already an 
+	// element. But if it is a string or an array that is converted to an element,
+	// the newly created element is returned instead.
+
+	Base.each(inserters, function(inserter, name) {
+		var part = name.capitalize();
+		// #insert* acts like the dom #insert* functions, inserting this element
+		// into the passed element(s).
+		fields['insert' + part] = function(el) {
+			el = toElements.apply(this, arguments);
+			var dests = el.array;
+			// Clone the object for every index other than the first
+			// as we're inserting into multiple times.
+			for (var i = 0, l = dests.length; i < l; i++)
+				inserter(i == 0 ? this : this.clone(true), dests[i]);
+			return el.created ? el.result : this;
+		}
+
+		// #inject* does the reverse of #insert*, it injects the passed element(s)
+		// into this element.
+		fields['inject' + part] = function(el) {
+			el = toElements.apply(this, arguments);
+			var sources = el.array;
+			for (var i = 0, l = sources.length; i < l; i++)
+				inserter(sources[i], this);
+			return el.created ? el.result : this;
+		}
+	});
+
+	return fields;
 });
 
 #endif // __browser_dom_DomElement__

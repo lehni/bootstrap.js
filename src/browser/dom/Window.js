@@ -11,7 +11,7 @@ catch (e) {}
 @*/
 
 Window = DomElement.get(window).inject({
-	getTag: function() {
+	toString: function() {
 		return 'window';
 	},
 
