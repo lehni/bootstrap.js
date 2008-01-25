@@ -55,9 +55,9 @@ HtmlElement.inject(new function() {
 
 	var fields = {
 		getComputedStyle: function(name) {
-			var computed;
+			var style;
 			return this.$.currentStyle && this.$.currentStyle[name.camelize()]
-				|| (computed = this.getView().$.getComputedStyle(el, null)) && computed.getPropertyValue(name.hyphenate())
+				|| (style = this.getView().$.getComputedStyle(this.$, null)) && style.getPropertyValue(name.hyphenate())
 				|| null;
 		},
 
@@ -71,7 +71,6 @@ HtmlElement.inject(new function() {
 			name = name.camelize();
 			var style = el.style[name];
 			if (!Base.check(style)) {
-//			if (!style && style != 0 || /auto|inherit/.test(style)) {
 				if (styles.part[name]) {
 					style = Hash.map(styles.part[name], function(val, key) {
 						return this.getStyle(key);
