@@ -59,7 +59,7 @@ String.inject({
 #endif // !BROWSER_LEGACY
 	},
 
-	escapeRegExp: function(){
+	escapeRegExp: function() {
 		return this.replace(/([-.*+?^${}()|[\]\/\\])/g, '\\$1');
 	},
 

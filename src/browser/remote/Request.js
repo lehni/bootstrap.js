@@ -178,7 +178,7 @@ Request = Base.extend(Chain, Callback, new function() {
 
 		stripScripts: function(html) {
 			var script = '';
-			html = html.replace(/<script[^>]*>([\u0000-\uffff]*?)<\/script>/gi, function(){
+			html = html.replace(/<script[^>]*>([\u0000-\uffff]*?)<\/script>/gi, function() {
 				script += arguments[1] + '\n';
 				return '';
 			});
