@@ -98,7 +98,7 @@ HtmlElement.inject({
 
 Array.inject({
 	toElement: function(doc) {
-		doc = DomElement.get(doc) || Document;
+		doc = DomElement.get(doc || document);
 		// This handles arrays of any of these forms:
 		// [tag, properties, content] -> single element is returned
 		// [tag, properties] -> single element is returned
@@ -118,29 +118,39 @@ Array.inject({
 		//		['span', { html: 'hello ' }],
 		//		['span', { html: 'world!' }]
 		//	]]
-
-		var tag = this[0];
-		if (typeof tag == 'string') {
-			var next = this[1], props = null, index = 1;
-			if (/^(object|hash)$/.test(Base.type(next))) {
-				props = next;
-				index++;
+		var value = this[0];
+		if (typeof value == 'string') {
+			// See if it's html or just a simple tag name with some properties
+			var element, index = 1;
+			// If the passed string is html, use String#toElement instead
+			if (value.isHtml()) {
+				element = value.toElement(doc);
+			} else {
+				var next = this[1], props = null;
+				if (/^(object|hash)$/.test(Base.type(next))) {
+					props = next;
+					index++;
+				}
+				element = doc.createElement(value, props);
 			}
-			var element = doc.createElement(tag, props);
+			// See if there are some children to add:
 			var content = this[index];
 			if (content) {
-				// Assume content is an array.
-				var children = typeof content[0] == 'array' ?
+				// Content can be an array of children, which can be either arrays
+				// or strings.
+				// But this array can also be omitted, in which case the children
+				// are sliced out of this array.
+				var children = Base.type(content) == 'array' && Base.type(content[0]) == 'array' ?
 					content : this.slice(index, this.length);
 				for (var i = 0, l = children.length; i < l; i++)
-					children[i].toElement().insertBottom(element);
+					children[i].toElement(doc).insertBottom(element);
 			}
 			return element;
 		} else {
 			// Produce a collection of elements, no parent.
 			var elements = new HtmlElements();
 			for (var i = 0, l = this.length; i < l; i++)
-				elements.push(this[i].toElement());
+				elements.push(this[i].toElement(doc));
 			return elements;
 		}
 	}
@@ -148,16 +158,15 @@ Array.inject({
 
 String.inject({
 	toElement: function(doc) {
-		doc = doc || Document;
+		var doc = doc || document, elements;
 		// See if it contains tags. If so, produce nodes, otherwise execute
 		// the string as a selector
-		var match = /^[^<]*(<(.|\s)+>)[^>]*$/.exec(this), elements;
-		if (match) {
+		if (this.isHtml()) {
 			// Html code. Conversion to HtmlElements ported from jQuery
 			// Trim whitespace, otherwise indexOf won't work as expected
 			var str = this.trim().toLowerCase();
 			// doc can be native or wrapped:
-			var div = DomElement.unwrap(doc.createElement('div'));
+			var div = DomElement.unwrap(doc).createElement('div');
 
 			var wrap =
 				 // option or optgroup
