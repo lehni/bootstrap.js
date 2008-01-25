@@ -123,8 +123,8 @@ new function() { // bootstrap
 #endif // HELMA
 						}
 						break;
-					case 'hash':
 					case 'object':
+					case 'hash':
 						// Merge hashes and objects
 #ifdef HELMA // TODO: remove after debugging
 						if (prev && prev != val)
