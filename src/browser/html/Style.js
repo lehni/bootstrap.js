@@ -21,12 +21,15 @@ HtmlElement.inject(new function() {
 			width: '@px', height: '@px', left: '@px', top: '@px', right: '@px', bottom: '@px',
 			color: 'rgb(@, @, @)', backgroundColor: 'rgb(@, @, @)', backgroundPosition: '@px @px',
 			fontSize: '@px', letterSpacing: '@px', lineHeight: '@px', textIndent: '@px',
-			margin: '@px @px @px @px', padding: '@px @px @px @px', border: '@px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @)',
-			borderWidth: '@px @px @px @px', borderStyle: '@ @ @ @', borderColor: 'rgb(@, @, @) rgb(@, @, @) rgb(@, @, @) rgb(@, @, @)',
+			margin: '@px @px @px @px', padding: '@px @px @px @px',
+			border: '@px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @) @px @ rgb(@, @, @)',
+			borderWidth: '@px @px @px @px', borderStyle: '@ @ @ @',
+			borderColor: 'rgb(@, @, @) rgb(@, @, @) rgb(@, @, @) rgb(@, @, @)',
 			clip: 'rect(@px, @px, @px, @px)', opacity: '@'
 		},
 		part: {
-			'margin': {}, 'padding': {}, 'border': {}, 'borderWidth': {}, 'borderStyle': {}, 'borderColor': {}
+			'border': {}, 'borderWidth': {}, 'borderStyle': {}, 'borderColor': {},
+			'margin': {}, 'padding': {}
 		}
 	};
 
@@ -169,9 +172,9 @@ HtmlElement.inject(new function() {
 	};
 
 	// Create getters and setters for some often used css properties:
-	// TODO: add more? e.g. border margin padding display
-	// TODO: do clip and zIndex belong to Dimension.js?
-	['opacity', 'color', 'background', 'visibility', 'clip', 'zIndex'].each(function(name) {
+	// TODO: Add more?
+	['opacity', 'color', 'background', 'visibility', 'clip', 'zIndex',
+		'border', 'margin', 'padding', 'display'].each(function(name) {
 		var part = name.capitalize();
 		fields['get' + part] = function() {
 			return this.getStyle(name);
