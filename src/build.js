@@ -36,7 +36,7 @@
 
 // Document & Window: Needs Html, since it fetches head, html and body
 #include "browser/dom/DomDocument.js"
-#include "browser/dom/DomDocumentView.js"
+#include "browser/dom/DomView.js"
 
 #include "browser/Globals.js"
 
