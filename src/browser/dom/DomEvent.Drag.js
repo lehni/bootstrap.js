@@ -1,8 +1,7 @@
-#ifndef __browser_dom_Drag__
-#define __browser_dom_Drag__
+#ifndef __browser_dom_DomEvent_Drag__
+#define __browser_dom_DomEvent_Drag__
 
 #include "DomEvent.js"
-#include "Document.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Drag
@@ -20,8 +19,9 @@ DomEvent.add(new function() {
 			// dragstart might stop the event, check here
 			if (!event.stopped) {
 				event.stop();
-				Document.addEvent('mousemove', drag);
-				Document.addEvent('mouseup', dragEnd);
+				var doc = this.getDocument();
+				doc.addEvent('mousemove', drag);
+				doc.addEvent('mouseup', dragEnd);
 				object = this;
 			}
 		}
@@ -43,8 +43,9 @@ DomEvent.add(new function() {
 			event.type = 'dragend';
 			object.fireEvent('dragend', [event]);
 			event.preventDefault();
-			Document.removeEvent('mousemove', drag);
-			Document.removeEvent('mouseup', dragEnd);
+			var doc = object.getDocument();
+			doc.removeEvent('mousemove', drag);
+			doc.removeEvent('mouseup', dragEnd);
 			object = null;
 		}
 	}
@@ -64,4 +65,4 @@ DomEvent.add(new function() {
 	};
 });
 
-#endif // __browser_dom_Drag__
+#endif // __browser_dom_DomEvent_Drag__

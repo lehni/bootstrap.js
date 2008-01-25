@@ -43,8 +43,7 @@ DomElement.inject(new function() {
 			function resolver(prefix) {
 				return prefix == 'xhtml' ? 'http://www.w3.org/1999/xhtml' : false;
 			}
-			// TODO: getDocument!
-			var res = document.evaluate('.//' + items.join(''), context,
+			var res = (context.ownerDocument || context).evaluate('.//' + items.join(''), context,
 				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
 			for (var i = 0, l = res.snapshotLength; i < l; ++i)
 				elements.push(res.snapshotItem(i));
@@ -74,8 +73,7 @@ DomElement.inject(new function() {
 			if (params.id) {
 				// First try getElementById. If that does not return the right
 				// object, retrieve tags first and then filter by id.
-				// TODO: getDocument()
-				var el = document.getElementById(params.id);
+				var el = (context.ownerDocument || context).getElementById(params.id);
 				// Clear as it is already filtered by getElementById
 				params.id = null;
 				return el && DomElement.isAncestor(el, context)

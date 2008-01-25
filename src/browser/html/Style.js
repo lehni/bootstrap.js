@@ -54,6 +54,13 @@ HtmlElement.inject(new function() {
 	});
 
 	var fields = {
+		getComputedStyle: function(name) {
+			var computed;
+			return this.$.currentStyle && this.$.currentStyle[name.camelize()]
+				|| (computed = this.getView().$.getComputedStyle(el, null)) && computed.getPropertyValue(name.hyphenate())
+				|| null;
+		},
+
 		getStyle: function(name) {
 			if (name === undefined) return this.getStyles();
 			if (name == 'opacity') {
@@ -73,9 +80,7 @@ HtmlElement.inject(new function() {
 						return val == style[0];
 					}) ? style[0] : style.join(' ');
 				}
-				// el.currentStyle: IE, document.defaultView: everything else
-				style = document.defaultView && document.defaultView.getComputedStyle(el, null).getPropertyValue(name.hyphenate())
-					|| el.currentStyle && el.currentStyle[name];
+				style = this.getComputedStyle(name);
 			}
 			// TODO: this does not belong here
 			if (name == 'visibility')
