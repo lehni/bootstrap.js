@@ -111,10 +111,10 @@ DomElements = Array.extend(new function() {
 
 DomElement = Base.extend(new function() {
 	var elements = [];
-	// LUTs for tag and class based constructors. Bootstrap can automatically
+	// LUTs for tags and class based constructors. Bootstrap can automatically
 	// use sub-prototype of DomElement for any given wrapped element based on
 	// its className Attribute. the sub-prototype only needs to define _class
-	var names = {}, classes = {}, classCheck, unique = 0;
+	var tags = {}, classes = {}, classCheck, unique = 0;
 
 	// Garbage collection - uncache elements/purge listeners on orphaned elements
 	// so we don't hold a reference and cause the browser to retain them.
@@ -169,7 +169,7 @@ DomElement = Base.extend(new function() {
 	function getConstructor(el) {
 		// Use DomElement as as the default, HtmlElement for anything with
 		// className !== undefined and special constructors based on tag names.
-		// names stores both upper-case and lower-case references for higher
+		// tags stores both upper-case and lower-case references for higher
 		// speed.
 		// classCheck only exists if HtmlElement was extended with prototypes
 		// defining _class. In this case, classCheck is a regular expression that
@@ -178,14 +178,17 @@ DomElement = Base.extend(new function() {
 		// decide for constructor. This allows using e.g. "window hidden" for
 		// element that should map to a window prototype.
 		var match;
-		// Check classCheck first, since it can override the _name setting
+		// Check classCheck first, since it can override the _tag setting
 		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
-			// Check _name settings for prototypes bound to nodeNames, e.g. #document, form, etc
-			el.nodeName && names[el.nodeName] ||
-			// Check views / windows
-			el.location && el.frames && el.history && DomView ||
+			// Check _tag settings for prototypes bound to tagNames, e.g. form, etc
+			el.tagName && tags[el.tagName] ||
 			// Basic Html elements
 			el.className !== undefined && HtmlElement ||
+			// Check views / windows
+			// TODO: does this always work? What is the way to really know it's a view?
+			el.location && el.frames && el.history && DomView ||
+			// Check documents
+			el.nodeName == '#document' && (document.documentElement.nodeName.toLowerCase() == 'html' && HtmlDocument || DomDocument) ||
 			// Everything else
 			DomElement;
 	}
@@ -199,11 +202,11 @@ DomElement = Base.extend(new function() {
 
 		initialize: function(el, props, doc) {
 			// Support element creating constructors on subclasses of DomElement
-			// that define prototype._name and can take one argument, which 
+			// that define prototype._tag and can take one argument, which 
 			// defines the properties to be set:
-			if (this._name && Base.type(el) == 'object') {
+			if (this._tag && Base.type(el) == 'object') {
 				props = el;
-				el = this._name;
+				el = this._tag;
 			}
 			// doc is only used when producing an element from a string.
 			if (typeof(el) == 'string') {
@@ -297,15 +300,15 @@ DomElement = Base.extend(new function() {
 				// Now reset inject. Reseting before does not work, as it would
 				// be overridden during static inheritance again.
 				ret.inject = inject;
-				// When extending DomElement with a tag field specified, this 
+				// When extending DomElement with a tag name field specified, this 
 				// prototype will be used when wrapping elements of that type.
-				// If this is a prototype for a certain tag, store it in the LUT.
+				// If this is a prototype for a certain tag name, store it in the LUT.
 				if (src) {
-					// names stores both upper-case and lower-case references
-					// for higher speed in getConstructor, since nodeName can
+					// tags stores both upper-case and lower-case references
+					// for higher speed in getConstructor, since tagName can
 					// be used for direct lookup, regardless of its case.
-					if (src._name)
-						names[src._name.toLowerCase()] = names[src._name.toUpperCase()] = ret;
+					if (src._tag)
+						tags[src._tag.toLowerCase()] = tags[src._tag.toUpperCase()] = ret;
 					// classCheck is null until a sub-prototype defines _class
 					if (src._class) {
 						classes[src._class] = ret;
@@ -344,18 +347,18 @@ DomElement = Base.extend(new function() {
 			 * This is needed to avoid production of two objects to match the proper
 			 * prototype when using new HtmlElement(name, props).
 			 */
-			create: function(name, props, doc) {
+			create: function(tag, props, doc) {
 				if (Browser.IE && props) {
 					['name', 'type', 'checked'].each(function(key) {
 						if (props[key]) {
-							name += ' ' + key + '="' + props[key] + '"';
+							tag += ' ' + key + '="' + props[key] + '"';
 							if (key != 'checked')
 								delete props[key];
 						}
 					});
-					name = '<' + name + '>';
+					tag = '<' + tag + '>';
 				}
-				return (DomElement.unwrap(doc) || document).createElement(name);
+				return (DomElement.unwrap(doc) || document).createElement(tag);
 			},
 
 			unwrap: function(el) {
@@ -405,15 +408,18 @@ DomElement.inject(new function() {
 		href: 2, src: 2
 	};
 
-	// handlers caches getter and setter functions for given property names.
-	// See handle()
-	var handlers = { get: {}, set: {} };
 
-	// handleProperty() handles both get and set calls for any given property name.
+	// handle() handles both get and set calls for any given property name.
 	// prefix is either set or get, and is used for lookup of getter / setter
 	// methods. get/setProperty is used as a fallback.
 	// See DomElement#get/set
 	function handle(that, prefix, name, value) {
+		var ctor = that.__proto__.constructor;
+		// handle caches getter and setter functions for given property names.
+		// Store the handlers in the constructor of each prototype, so caching
+		// between different sub-prototypes that might redefine getter/setters
+		// does not get mixed up:
+		var handlers = ctor.handlers = ctor.handlers || { get: {}, set: {} };
 		var list = handlers[prefix];
 		// First see if there is a getter / setter for the given property
 		var fn = name == 'events' && prefix == 'set' ? that.addEvents : list[name];
@@ -595,7 +601,7 @@ DomElement.inject(new function() {
 		},
 
 		toString: function() {
-			return (this.$.nodeName || this._type).toLowerCase() +
+			return (this.$.tagName || this._type).toLowerCase() +
 				(this.$.id ? '#' + this.$.id : '');
 		},
 

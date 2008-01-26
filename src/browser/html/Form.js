@@ -46,7 +46,7 @@ HtmlElement.inject({
 // SelectElement and OptionElement. Also, think of ImageElement (with setSrc...).
 
 Form = HtmlElement.extend({
-	_name: 'form',
+	_tag: 'form',
 	_properties: ['action', 'method', 'target'],
 	_methods: ['submit'],
 
@@ -76,7 +76,7 @@ FormElement = HtmlElement.extend({
 });
 
 Input = FormElement.extend({
-	_name: 'input',
+	_tag: 'input',
 	_properties: ['type', 'checked', 'defaultChecked', 'readOnly', 'maxLength'],
 	_methods: ['click'],
 
@@ -97,12 +97,12 @@ Input = FormElement.extend({
 });
 
 TextArea = FormElement.extend({
-	_name: 'textarea',
+	_tag: 'textarea',
 	_properties: ['value']
 });
 
 Select = FormElement.extend({
-	_name: 'select',
+	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
 
 	getOptions: function() {
@@ -128,7 +128,7 @@ Select = FormElement.extend({
 
 // Name it SelectOption instead of Option, as Option is the native prototype.
 SelectOption = FormElement.extend({
-	_name: 'option',
+	_tag: 'option',
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
 });
 

@@ -108,11 +108,12 @@ Array.inject({
 			var value = this[i++], element = null;
 			if (typeof value == 'string') {
 				// If the string is html, convert it through String#toElement.
-				// Otherwise assume it's a tag name, and see if the following 
-				// parameter is a properties hash. Use these to create the element:
+				// Otherwise assume it's a tag name, and look see the following 
+				// value is a properties hash. Use these to create the element:
+				var props = /^(object|hash)$/.test(Base.type(this[i])) && this[i++];
 				element = value.isHtml()
-					? value.toElement(doc)
-					: doc.createElement(value, /^(object|hash)$/.test(Base.type(this[i])) && this[i++]);
+					? value.toElement(doc).set(props)
+					: doc.createElement(value, props);
 				// See if it has children defined, and add them through Array#toElement
 				if (Base.type(this[i]) == 'array')
 					element.injectBottom(this[i++].toElement(doc));
@@ -120,9 +121,11 @@ Array.inject({
 				// Anything else
 				element = value.toElement(doc);
 			}
+			// Append arrays and push single elements.
 			if (element)
-				elements.push(element);
+				elements[Base.type(element) == 'array' ? 'append' : 'push'](element);
 		}
+		// Unbox if there's only one element in the array
 		return elements.length == 1 ? elements[0] : elements;
 	}
 });
@@ -191,6 +194,7 @@ String.inject({
 			// Make sure doc is wrapped.
 			elements = DomElement.get(doc).getElements(this);
 		}
+		// Unbox if there's only one element in the array
 		return elements.length == 1 ? elements[0] : elements;
 	}
 });
