@@ -48,10 +48,12 @@ Request = Base.extend(Chain, Callback, new function() {
 				styles: {
 					position: 'absolute', top: '0', marginLeft: '-10000px'
 				}
-			},
-			['iframe', {
-				name: id, id: id, events: { load: onLoad }, onreadystatechange: onLoad
-			}]
+			}, [
+				'iframe', {
+					name: id, id: id, events: { load: onLoad },
+					onreadystatechange: onLoad
+				}
+			]
 		);
 
 		that.frame = {
