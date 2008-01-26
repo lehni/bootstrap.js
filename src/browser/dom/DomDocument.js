@@ -1,15 +1,14 @@
 #ifndef __browser_dom_DomDocument__
 #define __browser_dom_DomDocument__
 
-#include "../html/HtmlElement.js"
+#include "DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Document
+// DomDocument
 
 DomDocument = DomElement.extend({
-	_name: '#document',
 	_type: 'document',
-	_elements: HtmlElements,
+	_elements: DomElements,
 
 	initialize: function() {
 		if(Browser.IE)

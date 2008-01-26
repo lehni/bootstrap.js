@@ -18,6 +18,8 @@
 
 // DomElement
 #include "browser/dom/DomElement.js"
+#include "browser/dom/DomDocument.js"
+#include "browser/dom/DomView.js"
 #include "browser/dom/DomEvent.js"
 #include "browser/dom/DomEvent.Drag.js"
 
@@ -29,15 +31,13 @@
 
 // Html
 #include "browser/html/HtmlElement.js"
+#include "browser/html/HtmlDocument.js"
 #include "browser/html/Style.js"
 #include "browser/html/Dimension.js"
 #include "browser/html/Form.js"
 #include "browser/html/Selection.js"
 
-// Document & Window: Needs Html, since it fetches head, html and body
-#include "browser/dom/DomDocument.js"
-#include "browser/dom/DomView.js"
-
+// Globals
 #include "browser/Globals.js"
 
 // Remote
