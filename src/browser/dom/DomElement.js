@@ -529,8 +529,7 @@ DomElement.inject(new function() {
 		},
 
 		wrap: function() {
-			var el = this.create(arguments), last;
-			el.insertBefore(this);
+			var el = this.injectBefore.apply(this, arguments), last;
 			do {
 				last = el;
 				el = el.getFirst();
