@@ -99,60 +99,31 @@ HtmlElement.inject({
 Array.inject({
 	toElement: function(doc) {
 		doc = DomElement.get(doc || document);
-		// This handles arrays of any of these forms:
-		// [tag, properties, content] -> single element is returned
-		// [tag, properties] -> single element is returned
-		// [tag, content] -> single element is returned
-		// [content] -> elements are returned in list
-
-		// content can be:
-		// [[tag (,...)], [tag (,...)], [tag (,...)]]
-		// [tag (,...)], [tag (,...)], [tag (,...)]
-
-		// Suport both nested and unnested arrays:
-		//	['div', { margin: 10 },
-		//		['span', { html: 'hello ' }],
-		//		['span', { html: 'world!' }]
-		//	]
-		//	['div', { margin: 10 }, [
-		//		['span', { html: 'hello ' }],
-		//		['span', { html: 'world!' }]
+		//	['div', { margin: 10 }, [ // Children
+		//		'span', { html: 'hello ' },
+		//		'<span>world</span>'
 		//	]]
-		var value = this[0];
-		if (typeof value == 'string') {
-			// See if it's html or just a simple tag name with some properties
-			var element, index = 1;
-			// If the passed string is html, use String#toElement instead
-			if (value.isHtml()) {
+		var elements = new HtmlElements();
+		for (var i = 0; i < this.length;) {
+			var value = this[i++], element = null;
+			if (typeof value == 'string') {
+				// If the string is html, convert it through String#toElement.
+				// Otherwise assume it's a tag name, and see if the following 
+				// parameter is a properties hash. Use these to create the element:
+				element = value.isHtml()
+					? value.toElement(doc)
+					: doc.createElement(value, /^(object|hash)$/.test(Base.type(this[i])) && this[i++]);
+				// See if it has children defined, and add them through Array#toElement
+				if (Base.type(this[i]) == 'array')
+					element.injectBottom(this[i++].toElement(doc));
+			} else if (value && value.toElement) {
+				// Anything else
 				element = value.toElement(doc);
-			} else {
-				var next = this[1], props = null;
-				if (/^(object|hash)$/.test(Base.type(next))) {
-					props = next;
-					index++;
-				}
-				element = doc.createElement(value, props);
 			}
-			// See if there are some children to add:
-			var content = this[index];
-			if (content) {
-				// Content can be an array of children, which can be either arrays
-				// or strings.
-				// But this array can also be omitted, in which case the children
-				// are sliced out of this array.
-				var children = Base.type(content) == 'array' && Base.type(content[0]) == 'array' ?
-					content : this.slice(index, this.length);
-				for (var i = 0, l = children.length; i < l; i++)
-					children[i].toElement(doc).insertBottom(element);
-			}
-			return element;
-		} else {
-			// Produce a collection of elements, no parent.
-			var elements = new HtmlElements();
-			for (var i = 0, l = this.length; i < l; i++)
-				elements.push(this[i].toElement(doc));
-			return elements;
+			if (element)
+				elements.push(element);
 		}
+		return elements.length == 1 ? elements[0] : elements;
 	}
 });
 
