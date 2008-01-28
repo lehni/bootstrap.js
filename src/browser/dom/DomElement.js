@@ -557,7 +557,9 @@ DomElement.inject(new function() {
 		},
 
 		removeChildren: function() {
-			this.getChildren().remove();
+			var children = this.getChildren();
+			children.remove();
+			return children;
 		},
 
 		replaceWith: function(el) {
