@@ -185,8 +185,8 @@ DomElement = Base.extend(new function() {
 			// Basic Html elements
 			el.className !== undefined && HtmlElement ||
 			// Check views / windows
-			// TODO: does this always work? What is the way to really know it's a view?
-			el.location && el.frames && el.history && DomView ||
+			// TODO: does this always work? What is the way to really know it's a view? How to distinguish DomView from HtmlView?
+			el.location && el.frames && el.history && HtmlView ||
 			// Check documents
 			el.nodeName == '#document' && (document.documentElement.nodeName.toLowerCase() == 'html' && HtmlDocument || DomDocument) ||
 			// Everything else
