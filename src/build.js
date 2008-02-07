@@ -32,6 +32,7 @@
 // Html
 #include "browser/html/HtmlElement.js"
 #include "browser/html/HtmlDocument.js"
+#include "browser/html/HtmlView.js"
 #include "browser/html/Style.js"
 #include "browser/html/Dimension.js"
 #include "browser/html/Form.js"
