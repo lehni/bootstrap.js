@@ -63,9 +63,14 @@ String.inject({
 		return this.replace(/([-.*+?^${}()|[\]\/\\])/g, '\\$1');
 	},
 
-	trim: function(str) {
-		str = str ? '[' + str.escapeRegExp() + ']' : '\\s';
-		return this.replace(new RegExp('^' + str + '+|' + str + '+$', 'g'), '');
+	/**
+	 * Trims away characters matching a given regular expression at the beginning
+	 * and end of the strnig. If no expression is given, \s is used to match white
+	 * space.
+	 */
+	trim: function(exp) {
+		exp = exp ? '[' + exp + ']' : '\\s';
+		return this.replace(new RegExp('^' + exp + '+|' + exp + '+$', 'g'), '');
 	},
 
 	clean: function() {
