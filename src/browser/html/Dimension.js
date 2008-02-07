@@ -23,8 +23,8 @@ HtmlElement.inject(new function() {
 	function cumulate(name, parent, iter) {
 #endif // !BROWSER_LEGACY
 		var left = name + 'Left', top = name + 'Top';
-		return function() {
-			var cur, next = this, x = 0, y = 0;
+		return function(that) {
+			var cur, next = that, x = 0, y = 0;
 			do {
 				cur = next;
 				x += cur.$[left] || 0;
@@ -33,8 +33,8 @@ HtmlElement.inject(new function() {
 #ifdef BROWSER_LEGACY
 			// Fix body on mac ie
 			if (fix) ['margin', 'padding'].each(function(val) {
-				x += this.getStyle(val + '-left').toInt() || 0;
-				y += this.getStyle(val + '-top').toInt() || 0;
+				x += that.getStyle(val + '-left').toInt() || 0;
+				y += that.getStyle(val + '-top').toInt() || 0;
 			}, cur); // TODO: is it correct to pass cur here??? Verify on Mac IE
 #endif // BROWSER_LEGACY
 			return { x: x, y: y };
@@ -62,6 +62,10 @@ HtmlElement.inject(new function() {
 		}
 	}
 
+	function body(that) {
+		return that.getTag() == 'body';
+	}
+
 	var getCumulative = cumulate('offset', 'offsetParent', Browser.WEBKIT ? function(cur, next) {
 		// Safari returns margins on body which is incorrect if the
 		// child is absolutely positioned.
@@ -72,30 +76,44 @@ HtmlElement.inject(new function() {
 		return next.$ != document.body && !/^(relative|absolute)$/.test(next.getStyle('position'));
 	});
 
+	var getScrollOffset = cumulate('scroll', 'parentNode');
+
 	var fields = {
 		getSize: function() {
-			return { width: this.$.offsetWidth, height: this.$.offsetHeight };
+			return body(this)
+				? this.getView.getSize()
+				: { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
 
 		getOffset: function(positioned) {
-			return (positioned ? getPositioned : getCumulative).apply(this);
+			return body(this)
+				? this.getView().getOffset()
+			 	: (positioned ? getPositioned : getCumulative)(this);
 		},
 
-		getScrollOffset: cumulate('scroll', 'parentNode'),
+		getScrollOffset: function() {
+			return body(this)
+				? this.getView().getScrollOffset()
+			 	: getScrollOffset(this);
+		},
 
 		getScrollSize: function() {
-			return { width: this.$.scrollWidth, height: this.$.scrollHeight };
+			return body(this)
+				? this.getView().getScrollSize()
+			 	: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
 		getBounds: function() {
+			if (body(this))
+				return this.getView().getBounds();
 			var off = this.getOffset(), el = this.$;
 			return {
-				width: el.offsetWidth,
-				height: el.offsetHeight,
 				left: off.x,
 				top: off.y,
 				right: off.x + el.offsetWidth,
-				bottom: off.y + el.offsetHeight
+				bottom: off.y + el.offsetHeight,
+				width: el.offsetWidth,
+				height: el.offsetHeight
 			};
 		},
 
@@ -111,15 +129,21 @@ HtmlElement.inject(new function() {
 				pos.y >= bounds.top && pos.y < bounds.bottom;
 		},
 
-		// TODO: rename? (e.g. setScroll?)
 		scrollTo: function(x, y) {
-			this.$.scrollLeft = x;
-			this.$.scrollTop = y;
+			if (body(this)) {
+				this.getView().scrollTo(x, y);
+			} else {
+				// Convert { x: y: } to x / y
+				var off = typeof x == 'object' ? x : { x: x, y: y };
+				this.$.scrollLeft = off.x;
+				this.$.scrollTop = off.y;
+			}
+			return this;
 		},
 		
 		statics: {
 			getAt: function(pos, exclude) {
-				var el = Document.getElement('body');
+				var el = this.getDocument().getElement('body');
 				while (true) {
 					var max = -1;
 					var ch = el.getFirst();
@@ -153,6 +177,54 @@ HtmlElement.inject(new function() {
 	});
 
 	return fields;
+});
+
+// Inject dimension methods into both HtmlDocument and HtmlView.
+// Use the bind object in each to do so:
+[HtmlDocument, HtmlView].each(function(ctor) {
+	ctor.inject(this);
+}, {
+	getSize: function() {
+		var doc = this.getDocument().$, view = this.getView().$, html = doc.documentElement;
+		return Browser.WEBKIT2 && { width: view.innerWidth, height: view.innerHeight }
+			|| Browser.OPERA && { width: doc.body.clientWidth, height: doc.body.clientHeight }
+			|| { width: html.clientWidth, height: html.clientHeight };
+	},
+
+	getScrollOffset: function() {
+		var doc = this.getDocument().$, view = this.getView().$, html = doc.documentElement;
+		return {
+			x: view.pageXOffset || html.scrollLeft || doc.body.scrollLeft || 0,
+			y: view.pageYOffset || html.scrollTop || doc.body.scrollTop || 0
+		}
+	},
+
+	getScrollSize: function() {
+		var doc = this.getDocument().$, html = doc.documentElement;
+		return Browser.IE && { x: Math.max(html.clientWidth, html.scrollWidth), y: Math.max(html.clientHeight, html.scrollHeight) }
+			|| Browser.WEBKIT && { x: doc.body.scrollWidth, y: doc.body.scrollHeight }
+			|| { x: html.scrollWidth, y: html.scrollHeight };
+	},
+
+	getOffset: function(){
+		return { x: 0, y: 0 };
+	},
+
+	getBounds: function(){
+		var size = this.getSize();
+		return {
+			left: 0, top: 0,
+			right: size.width, bottom: size.height,
+			width: size.width, height: size.height
+		};
+	},
+
+	scrollTo: function(x, y) {
+		// Convert { x: y: } to x / y
+		var off = typeof x == 'object' ? x : { x: x, y: y };
+		this.getView().$.scrollTo(off.x, off.y);
+		return this;
+	}
 });
 
 #endif // __browser_html_Dimension__
