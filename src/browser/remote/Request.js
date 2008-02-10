@@ -83,7 +83,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			encoding: 'utf-8',
 			emulation: true,
 			headers: {},
-			secure: true
+			secure: false
 		},
 
 		initialize: function(/* url: 'string', options: 'object', handler: 'function' */) {
