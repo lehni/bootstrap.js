@@ -138,9 +138,20 @@ Request = Base.extend(Chain, Callback, new function() {
 				// First tag in IE ends up in <head>, safe it
 				var head = Browser.IE && doc.getElementsByTagName('head')[0];
 				text = (head && head.innerHTML || '') + text;
+				// Remove div
+				var div = this.frame.div;
+				div.remove();
 				this.success(text);
-				// Some browsers need this object to stay around for a while
-				this.frame.div.remove.delay(1000, this.frame.div);
+				if (Browser.GECKO) {
+					// Gecko needs the iframe to stay around for a little while,
+					// otherwise it appears to load endlessly. Insert it back in
+					// and use delay to remove it again. This even works if
+					// success above changes the whole html and would remove the
+					// iframe, as it can happen during editing. Since we remove
+					// it before already, it is untouched by this.
+					div.insertBottom(Document.getElement('body'));
+					div.remove.delay(1, div);
+				}
 				this.frame = null;
 			}
 		},
