@@ -81,7 +81,7 @@ HtmlElement.inject(new function() {
 	var fields = {
 		getSize: function() {
 			return body(this)
-				? this.getView.getSize()
+				? this.getView().getSize()
 				: { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
 
