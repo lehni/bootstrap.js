@@ -96,18 +96,21 @@ new function() { // bootstrap
 #endif // RHINO
 						if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
-							if (val.valueOf() === prev.valueOf()) return;
+							// TODO: needed? if (val.valueOf() === prev.valueOf()) return;
 							// If the base function has already the _version field set, 
 							// it is a function previously defined through inject. 
 							// In this case, the value of _version decides what to do:
 							// If we're in the same compilation cicle, Aspect behavior
-							// is used.
-							// Otherwise, fromBase is set to true, causing the closure
-							// to look up the base value each time.
-							var fromBase = base && base[name] == prev || prev._version && prev._version != version;
-#else // !HELMA
-							var fromBase = base && base[name] == prev;
+							// is used, by continuously referencing the previously defined
+							// functions in the same cicle.
+							// Otherwise, the real previous function is fetched from _previous,
+							// making sure we do not end up in aspect-like changes of the 
+							// multiple instances of the same function, compiled in different
+							// cicles.
+							if (prev._version && prev._version != version)
+								prev = prev._previous;
 #endif // !HELMA
+							var fromBase = base && base[name] == prev;
 							res = (function() {
 								var tmp = this.base;
 								// Look up the base function each time if we can,
@@ -118,18 +121,18 @@ new function() { // bootstrap
 								finally { this.base = tmp; }
 							}).pretend(val);
 #ifdef HELMA
-							// If versioning is used, set the new version now.
-							if (version) res._version = version;
+							// If versioning is used, set the new version now, and keep a reference to the
+							// real previous function, as used in the code above.
+							if (version) {
+								res._version = version;
+								res._previous = prev;
+							}
 #endif // HELMA
 						}
 						break;
 					case 'object':
 					case 'hash':
 						// Merge hashes and objects
-#ifdef HELMA // TODO: remove after debugging
-						if (prev && prev != val)
-							app.log(name + ' ' + prev + ' ' + val + ' ' + (val instanceof Object));
-#endif // HELMA
 						// Make sure it's a simple object and not something native
 						if (prev && prev != val && val instanceof Object)
 							res = Hash.merge({}, prev, val);
@@ -262,9 +265,9 @@ new function() { // bootstrap
 			// The versions are used further up to determine wether the
 			// previously defined function in the same prototype should be used
 			// (AOP-like), or the same function in the real super prototype.
-			// _version is only added to prototypes that inherit from HopObject,
+			// _version is only added to constructors that are or inherit from HopObject,
 			// and is automatically increased in onCodeUpdate, as defined bellow.
-			var version = proto instanceof HopObject && (proto._version || (proto._version = 1));
+			var version = (this == HopObject || proto instanceof HopObject) && (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
 			inject(proto, src, base && base.prototype, src && src._generics && this);
@@ -287,8 +290,8 @@ new function() { // bootstrap
 				var update = proto.onCodeUpdate;
 				if (!update || !update._version) {
 					var res = function(name) {
-						// "this" points to the prototype here. Update its _version
-						this._version++;
+						// "this" points to the prototype here. Update its constructor's _version
+						this.constructor._version = (this.constructor._version || 0) + 1;
 						// Call the previously defined funciton, if any
 						if (update) update.call(this, name);
 					};
