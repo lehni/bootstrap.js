@@ -130,6 +130,7 @@ new function() { // bootstrap
 #endif // HELMA
 						}
 						break;
+#ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
 					case 'object':
 					case 'hash':
 						// Merge hashes and objects
@@ -137,6 +138,7 @@ new function() { // bootstrap
 						if (prev && prev != val && val instanceof Object)
 							res = Hash.merge({}, prev, val);
 						break;
+#endif // HIDDEN
 				}
 				dest[name] = res;
 #if defined(DONT_ENUM) || defined(HELMA)
@@ -329,7 +331,7 @@ new function() { // bootstrap
 			// constructors or constructors not created through .extend,
 			// this.dont will be undefined and no value will be passed to the
 			// constructor that would not know what to do with it.
-			ctor.dont = '';
+			ctor.dont = {};
 			// Copy over static fields, as prototype-like inheritance
 			// is not possible for static fields.
 			// TODO: This needs fixing for versioning on the server!
