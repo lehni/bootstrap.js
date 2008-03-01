@@ -115,6 +115,7 @@ Array.inject(new function() {
 	// not iterate over the new definiton bellow...
 
 	var fields = Hash.merge({}, Enumerable, {
+		HIDE
 		_generics: true,
 		// tell Base.type what to return for arrays.
 		_type: 'array',
