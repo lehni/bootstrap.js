@@ -40,9 +40,9 @@ Enumerable = new function() {
 	 */
 #ifdef SET_ITERATOR
 	Base.iterate = function(fn, name) {
-#else
+#else // !SET_ITERATOR
 	Base.iterate = function(fn) {
-#endif
+#endif // !SET_ITERATOR
 #if defined(SET_ITERATOR) && defined(DONT_ENUM)
 		// dontEnum all set iterators once and for all on browsers:
 		Base.prototype.dontEnum(true, name);
@@ -160,7 +160,7 @@ Enumerable = new function() {
 		// dontEnum is always used to hide fields there.
 		for (var i in this)
 			ITERATOR(iter, bind, this[i], i, this, __each);
-#endif
+#endif // HELMA
 	};
 
 	return {
