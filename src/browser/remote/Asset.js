@@ -8,7 +8,7 @@
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif
+#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Asset

@@ -212,9 +212,9 @@ Array.inject(new function() {
 			// fix Opoera bug where arguments are arrays but do not
 			// concatenate correctly (a new array is returned with [0] == this).
 			return res[0] == this ? Enumerable.toArray.call(this) : res;
-#else
+#else // !BROWSER
 			return this.concat([]);
-#endif
+#endif // !BROWSER
 		},
 
 		/**
