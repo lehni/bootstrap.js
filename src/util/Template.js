@@ -183,9 +183,9 @@ Template.prototype = {
 		var code = [ 'this.__render__ = function(param, template, out) {' ];
 #ifdef RHINO
 		var lineBreak = java.lang.System.getProperty('line.separator');
-#else
+#else // !RHINO
 		var lineBreak = '\n';
-#endif
+#endif // !RHINO
 		// Append strings in buffer either to templateTag or to code, depending
 		// on the mode we're in.
 		function append() {
@@ -306,7 +306,7 @@ Template.prototype = {
 		if (!match)	return null;
 		// If the tag ends with -%>, the line break after it should be swallowed,
 		// if there is any. By default all control macros swallow line breaks.
-		var isEqualTag = match[1] == '=', content = match[2], swallow = match[3];
+		var isEqualTag = match[1] == '=', content = match[2], swallow = !!match[3];
 
 		var start = 0, pos = 0, end;
 
@@ -692,6 +692,8 @@ Template.prototype = {
 					code.push(						'var obj = ' + object + ';');
 				object = 'obj';
 #endif // HELMA
+				// If the macro tag defines the swallow sign (-%>), set postProcess to true and call trim on the resulting string
+				postProcess = postProcess | macro.swallow;
 				// Macros can both write to res and return a value. prefix / suffix / filter applies to both,
 				// encoding / default only to the value returned.
 				// TODO: Compare with Helma, to see if that is really true. E.g. what happens when default is set
@@ -699,7 +701,9 @@ Template.prototype = {
 				code.push(		postProcess		?	'out.push();' : null,
 													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' +
 															macro.name + '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ', out);',
-								postProcess		?	'template.write(out.pop(), ' + values.filters + ', ' + values.prefix + ', ' +
+								// Trim if swallow is defined:						
+								macro.swallow	?	'if (val) val = val.toString().trim()' : null,
+								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', ' + values.prefix + ', ' +
 															values.suffix + ', null, out);' : null);
 				result = 'val';
 			}
@@ -915,7 +919,7 @@ Template.prototype = {
 #ifdef HIDDEN
 			 	var content = this.resource.getContent(getProperty('skinCharset'));
 			 	// Store the original lines:
-			 	var lines = content.split(/\n|\r\n|\r/mg);
+			 	var lines = content.split(/\r\n|\n|\r/mg);
 #endif // HIDDEN
 				// Use java.io.BufferedReader for reading the lines into a line array,
 				// as this is much faster than the regexp above
@@ -936,12 +940,12 @@ Template.prototype = {
 				reader.close();
 				this.lastModified = this.resource.lastModified();
 			} else if (this.content) {
-				lines = this.content.split(/\n|\r\n|\r/mg);
+				lines = this.content.split(/\r\n|\n|\r/mg);
 			} else {
 				lines = [];
 			}
 #else // !RHINO
-			var lines = this.content.split(/\n|\r\n|\r/mg);
+			var lines = this.content.split(/\r\n|\n|\r/mg);
 #endif // !RHINO
 			this.subTemplates = {};
 			// Keep a reference to all sub templates to be
@@ -963,7 +967,7 @@ Template.prototype = {
 			cx.setOptimizationLevel(level);
 #else // !RHINO
 			eval(code);
-#endif
+#endif // !RHINO
 		} catch (e) {
 			this.throwError(e);
 		}
@@ -1152,9 +1156,9 @@ Template.methods = new function() {
 				template = templates[name] = new Template(
 #ifdef RHINO
 					new java.io.File(baseDir + '/templates/' + name + '.jstl'));
-#else
+#else // !RHINO
 					name);
-#endif
+#endif // !RHINO
 			return template;
 		},
 
