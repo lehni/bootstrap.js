@@ -8,7 +8,7 @@
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif
+#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomElements
@@ -193,7 +193,7 @@ DomElement = Base.extend(new function() {
 			DomElement;
 	}
 
-	var dont = '';
+	var dont = {};
 
 	return {
 		// Tells Base.type the type to return when encountering an element.
