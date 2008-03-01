@@ -69,10 +69,10 @@ Enumerable = new function() {
 			// Backup previous value of the field, and set iterator.
 			var prev = bind[name];
 			bind[name] = iter;
-#ifdef HELMA
-			// On Helma, we can only dontEnum once the property is defined.
+#ifdef RHINO_DONT_ENUM
+			// On Rhino+dontEnum, we can only dontEnum once the property is defined.
 			bind.dontEnum(name);
-#endif // HELMA
+#endif // RHINO_DONT_ENUM
 #endif// !SET_ITERATOR
 			// Interesting benchmark observation: The loops seem execute 
 			// faster when called on the object (this), so outsource to
@@ -119,7 +119,7 @@ Enumerable = new function() {
 			if (!entry || entry.allow && entry.object[i] !== this[i])
 				ITERATOR(iter, bind, val, i, this, __each);
 		}
-#elif !defined(HELMA)
+#elif !defined(RHINO_DONT_ENUM)
 		// We use for-in here, but need to filter out what should not be iterated.
 		// The loop here uses an inline version of Object#has (See Core.js).
 #ifdef EXTEND_OBJECT
@@ -155,12 +155,12 @@ Enumerable = new function() {
 			}
 		}
 #endif // !EXTEND_OBJECT
-#else // HELMA
-		// No need to check when not extending Object and when on Helma as
-		// dontEnum is always used to hide fields there.
+#else // RHINO_DONT_ENUM
+		// No need to check when not extending Object and when on Rhino+dontEnum,
+		// as dontEnum is always used to hide fields there.
 		for (var i in this)
 			ITERATOR(iter, bind, this[i], i, this, __each);
-#endif // HELMA
+#endif // RHINO_DONT_ENUM
 	};
 
 	return {

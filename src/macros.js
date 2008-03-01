@@ -5,6 +5,7 @@
 #ifdef HELMA
 #comment Helma has its own dontEnum() method and does not need an emulation.
 #undef DONT_ENUM
+#define RHINO_DONT_ENUM
 #endif // HELMA
 
 #if (defined(SET_ITERATOR) || defined(BROWSER_LEGACY)) && defined(DONT_ENUM) && !defined(EXTEND_OBJECT)
@@ -15,14 +16,14 @@
 #undef DONT_ENUM
 #endif // (SET_ITERATOR || BROWSER_LEGACY) && DONT_ENUM && !EXTEND_OBJECT
 
-#if defined(DONT_ENUM) || defined(HELMA)
+#if defined(DONT_ENUM) || defined(RHINO_DONT_ENUM)
 #comment Define the HIDE parameter, to be added to extend() after the object
 #comment that defines the fields to be injected, if dontEnum should be called
 #comment for these fields. This only does something if dontEnum() is there.
 #define HIDE _hide: true,
-#else // !DONT_ENUM && !HELMA
+#else // !DONT_ENUM && !RHINO_DONT_ENUM
 #define HIDE
-#endif // !DONT_ENUM && !HELMA
+#endif // !DONT_ENUM && !RHINO_DONT_ENUM
 
 #comment It appears that __proto__ is broken on IE browsers, so we even need it
 #comment for non legacy browsers:

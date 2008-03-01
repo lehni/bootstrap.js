@@ -141,10 +141,10 @@ new function() { // bootstrap
 #endif // HIDDEN
 				}
 				dest[name] = res;
-#if defined(DONT_ENUM) || defined(HELMA)
+#if defined(DONT_ENUM) || defined(RHINO_DONT_ENUM)
 				if (src._hide && dest.dontEnum)
 					dest.dontEnum(name);
-#endif // DONT_ENUM || HELMA
+#endif // DONT_ENUM || RHINO_DONT_ENUM
 			}
 		}
 		// Iterate through all definitions in src with an iteator function
@@ -158,15 +158,15 @@ new function() { // bootstrap
 			for (var name in src)
 #ifdef DONT_ENUM
 				if (visible(src, name) && !/^(toString|valueOf|statics|_generics|_hide)$/.test(name))
-#elif !defined(HELMA)
+#elif !defined(RHINO_DONT_ENUM)
 				if (visible(src, name) && !/^(prototype|constructor|toString|valueOf|statics|_generics)$/.test(name))
-#else // HELMA
+#else // RHINO_DONT_ENUM
 				// On normal JS, we can hide statics through our dontEnum().
-				// on Helma, the native dontEnum can only be called on fields
-				// that are defined already, as an added attribute. So we need
-				// to check against statics here...
+				// on Rhino+dontEnum (e.g. Helma), the native dontEnum can only
+				// be called on fields that are defined already, as an added
+				// attribute. So we need to check against statics here...
 				if (!/^(prototype|constructor|toString|valueOf|statics|_generics|_hide)$/.test(name))
-#endif // HELMA
+#endif // RHINO_DONT_ENUM
 					field(name, generics);
 			// Do not create generics for these:
 			field('toString');
@@ -227,7 +227,9 @@ new function() { // bootstrap
 				!entry._object || entry._allow && entry._object[name] !== obj[name]);
 #endif // !BROWSER_LEGACY
 #else // !DONT_ENUM
-#ifndef HELMA
+#ifdef RHINO_DONT_ENUM
+		return name in obj;
+#else !RHINO_DONT_ENUM
 		// We need to filter out what does not belong to the object itself.
 		// This is done by comparing the value with the value of the same
 		// name in the prototype. If the value is equal it's defined in one
@@ -243,9 +245,7 @@ new function() { // bootstrap
 		// be defined on legacy browsers.
 		return NAME_IS_VISIBLE(name, (!obj.__proto__ || obj[name] !== obj.__proto__[name]));
 #endif // !EXTEND_OBJECT
-#else // HELMA
-		return name in obj;
-#endif // HELMA
+#endif // !RHINO_DONT_ENUM
 #endif // !DONT_ENUM
 	}
 
@@ -321,10 +321,10 @@ new function() { // bootstrap
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
-#ifdef HELMA
-			// On Helma, we can only dontEnum fields after they are set.
+#ifdef RHINO_DONT_ENUM
+			// On Rhino+dontEnum, we can only dontEnum fields after they are set.
 			proto.dontEnum('constructor');
-#endif // HELMA
+#endif // RHINO_DONT_ENUM
 			// An object to be passed as the first parameter in constructors
 			// when initialize should not be called. This needs to be a property
 			// of the created constructor, so that if .extend is called on native
