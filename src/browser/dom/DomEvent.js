@@ -120,32 +120,26 @@ DomEvent = Base.extend(new function() {
 								this.fireEvent('domready');
 							}
 						}.bind(this);
-
-						var view = this.getView(), doc = this.getDocument();
-
-						function check(obj) {
-							if (/^(loaded|complete)$/.test(obj.$.readyState)) {
-								domReady();
-								return true;
-							}
-						}
-						if (doc.$.readyState && (Browser.WEBKIT || Browser.MACIE)) { // Safari and Konqueror
+						var doc = this.getDocument();
+						if (Browser.WEBKIT) {
 							(function() {
-								if (!check(doc))
-									arguments.callee.delay(50);
+								if (/^(loaded|complete)$/.test(doc.$.readyState)) domReady();
+								else arguments.callee.delay(50);
 							})();
-						} else if (doc.$.readyState && Browser.IE) { // IE
-							var script = doc.getElement('#ie_domready');
-							if (!script) {
-								doc.write('<script id=ie_domready defer src="'
-									+ (view.$.location.protocol == 'https:' ? '://0' : 'javascript:void(0)')
-									+ '"><\/script>');
-								script = doc.getElement('#ie_domready');
-							}
-							if (!check(script))
-								script.addEvent('readystatechange', check.bind(null, [script]));
-						} else { // Others
-							view.addEvent('load', domReady);
+						} else if (Browser.IE) {
+							// From: http://www.hedgerwow.com/360/dhtml/ie-dom-ondocumentready.html
+							var temp = doc.createElement('div');
+							(function() {
+								try {
+									temp.$.doScroll('left');
+									temp = null;
+									domReady();
+								} catch (e) {
+									arguments.callee.delay(50);
+								}
+							})();
+						} else {
+							this.getView().addEvent('load', domReady);
 							doc.addEvent('DOMContentLoaded', domReady);
 						}
 					}
