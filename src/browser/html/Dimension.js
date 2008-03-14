@@ -206,11 +206,11 @@ HtmlElement.inject(new function() {
 			|| { x: html.scrollWidth, y: html.scrollHeight };
 	},
 
-	getOffset: function(){
+	getOffset: function() {
 		return { x: 0, y: 0 };
 	},
 
-	getBounds: function(){
+	getBounds: function() {
 		var size = this.getSize();
 		return {
 			left: 0, top: 0,
