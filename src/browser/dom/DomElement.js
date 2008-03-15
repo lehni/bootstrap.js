@@ -563,10 +563,20 @@ DomElement.inject(new function() {
 		},
 
 		replaceWith: function(el) {
-			el = DomElement.get(el);
-			if (this.$.parentNode)
-				this.$.parentNode.replaceChild(el.$, this.$);
-			return el;
+			if (this.$.parentNode) {
+				// Use toElements to support on the fly creation of one or more
+				// elements to replace with:
+				el = toElements.apply(this, arguments);
+				var els = el.array;
+				// Replace the first item of the array and insert all the others
+				// afterwards, if there are more than one:
+				if (els.length > 0)
+					this.$.parentNode.replaceChild(els[0].$, this.$);
+				for (var i = els.length - 1; i >= 1; i--)
+					els[i].insertAfter(els[0]);
+				return el.result;
+			}
+			return null;
 		},
 
 		clone: function(contents) {
