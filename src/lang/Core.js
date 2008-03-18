@@ -67,7 +67,10 @@ new function() { // bootstrap
 		 */
 		function field(name, generics) {
 			var val = src[name], res = val, prev = dest[name];
-			if (val !== Object.prototype[name]) {
+			// Use __proto__ if available, fallback to Object.prototype otherwise,
+			// since it must be a plain object on browser not natively supporting
+			// __proto__:
+			if (val !== (src.__proto__ || Object.prototype)[name]) {
 				switch (typeof val) {
 					case 'function':
 #ifdef GETTER_SETTER
@@ -193,6 +196,10 @@ new function() { // bootstrap
 				return this.initialize.apply(this, arguments);
 		}
 		ctor.prototype = obj;
+		// Add a toString function that delegates to initialize if possible
+		ctor.toString = function() {
+			return (this.prototype.initialize || function() {}).toString();
+		}
 		return ctor;
 	}
 
