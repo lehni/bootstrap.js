@@ -113,16 +113,20 @@ Select = FormElement.extend({
 		return this.getElements('option[selected]');
 	},
 
-	getValue: function() {
-		return this.getSelected().getProperty('value');
-	},
-
-	setValue: function(values) {
+	setSelected: function(values) {
 		this.$.selectedIndex = -1;
 		return Base.each(values.length != null ? values : [values], function(val) {
 			val = DomElement.unwrap(val);
 			this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
 		}, this);
+	},
+
+	getValue: function() {
+		return this.getSelected().getProperty('value');
+	},
+
+	setValue: function(values) {
+		return this.setSelected(values);
 	}
 });
 
