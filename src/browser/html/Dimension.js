@@ -139,28 +139,6 @@ HtmlElement.inject(new function() {
 				this.$.scrollTop = off.y;
 			}
 			return this;
-		},
-		
-		statics: {
-			getAt: function(pos, exclude) {
-				var el = this.getDocument().getElement('body');
-				while (true) {
-					var max = -1;
-					var ch = el.getFirst();
-					while (ch) {
-						if (ch.contains(pos) && ch != exclude) {
-							var z = ch.style.zIndex.toInt() || 0;
-							if (z >= max) {
-								el = ch;
-								max = z;
-							}
-						}
-						ch = ch.getNext();
-					}
-					if (max < 0) break;
-				}
-				return el;
-			}
 		}
 	};
 
@@ -224,6 +202,26 @@ HtmlElement.inject(new function() {
 		var off = typeof x == 'object' ? x : { x: x, y: y };
 		this.getView().$.scrollTo(off.x, off.y);
 		return this;
+	},
+
+	getElementAt: function(pos, exclude) {
+		var el = this.getDocument().getElement('body');
+		while (true) {
+			var max = -1;
+			var ch = el.getFirst();
+			while (ch) {
+				if (ch.contains(pos) && ch != exclude) {
+					var z = ch.$.style.zIndex.toInt() || 0;
+					if (z >= max) {
+						el = ch;
+						max = z;
+					}
+				}
+				ch = ch.getNext();
+			}
+			if (max < 0) break;
+		}
+		return el;
 	}
 });
 
