@@ -427,14 +427,39 @@ DomElement.inject(new function() {
 			fn = list[name] = that[prefix + name.capitalize()] || null;
 		// If the passed value is an array, use it as the argument
 		// list for the call.
-		if (fn) return fn[value && value.push ? 'apply' : 'call'](that, value);
+		if (fn) return fn[Base.type(value) == 'array' ? 'apply' : 'call'](that, value);
 		else return that[prefix + 'Property'](name, value);
 	}
 
+	// A helper for walking the DOm
 	function walk(el, name, start) {
 		el = el[start ? start : name];
 		while (el && Base.type(el) != 'element') el = el[name];
 		return DomElement.get(el);
+	}
+
+	// A helper for calling toElement and returning results.
+	function toElements(elements) {
+		// Support passing things as argument lists, without the first wrapping array
+		if (Base.type(elements) != 'array')
+			elements = Array.create(arguments);
+		// Find out if elements are created, or if they were already bassed.
+		// The convention is to return the newly created elements if they are not
+		// elements already, otherwise return this.
+		var created = elements.find(function(el) {
+			return Base.type(el) != 'element';
+		});
+		// toElement can either return a single DomElement or a DomElements array.
+		var result = elements.toElement(this.getDocument());
+		return {
+			// Make sure we always return an array of the resulted elements as well,
+			// for simpler handling in inserters below
+			array: result ? (Base.type(result) == 'array' ? result : [result]) : [],
+			// Result might be a single element or an array, depending on what the
+			// user passed. This is to be returned back. Only define it if the elements
+			// were created.
+			result: created && result
+		};
 	}
 
 	var fields = {
@@ -679,22 +704,7 @@ DomElement.inject(new function() {
 
 	inserters.inside = inserters.bottom;
 
-	function toElements(element) {
-		// Support passing things without the first wrapping array
-		if (arguments.length > 0)
-			element = Array.create(arguments);
-		// toElement can either return a single DomElement or a DomElements array.
-		var result = element && (element.toElement && element.toElement(this.getDocument()) || DomElement.get(element)) || null;
-		return {
-			result: result,
-			// Make sure it's always an array, for single handling in inserters below
-			array: result ? (Base.type(result) == 'array' ? result : [result]) : [],
-			created: result && Base.type(element) != 'element'
-		};
-	}
-
-	// Now add the various inserters
-
+	// Now add the inserters
 	// Important: The inseters return this if the object passed is already an 
 	// element. But if it is a string or an array that is converted to an element,
 	// the newly created element is returned instead.
@@ -705,22 +715,20 @@ DomElement.inject(new function() {
 		// into the passed element(s).
 		fields['insert' + part] = function(el) {
 			el = toElements.apply(this, arguments);
-			var dests = el.array;
 			// Clone the object for every index other than the first
 			// as we're inserting into multiple times.
-			for (var i = 0, l = dests.length; i < l; i++)
-				inserter(i == 0 ? this : this.clone(true), dests[i]);
-			return el.created ? el.result : this;
+			for (var i = 0, list = el.array, l = list.length; i < l; i++)
+				inserter(i == 0 ? this : this.clone(true), list[i]);
+			return el.result || this;
 		}
 
 		// #inject* does the reverse of #insert*, it injects the passed element(s)
 		// into this element.
 		fields['inject' + part] = function(el) {
 			el = toElements.apply(this, arguments);
-			var sources = el.array;
-			for (var i = 0, l = sources.length; i < l; i++)
-				inserter(sources[i], this);
-			return el.created ? el.result : this;
+			for (var i = 0, list = el.array, l = list.length; i < l; i++)
+				inserter(list[i], this);
+			return el.result || this;
 		}
 	});
 
