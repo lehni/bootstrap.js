@@ -319,11 +319,11 @@ DomElement = Base.extend(new function() {
 						classCheck = new RegExp('(^|\\s)(' + Base.each(classes, function(val, name) {
 							this.push(name);
 						}, []).join('|') + ')(\\s|$)');
-						// If the prototype defines an initialize method, force
-						// wrapping of these elements on domready, so that 
-						// initialize will be directly called and further
-						// manipulation can be done, e.g. adding shadows.
-						if (src.initialize) Document.addEvent('domready', function() {
+						// If the prototype defines an initialize method, and it
+						// does not want to be lazily loaded, force wrapping of
+						// these elements on domready, so that initialize will be
+						// directly called and further dom manipulation can be done.
+						if (!src._lazy && src.initialize) Document.addEvent('domready', function() {
 							Document.getElements('.' + src._class);
 						});
 					}
