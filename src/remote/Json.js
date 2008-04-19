@@ -15,13 +15,17 @@ Json = new function() {
 
 	return {
 		encode: function(obj) {
-#ifdef __RHINO // TODO: uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
+#ifdef HIDDEN // #ifdef RHINO // TODO: uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
 			var str = uneval(obj);
 			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
 #else // !RHINO
 			switch (Base.type(obj)) {
 				case 'string':
+#ifdef RHINO
+					return uneval(obj);
+#else
 					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
+#endif
 				case 'array':
 					return '[' + obj.collect(Json.encode) + ']';
 				case 'object':
