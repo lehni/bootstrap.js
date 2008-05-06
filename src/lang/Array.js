@@ -291,10 +291,22 @@ Array.inject(new function() {
 		},
 
 		/**
-		 * Creates an object containing the array's values associated to the
-		 * given keys.
+		 * Creates a hash object containing the array's values associated to the
+		 * given keys as defined by obj.
+		 * This is based on mootools' associate, but extended by the possibility
+		 * to not pass an obj, or pass a function:
+		 * - If obj is an array, its values are the new keys.
+		 * - If obj is a hash object, mootools behavior is assumed.
+		 * - If obj is not defined, it is set to the array itself, resulting in
+		 *   a hash with key and value set to the same (the initial array entry).
+		 * - If obj is a function, it's passed to this.map(), and the resulting 
+		 *   array is used for the key values.
 		 */
 		associate: function(obj) {
+			if (!obj)
+				obj = this;
+			else if (typeof obj == 'function')
+				obj = this.map(obj);
 			if (obj.length != null) {
 				var that = this;
 				return Base.each(obj, function(name, index) {
@@ -302,11 +314,14 @@ Array.inject(new function() {
 					if (index == that.length) throw Base.stop;
 				}, {});
 			} else {
-				obj = Hash.create(obj);
+				// Produce a new bare object since we're deleting from it. 
+				obj = Hash.merge({}, obj);
 				// Use Base.each since this is also used for generics
 				return Base.each(this, function(val) {
 					var type = Base.type(val);
-					obj.each(function(hint, name) {
+					// Use Base.each since it's a bare object for speed reasons
+					// on the browser.
+					Base.each(obj, function(hint, name) {
 						if (hint == 'any' || type == hint) {
 							this[name] = val;
 							delete obj[name];
@@ -359,7 +374,7 @@ Array.inject(new function() {
 		shuffle: function() {
 			var res = this.clone();
 			var i = this.length;
-			while (i--) res.swap(i, Math.rand(0, i));
+			while (i--) res.swap(i, Math.rand(i + 1));
 			return res;
 		},
 
