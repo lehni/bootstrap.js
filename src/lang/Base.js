@@ -18,7 +18,7 @@ Base.inject({
 #ifdef DEBUG
 	debug: function() {
 		return /^(string|number|function|regexp)$/.test(Base.type(this)) ? this
-			: this.each(function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
+			: Base.each(this, function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
 	},
 #endif !DEBUG
 
