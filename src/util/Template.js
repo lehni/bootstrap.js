@@ -302,7 +302,7 @@ Template.prototype = {
 	 * that then can be used to produce the macro code.
 	 */
 	parseMacroParts: function(tag, code, stack, allowControls) {
-		var match = tag.match(/^<%(=?)\s*(.*?)\s*(-?)%>$/);
+		var match = tag.match(/^<%(=?)\s*([\u0000-\uffff]*?)\s*(-?)%>$/);
 		if (!match)	return null;
 		// If the tag ends with -%>, the line break after it should be swallowed,
 		// if there is any. By default all control macros swallow line breaks.
@@ -437,7 +437,7 @@ Template.prototype = {
 				macro = {
 					command: next, opcode: [], param: [], unnamed: [],
 					// Values needed on code rendering time
-					values: { prefix: null, suffix: null, 'default': null, encoding: null, separator: null }
+					values: { prefix: null, suffix: null, 'default': null, encoding: null, separator: null, 'if': null }
 				};
 				// Control and data macros are only allowed for first macro in chain (main)
 				if (isMain) {
@@ -570,10 +570,15 @@ Template.prototype = {
 		if (!macro)
 			throw 'Invalid tag';
 		var values = macro.values, result;
+		// Put it all into a conditional block if the 'if' param is defined:
+		var condition = values['if'];
+		if (condition)
+			code.push(								'if (' + condition + ') {');
 		var postProcess = !!(values.prefix || values.suffix || values.filters);
 		var codeIndexBefore = code.length;
 		if (macro.isData) { // param, response, request, session, or a <%= %> tag
-			result = this.parseLoopVariables(macro.command + ' ' + macro.opcode, stack);
+			result = this.parseLoopVariables(macro.opcode
+				? macro.command + ' ' + macro.opcode : macro.command, stack);
 		} else if (macro.isControl) {
 			var open = false, close = false;
 			var prevControl = stack.control[stack.control.length - 1];
@@ -725,6 +730,7 @@ Template.prototype = {
 					return result;
 				} else {
 					// Dereference to local variable if it's a call, a lookup, or a more complex construct (containg whitespaces)
+					// TODO: Detect strings and simple values and do not do if check bellow if it is valid!
 					if (/[.()\s]/.test(result)) {
 						code.push(					'var val = ' + result + ';');
 						result = 'val';
@@ -741,9 +747,12 @@ Template.prototype = {
 			// This is needed for nested macros. Insert out.push() before the 
 			// rendering code and return out.pop(). Due to the post processing
 			// we cannot simply return a variable...
-			code.splice(codeIndexBefore, 0,		'out.push();');
+			code.splice(codeIndexBefore, 0,			'out.push();');
 			return 'out.pop()';
 		}
+		// Close the condition block now, if needed.
+		if (condition)
+			code.push(								'}');
 		// Tell parse() wether to swallow the line break or not.
 		if (!toString)
 			return macro.swallow;
