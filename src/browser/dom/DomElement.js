@@ -396,18 +396,19 @@ DomElement = Base.extend(new function() {
 DomElement.inject(new function() {
 	// Dom / Html to JS property mappings, as used by getProperty, setProperty
 	// and removeProperty.
-	var properties = {
-		'class': 'className', className: 'className', 'for': 'htmlFor',
-		colspan: 'colSpan', rowspan: 'rowSpan', accesskey: 'accessKey',
-		tabindex: 'tabIndex', maxlength: 'maxLength', readonly: 'readOnly',
-		value: 'value', disabled: 'disabled', checked: 'checked',
-		multiple: 'multiple', selected: 'selected'
-	};
-
-	var flags = {
-		href: 2, src: 2
-	};
-
+	var bools = ['compact', 'nowrap', 'ismap', 'declare', 'noshade', 'checked',
+		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
+	].associate();
+	var properties = Hash.merge({ // props
+		text: Browser.IE ? 'innerText' : 'textContent', html: 'innerHTML',
+		'class': 'className', 'for': 'htmlFor'
+	}, [ // camels
+		'value', 'accessKey', 'cellPadding', 'cellSpacing', 'colSpan',
+		'frameBorder', 'maxLength', 'readOnly', 'rowSpan', 'tabIndex',
+		'useMap'
+	].associate(function(name) {
+		return name.toLowerCase();
+	}), bools);
 
 	// handle() handles both get and set calls for any given property name.
 	// prefix is either set or get, and is used for lookup of getter / setter
@@ -610,24 +611,22 @@ DomElement.inject(new function() {
 
 		getProperty: function(name) {
 			var key = properties[name];
-			if (key) return this.$[key];
-			var flag = flags[name];
-			if (!Browser.IE || flag) return this.$.getAttribute(name, flag);
-			var node = this.$.attributes[name];
-			return node && node.nodeValue;
+			var value = key ? this.$[key] : this.$.getAttribute(name);
+			return (bools[name]) ? !!value : value;
+		},
+
+		getProperties: function() {
+			var props = {};
+			for (var i = 0; i < arguments.length; i++)
+				props[arguments[i]] = this.getProperty(arguments[i]);
+			return props;
 		},
 
 		setProperty: function(name, value) {
-			var key = properties[name];
-			if (key) this.$[key] = value;
-			else this.$.setAttribute(name, value);
-			return this;
-		},
-
-		removeProperty: function(name) {
-			var key = properties[name];
-			if (key) this.$[key] = '';
-			else this.$.removeAttribute(name);
+			var key = properties[name], defined = value != undefined;
+			if (key && bools[name]) value = value || !defined ? true : false;
+			else if (!defined) return this.removeProperty(name);
+			key ? this.$[key] = value : this.$.setAttribute(name, value);
 			return this;
 		},
 
@@ -635,6 +634,16 @@ DomElement.inject(new function() {
 			return Base.each(src, function(value, name) {
 				this.setProperty(name, value);
 			}, this);
+		},
+
+		removeProperty: function(name) {
+			var key = properties[name], bool = key && bools[name];
+			key ? this.$[key] = bool ? false : '' : this.$.removeAttribute(name);
+			return this;
+		},
+
+		removeProperties: function() {
+			return Base.each(arguments, this.removeProperty, this);
 		},
 
 		toString: function() {

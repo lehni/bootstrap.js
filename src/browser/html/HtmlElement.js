@@ -60,36 +60,19 @@ HtmlElement.inject({
 	},
 
 	getHtml: function() {
-		return this.$.innerHTML;
+		return this.getProperty('html');
 	},
 
 	setHtml: function(html) {
-		this.$.innerHTML = html;
-		return this;
+		return this.setProperty('html', html);
 	},
 
 	getText: function() {
-		var tag = this.getTag();
-		return /^(style|script)$/.test(tag)
-			? Browser.IE
-				? tag == 'style' ? this.$.styleSheet.cssText : this.getProperty('text')
-				: this.$.innerHTML
-			: this.$.innerText || this.$.textContent;
+		return this.getProperty('text');
 	},
 
 	setText: function(text) {
-		var tag = this.getTag();
-		if (/^(style|script)$/.test(tag)) {
-			if (Browser.IE) {
-				if (tag == 'style') this.$.styleSheet.cssText = text;
-				else this.setProperty('text', text);
-			} else {
-				this.$.innerHTML = text;
-			}
-		} else {
-			this.$[this.$.innerText !== undefined ? 'innerText' : 'textContent'] = text;
-		}
-		return this;
+		return this.setProperty('text', text);
 	}
 });
 
