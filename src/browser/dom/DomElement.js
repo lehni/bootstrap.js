@@ -538,9 +538,10 @@ DomElement.inject(new function() {
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
 				// This is still needed on IE7, so do not mark it BROWSER_LEGACY
-				var text = Browser.IE && el.text;
+				var text = Browser.IE && el.$.text;
+				if (text) el.$.text = '';
 				this.$.appendChild(el.$);
-				if (text) this.$.text = text;
+				if (text) el.$.text = text;
 			}
 			return this;
 		},
@@ -661,16 +662,13 @@ DomElement.inject(new function() {
 		 */
 		before: function(source, dest) {
 			if (source && dest && dest.$.parentNode) {
-#ifdef BROWSER_LEGACY
 				// Fix a bug on Mac IE when inserting Option elements to Select 
 				// elements, where the text on these objects is lost after insertion.
 				// -> DomElement#appendChild does the same.
 				var text = Browser.IE && dest.$.text;
-#endif // BROWSER_LEGACY
+				if (text) dest.$.text = '';
 				dest.$.parentNode.insertBefore(source.$, dest.$);
-#ifdef BROWSER_LEGACY
-				if (text) source.$.text = text;
-#endif // BROWSER_LEGACY
+				if (text) dest.$.text = text;
 			}
 		},
 
