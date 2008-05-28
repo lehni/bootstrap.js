@@ -534,16 +534,13 @@ DomElement.inject(new function() {
 
 		appendChild: function(el) {
 			if (el = DomElement.get(el)) {
-#ifdef BROWSER_LEGACY
 				// Fix a bug on Mac IE when inserting Option elements to Select 
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
+				// This is still needed on IE7, so do not mark it BROWSER_LEGACY
 				var text = Browser.IE && el.text;
-#endif // BROWSER_LEGACY
 				this.$.appendChild(el.$);
-#ifdef BROWSER_LEGACY
 				if (text) this.$.text = text;
-#endif // BROWSER_LEGACY
 			}
 			return this;
 		},
