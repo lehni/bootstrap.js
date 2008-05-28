@@ -115,10 +115,14 @@ Select = FormElement.extend({
 
 	setSelected: function(values) {
 		this.$.selectedIndex = -1;
-		return Base.each(values.length != null ? values : [values], function(val) {
-			val = DomElement.unwrap(val);
-			this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
-		}, this);
+		if (values) {
+			Base.each(values.length != null ? values : [values], function(val) {
+				val = DomElement.unwrap(val);
+				if (val != null)
+					this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
+			}, this);
+		}
+		return this;
 	},
 
 	getValue: function() {
