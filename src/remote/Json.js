@@ -22,7 +22,8 @@ Json = new function() {
 			switch (Base.type(obj)) {
 				case 'string':
 #ifdef RHINO
-					return uneval(obj);
+					// Make sure it's a raw string, not an object
+					return uneval(obj.toString());
 #else
 					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
 #endif
