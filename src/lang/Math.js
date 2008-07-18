@@ -5,10 +5,10 @@
 // Math
 
 /**
- * Returns a random integer number 0 <= x < value
+ * Returns a random integer number min <= x < max
  */
-Math.rand = function(value) {
-	return Math.floor(Math.random() * Math.abs(value)); 
+Math.rand = function(min, max) {
+	return Math.floor(Math.random() * (max - min) + min);
 }
 
 #endif // __lang_Math__
