@@ -66,6 +66,19 @@ new function() { // bootstrap
 		 * Private function that injects one field with given name
 		 */
 		function field(name, generics) {
+			// Make generics first, as we might jump out bellow in the
+			// val.valueOf() === prev.valueOf() check,
+			// e.g. when explicitely reinjecting Array.prototype methods
+			// to produce generics of them.
+			// Also produce generics even if the value is already in
+			// src.__proto__ / Object.prototype, as checked bellow.
+			if (generics) generics[name] = function(bind) {
+				// Do not call Array.slice generic here, as on Safari,
+				// this seems to confuse scopes (calling another
+				// generic from generic-producing code).
+				return bind && dest[name].apply(bind,
+					Array.prototype.slice.call(arguments, 1));
+			}
 			var val = src[name], res = val, prev = dest[name];
 			// Use __proto__ if available, fallback to Object.prototype otherwise,
 			// since it must be a plain object on browser not natively supporting
@@ -82,17 +95,6 @@ new function() { // bootstrap
 							return;
 						}
 #endif // !GETTER_SETTER
-						// Make generics first, as we might jump out bellow in the
-						// val.valueOf() === prev.valueOf() check,
-						// e.g. when explicitely reinjecting Array.prototype methods
-						// to produce generics of them.
-						if (generics) generics[name] = function(bind) {
-							// Do not call Array.slice generic here, as on Safari,
-							// this seems to confuse scopes (calling another
-							// generic from generic-producing code).
-							return bind && dest[name].apply(bind,
-								Array.prototype.slice.call(arguments, 1));
-						}
 #ifdef RHINO
 						if (/\[native code/.test(val))
 							return;
