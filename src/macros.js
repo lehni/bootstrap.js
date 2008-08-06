@@ -2,10 +2,15 @@
 #comment COMMENT allows the definition of comments that are removed even when
 #comment js comments are not stripped from the source code.
 
+#define BASE_NAME() base
+
 #ifdef HELMA
 #comment Helma has its own dontEnum() method and does not need an emulation.
+#comment Helma needs GETTER_SETTER support to work around the base / _base problem.
 #undef DONT_ENUM
 #define RHINO_DONT_ENUM
+#define GETTER_SETTER
+#define BASE_NAME() _base
 #endif // HELMA
 
 #if (defined(SET_ITERATOR) || defined(BROWSER_LEGACY)) && defined(DONT_ENUM) && !defined(EXTEND_OBJECT)
