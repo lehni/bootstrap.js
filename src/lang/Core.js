@@ -79,63 +79,71 @@ new function() { // bootstrap
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-			var val = src[name], res = val, prev = dest[name];
+#ifdef GETTER_SETTER
+			var val = src[name], res = val, prev, set;
+#else // !GETTER_SETTER
+			var val = src[name], res = val, prev;
+#endif // !GETTER_SETTER
 			// Use __proto__ if available, fallback to Object.prototype otherwise,
 			// since it must be a plain object on browser not natively supporting
 			// __proto__:
 			if (val !== (src.__proto__ || Object.prototype)[name]) {
+				if (typeof val == 'function') {
+#ifdef RHINO
+					// Don't touch native java code
+					if (/\[native code/.test(val))
+						return;
+#endif // RHINO
+#ifdef GETTER_SETTER
+					// Check if the function defines a getter or setter by looking
+					// at its name. TODO: measure speed decrease of inject due to this!
+					if (set = name.match(/(.*)_(g|s)et$/)) {
+						// Set the new name so further bellow it can be hidden if needed
+						name = set[1];
+						dest['__define' + set[2].toUpperCase() + 'etter__'](name, val);
+					} else if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
+#else // !GETTER_SETTER
+					if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
+#endif // !GETTER_SETTER
+#ifdef HELMA
+						// If the base function has already the _version field set, 
+						// it is a function previously defined through inject. 
+						// In this case, the value of _version decides what to do:
+						// If we're in the same compilation cicle, Aspect behavior
+						// is used, by continuously referencing the previously defined
+						// functions in the same cicle.
+						// Otherwise, the real previous function is fetched from _previous,
+						// making sure we do not end up in aspect-like changes of the 
+						// multiple instances of the same function, compiled in different
+						// cicles.
+						if (prev._version && prev._version != version)
+							prev = prev._previous;
+#endif // HELMA
+						var fromBase = base && base[name] == prev;
+						res = (function() {
+							var tmp = this.BASE_NAME();
+							// Look up the base function each time if we can,
+							// to reflect changes to the base class after 
+							// inheritance.
+							this.BASE_NAME() = fromBase ? base[name] : prev;
+							try { return val.apply(this, arguments); }
+							finally { this.BASE_NAME() = tmp; }
+						}).pretend(val);
+#ifdef HELMA
+						// If versioning is used, set the new version now, and keep a reference to the
+						// real previous function, as used in the code above.
+						if (version) {
+							res._version = version;
+							res._previous = prev;
+						}
+#endif // HELMA
+					}
+				}
+#ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
 				switch (typeof val) {
 					case 'function':
-#ifdef GETTER_SETTER
-						// Check if the function defines a getter or setter by looking
-						// at its name. TODO: measure speed decrease of inject due to this!
-						var match;
-						if (match = name.match(/(.*)_(g|s)et$/)) {
-							dest['__define' + match[2].toUpperCase() + 'etter__'](match[1], val);
-							return;
-						}
-#endif // !GETTER_SETTER
-#ifdef RHINO
-						if (/\[native code/.test(val))
-							return;
-#endif // RHINO
-						if (prev && /\bthis\.base\b/.test(val)) {
-#ifdef HELMA
-							// TODO: needed? if (val.valueOf() === prev.valueOf()) return;
-							// If the base function has already the _version field set, 
-							// it is a function previously defined through inject. 
-							// In this case, the value of _version decides what to do:
-							// If we're in the same compilation cicle, Aspect behavior
-							// is used, by continuously referencing the previously defined
-							// functions in the same cicle.
-							// Otherwise, the real previous function is fetched from _previous,
-							// making sure we do not end up in aspect-like changes of the 
-							// multiple instances of the same function, compiled in different
-							// cicles.
-							if (prev._version && prev._version != version)
-								prev = prev._previous;
-#endif // !HELMA
-							var fromBase = base && base[name] == prev;
-							res = (function() {
-								var tmp = this.base;
-								// Look up the base function each time if we can,
-								// to reflect changes to the base class after 
-								// inheritance.
-								this.base = fromBase ? base[name] : prev;
-								try { return val.apply(this, arguments); }
-								finally { this.base = tmp; }
-							}).pretend(val);
-#ifdef HELMA
-							// If versioning is used, set the new version now, and keep a reference to the
-							// real previous function, as used in the code above.
-							if (version) {
-								res._version = version;
-								res._previous = prev;
-							}
-#endif // HELMA
-						}
+						// INSERT THE ABOVE!
 						break;
-#ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
 					case 'object':
 					case 'hash':
 						// Merge hashes and objects
@@ -143,9 +151,14 @@ new function() { // bootstrap
 						if (prev && prev != val && val instanceof Object)
 							res = Hash.merge({}, prev, val);
 						break;
-#endif // HIDDEN
 				}
+#endif // HIDDEN
+#ifdef GETTER_SETTER
+				if (!set)
+					dest[name] = res;
+#else // !GETTER_SETTER
 				dest[name] = res;
+#endif // !GETTER_SETTER
 #if defined(DONT_ENUM) || defined(RHINO_DONT_ENUM)
 				if (src._hide && dest.dontEnum)
 					dest.dontEnum(name);
@@ -437,6 +450,18 @@ new function() { // bootstrap
 	Base.inject({
 #endif // DONT_ENUM
 		HIDE
+#ifdef HELMA
+
+		/**
+		 * For Helma, we need to set _base instead of base, so define a getter
+		 * here that returns it. BASE_NAME defines the name for base (_base in
+	     * this case). This simplifies abstraction in general code above.
+		 */
+		base_get: function() {
+			return this.BASE_NAME();
+		},
+
+#endif // HELMA
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
