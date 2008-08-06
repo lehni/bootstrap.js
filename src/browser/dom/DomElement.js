@@ -401,7 +401,8 @@ DomElement.inject(new function() {
 	].associate();
 	var properties = Hash.merge({ // props
 		text: Browser.IE ? 'innerText' : 'textContent', html: 'innerHTML',
-		'class': 'className', 'for': 'htmlFor'
+		// Make sure that setting both class and className uses this.$.className instead of setAttribute
+		'class': 'className', className: 'className', 'for': 'htmlFor'
 	}, [ // camels
 		'value', 'accessKey', 'cellPadding', 'cellSpacing', 'colSpan',
 		'frameBorder', 'maxLength', 'readOnly', 'rowSpan', 'tabIndex',
