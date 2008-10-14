@@ -109,13 +109,9 @@ Array.inject(new function() {
 	// methods from #inject, since they define _hide!
 	// ( var fields = Hash.create(Enumerable, {...}) )
 	// Instead, use the generics in Hash to fill a normal object.
-	
-	// TODO: There is a problem on browsers when using EXTEND_OBJECT and DONT_ENUM
-	// here, since Base#clone will then be dontEnumed and Hash.merge will therefore
-	// not iterate over the new definiton bellow...
 
 	var fields = Hash.merge({}, Enumerable, {
-		HIDE
+		_HIDE
 		_generics: true,
 		// tell Base.type what to return for arrays.
 		_type: 'array',
@@ -235,14 +231,14 @@ Array.inject(new function() {
 		/**
 		 * Returns the first element of the array.
 		 */
-		first: function() {
+		getFirst: function() {
 			return this[0];
 		},
 
 		/**
 		 * Returns the last element of the array.
 		 */
-		last: function() {
+		getLast: function() {
 			return this[this.length - 1];
 		},
 
@@ -433,7 +429,7 @@ Array.inject(new function() {
 
 #ifdef BROWSER
 		// Safari breaks native concat on sub classes of arrays. Simulate it here.
-		conact: function(list) {
+		concat: function(list) {
 			return Browser.WEBKIT
 				? new Array(this.length + list.length).append(this).append(list)
 				: Array.concat(this, list);

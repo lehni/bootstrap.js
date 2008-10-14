@@ -169,7 +169,7 @@ DomElement.inject({
 			// want an event. Wrap it so it recieves a wrapped event, and
 			// bind it to that at the same time, as on PC IE, event listeners
 			// are not called bound to their objects.
-			var that = this, bound = listener.parameters().length == 0
+			var that = this, bound = listener.getParameters().length == 0
 				? listener.bind(this)
 				: function(event) { 
 					event = new DomEvent(event);

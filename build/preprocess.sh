@@ -1,5 +1,5 @@
 # Bootstrap JavaScript Library
-# (c) 2006-2007 Juerg Lehni, http://scratchdisk.com/
+# (c) 2006 - 2008 Juerg Lehni, http://scratchdisk.com/
 #
 # Bootstrap is released under the MIT license
 # http://bootstrap-js.net/

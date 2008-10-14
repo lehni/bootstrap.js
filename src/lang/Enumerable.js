@@ -43,10 +43,6 @@ Enumerable = new function() {
 #else // !SET_ITERATOR
 	Base.iterate = function(fn) {
 #endif // !SET_ITERATOR
-#if defined(SET_ITERATOR) && defined(DONT_ENUM)
-		// dontEnum all set iterators once and for all on browsers:
-		Base.prototype.dontEnum(true, name);
-#endif // APPLY_ITERATOR && DONT_ENUM
 		return function(iter, bind) {
 			// Convert the argument to an iterator function. If none is specified,
 			// the identity function is returned. 
@@ -69,10 +65,10 @@ Enumerable = new function() {
 			// Backup previous value of the field, and set iterator.
 			var prev = bind[name];
 			bind[name] = iter;
-#ifdef RHINO_DONT_ENUM
+#ifdef DONT_ENUM
 			// On Rhino+dontEnum, we can only dontEnum once the property is defined.
 			bind.dontEnum(name);
-#endif // RHINO_DONT_ENUM
+#endif // DONT_ENUM
 #endif// !SET_ITERATOR
 			// Interesting benchmark observation: The loops seem execute 
 			// faster when called on the object (this), so outsource to
@@ -107,69 +103,54 @@ Enumerable = new function() {
 
 	var each_Object = function(iter, bind) {
 #ifdef DONT_ENUM
-		// We use for-in here, but need to filter out what should not be iterated.
-		// Object#dontEnum defines a method to flag such a fields, and Object#has
-		// a way to find out for any given key if it is enumerable or not.
-		// The loop here uses an inline version of Object#has (See Core.js).  
-		var entries = this._dontEnum || {};
-		for (var i in this) {
-			var val = this[i], entry = entries[i];
-			// Skip dontEnum fields.
-			// This line here is similar to Base.prototype.has
-			if (!entry || entry.allow && entry.object[i] !== this[i])
-				ITERATOR(iter, bind, val, i, this, __each);
-		}
-#elif !defined(RHINO_DONT_ENUM)
+		// No need to check when not extending Object and when on Rhino+dontEnum,
+		// as dontEnum is always used to hide fields there.
+		for (var i in this)
+			ITERATOR(iter, bind, this[i], i, this, __each);
+#else // !DONT_ENUM
 		// We use for-in here, but need to filter out what should not be iterated.
 		// The loop here uses an inline version of Object#has (See Core.js).
 #ifdef EXTEND_OBJECT
-		for (var i in this) {
-			var val = this[i];
+		for (var i in this)
 #ifdef FIX_PROTO
 			// Since __proto__ is faked, it is be iterated and therefore 
 			// we need to check for that one too:
-			if (NAME_IS_VISIBLE(i, val !== this.__proto__ && val !== this.__proto__[i]))
+			if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
 #else // !FIX_PROTO
-			if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
+			if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
 #endif // !FIX_PROTO
-				ITERATOR(iter, bind, val, i, this, __each);
-		}
+				ITERATOR(iter, bind, this[i], i, this, __each);
 #else // !EXTEND_OBJECT
 		// Object.prototype is untouched, so we cannot assume __proto__ to always
 		// be defined on legacy browsers. Use two versions of the loops for 
 		// better performance here:
 		if (this.__proto__ == null) {
 			for (var i in this)
-				IF_NAME_IS_VISIBLE(i, ITERATOR(iter, bind, this[i], i, this, __each);)
+				IF_PROPERTY_IS_VISIBLE(i, ITERATOR(iter, bind, this[i], i, this, __each);)
 		} else {
-			for (var i in this) {
-				var val = this[i];
+			for (var i in this)
 #ifdef FIX_PROTO
 				// Since __proto__ is faked, it is be iterated and therefore 
 				// we need to check for that one too:
-				if (NAME_IS_VISIBLE(i, val !== this.__proto__ && val !== this.__proto__[i]))
+				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
 #else // !FIX_PROTO
-				if (NAME_IS_VISIBLE(i, val !== this.__proto__[i]))
+				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
 #endif // !FIX_PROTO
-					ITERATOR(iter, bind, val, i, this, __each);
-			}
+					ITERATOR(iter, bind, this[i], i, this, __each);
 		}
 #endif // !EXTEND_OBJECT
-#else // RHINO_DONT_ENUM
-		// No need to check when not extending Object and when on Rhino+dontEnum,
-		// as dontEnum is always used to hide fields there.
-		for (var i in this)
-			ITERATOR(iter, bind, this[i], i, this, __each);
-#endif // RHINO_DONT_ENUM
+#endif // !DONT_ENUM
 	};
 
 	return {
-		HIDE
+		_HIDE
+		_BEANS
+		_generics: true,
+
 		// Base.each is used mostly so functions can be generalized.
 		// But that's not enough, since find and others are still called
 		// on this.
 		// TODO: Find a workaround for this problem!
-		_generics: true,
 
 		/**
 		 * The core of all Enumerable functions. TODO: document

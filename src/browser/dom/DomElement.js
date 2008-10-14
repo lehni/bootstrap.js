@@ -73,7 +73,7 @@ DomElements = Array.extend(new function() {
 				return this.base(Base.each(src || {}, function(val, key) {
 					if (typeof val == 'function') {
 						var func = val, prev = proto[key];
-						var count = func.parameters().length, prevCount = prev && prev.parameters().length;
+						var count = func.getParameters().length, prevCount = prev && prev.getParameters().length;
 						val = function() {
 							var args = arguments, values;
 							// If there was a previous implementation under this name
@@ -196,6 +196,7 @@ DomElement = Base.extend(new function() {
 	var dont = {};
 
 	return {
+		_BEANS
 		// Tells Base.type the type to return when encountering an element.
 		_type: 'element',
 		_elements: DomElements,
@@ -465,6 +466,8 @@ DomElement.inject(new function() {
 	}
 
 	var fields = {
+		_BEANS
+
 		set: function(name, value) {
 			switch (Base.type(name)) {
 				case 'string':

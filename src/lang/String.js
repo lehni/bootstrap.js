@@ -7,6 +7,7 @@
 // String
 
 String.inject({
+	_BEANS
 	_type: 'string',
 
 	test: function(exp, param) {

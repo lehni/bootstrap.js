@@ -59,7 +59,7 @@ Asset = new function() {
 		},
 
 		stylesheet: function(src, props) {
-			return new HtmlElement('link', Hash.create({
+			return new HtmlElement('link', new Hash({
 				rel: 'stylesheet', media: 'screen', type: 'text/css', href: src
 			}, props)).insertInside(Document.getElement('head'));
 		},

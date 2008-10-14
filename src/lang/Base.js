@@ -7,7 +7,7 @@
 // Base
 
 Base.inject({
-	HIDE
+	_HIDE
 	_generics: true,
 
 	/**
@@ -104,7 +104,7 @@ Base.inject({
 });
 #else // !EXTEND_OBJECT
 // Reinject things from Base.prototype now, so they are added to the other types
-// as well. This works since EXTEND_OBJECT cannot be combined with DONT_ENUM.
+// as well.
 }, Base.prototype);
 #endif // !EXTEND_OBJECT
 

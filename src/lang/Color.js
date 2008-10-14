@@ -8,7 +8,7 @@
 // Color
 
 Array.inject({
-	HIDE
+	_HIDE
 
 	hexToRgb: function(toArray) {
 		if (this.length >= 3) {

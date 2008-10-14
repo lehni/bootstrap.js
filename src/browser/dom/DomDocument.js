@@ -7,6 +7,7 @@
 // DomDocument
 
 DomDocument = DomElement.extend({
+	_BEANS
 	_type: 'document',
 	_elements: DomElements,
 
