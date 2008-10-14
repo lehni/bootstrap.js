@@ -18,7 +18,8 @@
  * advantage of how Prototype handles it. 
  */
 Hash = Base.extend(Enumerable, {
-	HIDE
+	_HIDE
+	_BEANS
 	_generics: true,
 
 	/**
@@ -48,22 +49,22 @@ Hash = Base.extend(Enumerable, {
 	/**
 	 * Collects the keys of each element and returns them in an array.
 	 */
-	keys: function() {
+	getKeys: function() {
 		return this.map(function(val, key) {
 			return key;
 		});
 	},
 
-	length: function() {
-		return this.each(function() {
-			this.length++;
-		}, { length: 0 }).length;
-	},
-
 	/**
-	 * Does the same as toArray(), but renamed to go together with keys()
+	 * Does the same as toArray(), but renamed to go together with getKeys()
 	 */
-	values: Enumerable.toArray,
+	getValues: Enumerable.toArray,
+
+	getSize: function() {
+		return this.each(function() {
+			this.size++;
+		}, { size: 0 }).size;
+	},
 
 	statics: {
 		/**

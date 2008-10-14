@@ -186,6 +186,8 @@ DomElement.inject(new function() {
 	}
 
 	return {
+		_BEANS
+
 		getElements: function(selectors, nowrap) {
 			var elements = nowrap ? [] : new this._elements();
 			selectors = !selectors ? ['*'] : typeof selectors == 'string'

@@ -3,7 +3,7 @@
 
 /**
  * Bootstrap JavaScript Library
- * (c) 2006-2007 Juerg Lehni, http://scratchdisk.com/
+ * (c) 2006 - 2008 Juerg Lehni, http://scratchdisk.com/
  *
  * Bootstrap is released under the MIT license
  * http://bootstrap-js.net/
@@ -79,11 +79,11 @@ new function() { // bootstrap
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-#ifdef GETTER_SETTER
-			var val = src[name], res = val, prev, set;
-#else // !GETTER_SETTER
+#ifdef BEANS
+			var val = src[name], res = val, prev, bean, field;
+#else // !BEANS
 			var val = src[name], res = val, prev;
-#endif // !GETTER_SETTER
+#endif // !BEANS
 			// Use __proto__ if available, fallback to Object.prototype otherwise,
 			// since it must be a plain object on browser not natively supporting
 			// __proto__:
@@ -94,17 +94,7 @@ new function() { // bootstrap
 					if (/\[native code/.test(val))
 						return;
 #endif // RHINO
-#ifdef GETTER_SETTER
-					// Check if the function defines a getter or setter by looking
-					// at its name. TODO: measure speed decrease of inject due to this!
-					if (set = name.match(/(.*)_(g|s)et$/)) {
-						// Set the new name so further bellow it can be hidden if needed
-						name = set[1];
-						dest['__define' + set[2].toUpperCase() + 'etter__'](name, val);
-					} else if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
-#else // !GETTER_SETTER
 					if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
-#endif // !GETTER_SETTER
 #ifdef HELMA
 						// If the base function has already the _version field set, 
 						// it is a function previously defined through inject. 
@@ -126,6 +116,14 @@ new function() { // bootstrap
 							// to reflect changes to the base class after 
 							// inheritance.
 							this.BASE_NAME() = fromBase ? base[name] : prev;
+#ifdef DONT_ENUM
+#ifdef HELMA
+							if (!(this instanceof HopObject))
+								this.dontEnum('BASE_NAME()');
+#else // !HELMA
+							this.dontEnum('BASE_NAME()');
+#endif // !HELMA
+#endif // DONT_ENUM
 							try { return val.apply(this, arguments); }
 							finally { this.BASE_NAME() = tmp; }
 						}).pretend(val);
@@ -138,6 +136,17 @@ new function() { // bootstrap
 						}
 #endif // HELMA
 					}
+#ifdef BEANS
+					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/))) {
+						field = bean[3].toLowerCase() + bean[4];
+						if ((src.__lookupGetter__(field) || dest.__lookupGetter__(field)) || (src[field] || dest[field]) === undefined) {
+							dest['__define' + (bean[1] == 'set' ? 'S' : 'G') + 'etter__'](field, res);
+#ifdef DONT_ENUM
+							dest.dontEnum(field);
+#endif // DONT_ENUM
+						}
+					}
+#endif // BEANS
 				}
 #ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
 				switch (typeof val) {
@@ -153,16 +162,11 @@ new function() { // bootstrap
 						break;
 				}
 #endif // HIDDEN
-#ifdef GETTER_SETTER
-				if (!set)
-					dest[name] = res;
-#else // !GETTER_SETTER
 				dest[name] = res;
-#endif // !GETTER_SETTER
-#if defined(DONT_ENUM) || defined(RHINO_DONT_ENUM)
+#ifdef DONT_ENUM
 				if (src._hide && dest.dontEnum)
 					dest.dontEnum(name);
-#endif // DONT_ENUM || RHINO_DONT_ENUM
+#endif // DONT_ENUM
 			}
 		}
 		// Iterate through all definitions in src with an iteator function
@@ -174,17 +178,15 @@ new function() { // bootstrap
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
 			for (var name in src)
-#ifdef DONT_ENUM
-				if (visible(src, name) && !/^(toString|valueOf|statics|_generics|_hide)$/.test(name))
-#elif !defined(RHINO_DONT_ENUM)
-				if (visible(src, name) && !/^(prototype|constructor|toString|valueOf|statics|_generics)$/.test(name))
-#else // RHINO_DONT_ENUM
+#ifndef DONT_ENUM
+				if (visible(src, name) && !/^(prototype|constructor|toString|valueOf|statics|_generics|_beans)$/.test(name))
+#else // DONT_ENUM
 				// On normal JS, we can hide statics through our dontEnum().
 				// on Rhino+dontEnum (e.g. Helma), the native dontEnum can only
 				// be called on fields that are defined already, as an added
 				// attribute. So we need to check against statics here...
-				if (!/^(prototype|constructor|toString|valueOf|statics|_generics|_hide)$/.test(name))
-#endif // RHINO_DONT_ENUM
+				if (!/^(prototype|constructor|toString|valueOf|statics|_generics|_beans|_hide)$/.test(name))
+#endif // DONT_ENUM
 					field(name, generics);
 			// Do not create generics for these:
 			field('toString');
@@ -226,32 +228,8 @@ new function() { // bootstrap
 	 */
 	function visible(obj, name) {
 #ifdef DONT_ENUM
-		// This is tricky: as described in Object.prototype.dontEnum, the
-		// _dontEnum  objects form a inheritance sequence between prototypes.
-		// So if we check  obj._dontEnum[name], we're not sure that the
-		// value returned is actually from the current object. It might be
-		// from a parent in the inheritance chain. This is why dontEnum
-		// stores a reference to the object on which dontEnum was called for
-		// that object. If the value there differs from the one in obj, 
-		// it means it was modified somewhere between obj and there.
-		// If the entry allows overriding, we return true although _dontEnum
-		// lists it.
-		// We also need to detect if entries are actually _dontEnum entires
-		// or fields stored in Object.prototype. Check wether they have the 
-		// _object field set.
-#ifdef BROWSER_LEGACY
-		var val = obj[name], entry;
-		return val !== undefined && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
-				!entry._object || entry._allow && entry._object[name] !== val);
-#else // !BROWSER_LEGACY
-		var entry;
-		return name in obj && (!(entry = obj._dontEnum && obj._dontEnum[name]) ||
-				!entry._object || entry._allow && entry._object[name] !== obj[name]);
-#endif // !BROWSER_LEGACY
-#else // !DONT_ENUM
-#ifdef RHINO_DONT_ENUM
 		return name in obj;
-#else !RHINO_DONT_ENUM
+#else // !DONT_ENUM
 		// We need to filter out what does not belong to the object itself.
 		// This is done by comparing the value with the value of the same
 		// name in the prototype. If the value is equal it's defined in one
@@ -261,13 +239,12 @@ new function() { // bootstrap
 #ifdef EXTEND_OBJECT
 		// We're extending Object, so we can assume __proto__ to always be there,
 		// even when it's simulated on legacy browsers.
-		return NAME_IS_VISIBLE(name, obj[name] !== obj.__proto__[name]);
+		return PROPERTY_IS_VISIBLE(obj, name, obj[name] !== obj.__proto__[name]);
 #else // !EXTEND_OBJECT
 		// Object.prototype is untouched, so we cannot assume __proto__ to always
 		// be defined on legacy browsers.
-		return NAME_IS_VISIBLE(name, (!obj.__proto__ || obj[name] !== obj.__proto__[name]));
+		return PROPERTY_IS_VISIBLE(obj, name, (!obj.__proto__ || obj[name] !== obj.__proto__[name]));
 #endif // !EXTEND_OBJECT
-#endif // !RHINO_DONT_ENUM
 #endif // !DONT_ENUM
 	}
 
@@ -343,10 +320,10 @@ new function() { // bootstrap
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
-#ifdef RHINO_DONT_ENUM
+#ifdef DONT_ENUM
 			// On Rhino+dontEnum, we can only dontEnum fields after they are set.
 			proto.dontEnum('constructor');
-#endif // RHINO_DONT_ENUM
+#endif // DONT_ENUM
 			// An object to be passed as the first parameter in constructors
 			// when initialize should not be called. This needs to be a property
 			// of the created constructor, so that if .extend is called on native
@@ -398,66 +375,16 @@ new function() { // bootstrap
 	// Let's stay compatible with other libraries and not touch Object.prototype
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
-#ifdef DONT_ENUM
-		dontEnum: function(force) {
-			// inherit _dontEnum with all its settings from prototype and extend.
-			// _dontEnum objects form an own inheritance sequence, in parallel 
-			// to the inheritance of the prototypes / objects they belong to. 
-			// The sequence is only formed when dontEnum() is called, so there
-			// might be problems with empty prototypes that get filled after
-			// inheritance (very uncommon).
-			// Here we check if getting _dontEnum on the object actually returns
-			// the one of the parent. If it does, we create a new one by
-			// extending the current one.
-			// We cannot call proto._dontEnum.extend in Base.prototype.dontEnum,
-			// as this is a dontEnum entry after calling
-			// Object.prototype.dontEnum("extend"). Use the private function
-			// instead. Each _dontEnum object has a property _object that points
-			// to the object it belongs to. This makes it easy to check if we
-			// need to extend _dontEnum for any given object dontEnum is
-			// called on:
-			/*
-			// Alternative, when __proto__ works
-			if (!this._dontEnum) this._dontEnum = {};
-			else if (this.__proto__ && this._dontEnum === this.__proto__._dontEnum)
-				this._dontEnum = new (extend(this._dontEnum));
-			*/
-			/*
-			// The code bellow is a compressed form of this:
-			if (!this._dontEnum) this._dontEnum = { _object: this };
-			else if (this._dontEnum._object != this) {
-				this._dontEnum = new (extend(this._dontEnum));
-				this._dontEnum._object = this;
-			}
-			*/
-			// note that without the parantheses around extend(d), new would not
-			// create an instance of the returned constructor!
-			var d = this._dontEnum = !(d = this._dontEnum) ? {} :
-					d._object != this ? new (extend(d)) : d;
-			d._object = this;
-			for (var i = force == true ? 1 : 0; i < arguments.length; ++i)
-				d[arguments[i]] = { _object: this, _allow: force != true };
-		}
-	});
-
-	// Now that dontEnum is defined, use it to hide some fields:
-	// First hide the fields that cannot be overridden (wether they change
-	// value or not, they're allways hidden, by setting the first argument to true)
-	Base.prototype.dontEnum(true, 'dontEnum', '_dontEnum', '__proto__',
-		'prototype', 'constructor');
-
-	// Now add some new fields, and hide these too.
-	Base.inject({
-#endif // DONT_ENUM
-		HIDE
+		_HIDE
 #ifdef HELMA
+		_BEANS
 
 		/**
 		 * For Helma, we need to set _base instead of base, so define a getter
 		 * here that returns it. BASE_NAME defines the name for base (_base in
 	     * this case). This simplifies abstraction in general code above.
 		 */
-		base_get: function() {
+		getBase: function() {
 			return this.BASE_NAME();
 		},
 
@@ -497,6 +424,10 @@ new function() { // bootstrap
 			// set and is garbage collected right after.
 			var res = new (extend(this));
 			return res.inject.apply(res, arguments);
+		},
+
+		statics: {
+			has: visible
 		}
 	});
 }

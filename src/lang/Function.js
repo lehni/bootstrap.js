@@ -14,7 +14,7 @@ Function.inject(new function() {
 	function timer(that, type, delay, bind, args) {
 		// If delay is not defined, execute right away and return the result
 		// of the function. This is used in fireEvent.
-		if (delay == undefined)
+		if (delay === undefined)
 			// IE seems to not support passing undefined for args in apply,
 			// so make sure it's always defined:
 			return that.apply(bind, args ? args : []);
@@ -41,12 +41,13 @@ Function.inject(new function() {
 #endif // BROWSER
 
 	return {
+		_BEANS
 		_generics: true,
 
 		/**
 		 * Returns the function's name, if not unnamed.
 		 */
-		name: function() {
+		getName: function() {
 			var match = this.toString().match(/^\s*function\s*(\w*)/);
 			return match && match[1];
 		},
@@ -54,7 +55,7 @@ Function.inject(new function() {
 		/**
 		 * Returns the function's parameter names as an array
 		 */
-		parameters: function() {
+		getParameters: function() {
 			var str = this.toString().match(/^\s*function[^\(]*\(([^\)]*)/)[1];
 			return str ? str.split(/\s*,\s*/) : [];
 		},
@@ -62,7 +63,7 @@ Function.inject(new function() {
 		/**
 		 * Returns the function's body as a string, excluding the surrounding { }
 		 */
-		body: function() {
+		getBody: function() {
 			return this.toString().match(/^\s*function[^\{]*\{([\u0000-\uffff]*)\}\s*$/)[1];
 		},
 
@@ -106,10 +107,6 @@ Function.inject(new function() {
 // Function.call / apply does not work properly on IE 5 PC / Mac
 
 if (!Function.prototype.apply) {
-#ifdef DONT_ENUM
-	// Never enum __f, the helper property introduced bellow
-	Base.prototype.dontEnum(true, '__f');
-#endif // DONT_ENUM
 	var cache = {};
 
 	Function.inject({

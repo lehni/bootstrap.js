@@ -54,6 +54,8 @@ HtmlElement.inject(new function() {
 	});
 
 	var fields = {
+		_BEANS
+
 		getComputedStyle: function(name) {
 			var style;
 			return this.$.currentStyle && this.$.currentStyle[name.camelize()]

@@ -311,7 +311,7 @@ Request = Base.extend(Chain, Callback, new function() {
 					this.transport.onreadystatechange = this.onStateChange.bind(this);
 					if (method == 'post' && this.transport.overrideMimeType)
 						this.setHeader('Connection', 'close');
-					this.headers.merge(opts.headers).each(function(header, name) {
+					new Hash(this.headers, opts.headers).each(function(header, name) {
 						try{
 							this.transport.setRequestHeader(name, header);
 						} catch (e) {

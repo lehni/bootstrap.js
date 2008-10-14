@@ -79,6 +79,8 @@ HtmlElement.inject(new function() {
 	var getScrollOffset = cumulate('scroll', 'parentNode');
 
 	var fields = {
+		_BEANS
+
 		getSize: function() {
 			return body(this)
 				? this.getView().getSize()
@@ -162,6 +164,8 @@ HtmlElement.inject(new function() {
 [HtmlDocument, HtmlView].each(function(ctor) {
 	ctor.inject(this);
 }, {
+	_BEANS
+
 	getSize: function() {
 		var doc = this.getDocument().$, view = this.getView().$, html = doc.documentElement;
 		return Browser.WEBKIT2 && { width: view.innerWidth, height: view.innerHeight }

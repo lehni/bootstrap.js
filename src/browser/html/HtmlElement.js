@@ -32,6 +32,8 @@ HtmlElement.inject = DomElement.inject;
 // Use the modified inject function from above which injects both into HtmlElement
 // and HtmlElements.
 HtmlElement.inject({
+	_BEANS
+
 	getClass: function() {
 		return this.$.className;
 	},

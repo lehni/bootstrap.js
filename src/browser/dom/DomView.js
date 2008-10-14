@@ -5,6 +5,7 @@
 // DomView
 
 DomView = DomElement.extend({
+	_BEANS
 	_type: 'view',
 
 	getDocument: function() {
