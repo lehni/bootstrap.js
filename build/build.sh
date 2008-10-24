@@ -39,6 +39,7 @@ fi
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 #./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 #./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DDONT_ENUM -DEXTEND_OBJECT -DSET_ITERATOR -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
