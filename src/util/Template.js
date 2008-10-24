@@ -112,12 +112,28 @@ function Template(object, name, parent) {
 Template.prototype = {
 	render: function(object, param, out) {
 		try {
+			var parentParam = param && param.__param__;
 			// Inherit from param.__param__ if it is set:
-			if (param && param.__param__) {
+			if (parentParam) {
+#ifdef RHINO
+				var prm;
+				if (parentParam instanceof java.util.Map) {
+					// Copy since apparently we cannot inherit from java objects
+					prm = {};
+					for (var i in parentParam)
+						prm[i] = parentParam[i];
+				} else {
+					// Inherit form a native js object
+					function inherit() {};
+					inherit.prototype = parentParam;
+					prm = new inherit();
+				}
+#else // !RHINO
 				function inherit() {};
-				inherit.prototype = param.__param__;
+				inherit.prototype = parentParam;
 				var prm = new inherit();
-				// and copy over from param:
+#endif // !RHINO
+				// And copy over from param:
 				for (var i in param)
 					prm[i] = param[i];
 				param = prm;
