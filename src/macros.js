@@ -2,13 +2,13 @@
 #comment COMMENT allows the definition of comments that are removed even when
 #comment js comments are not stripped from the source code.
 
-#define BASE_NAME() base
+#define BASE_NAME base
 
 #ifdef HELMA
 #comment Helma needs BEANS support to work around the base / _base problem.
 #define DONT_ENUM
 #define BEANS
-#define BASE_NAME() _base
+#define BASE_NAME _base
 #endif // HELMA
 
 #ifdef DONT_ENUM
@@ -70,3 +70,37 @@
 #define PROPERTY_IS_VISIBLE(obj, name, condition) PROPERTY_CONDITION(obj, name, condition)
 #define IF_PROPERTY_IS_VISIBLE(name, command) command
 #endif // !CHECK_PROPERTY
+
+#comment Compose hidden fields
+
+#define HIDDEN_FIELDS_1 prototype|constructor|toString|valueOf|statics|_generics
+#define HIDDEN_FIELDS_2 HIDDEN_FIELDS_1
+#define HIDDEN_FIELDS_3 HIDDEN_FIELDS_2
+
+#define HIDDEN_FIELDS HIDDEN_FIELDS_3
+
+#ifdef BEANS
+# comment Add _beans
+#define HIDDEN_FIELDS_2 HIDDEN_FIELDS_1|_beans
+#endif // BEANS
+
+#ifdef DONT_ENUM
+# comment Add _hide
+#define HIDDEN_FIELDS_3 HIDDEN_FIELDS_2|_hide
+#endif // DONT_ENUM
+
+#comment Define BEAN_BLOCK OPEN / CLOSE for clean code.
+#comment It is only needed when DONT_ENUM is defined, in which case there will be
+#comment two statements inside the code block instead of one.
+
+#ifdef DONT_ENUM
+
+#define BEAN_BLOCK_OPEN {
+#define BEAN_BLOCK_CLOSE }
+
+#else // !DONT_ENUM
+
+#define BEAN_BLOCK_OPEN
+#define BEAN_BLOCK_CLOSE
+
+#endif // !DONT_ENUM
