@@ -80,7 +80,7 @@ new function() { // bootstrap
 					Array.prototype.slice.call(arguments, 1));
 			}
 #ifdef BEANS
-			var val = src[name], res = val, prev, bean, field;
+			var val = src[name], res = val, prev, bean, key;
 #else // !BEANS
 			var val = src[name], res = val, prev;
 #endif // !BEANS
@@ -111,21 +111,21 @@ new function() { // bootstrap
 #endif // HELMA
 						var fromBase = base && base[name] == prev;
 						res = (function() {
-							var tmp = this.BASE_NAME();
+							var tmp = this.BASE_NAME;
 							// Look up the base function each time if we can,
 							// to reflect changes to the base class after 
 							// inheritance.
-							this.BASE_NAME() = fromBase ? base[name] : prev;
+							this.BASE_NAME = fromBase ? base[name] : prev;
 #ifdef DONT_ENUM
 #ifdef HELMA
 							if (!(this instanceof HopObject))
-								this.dontEnum('BASE_NAME()');
+								this.dontEnum('BASE_NAME');
 #else // !HELMA
-							this.dontEnum('BASE_NAME()');
+							this.dontEnum('BASE_NAME');
 #endif // !HELMA
 #endif // DONT_ENUM
 							try { return val.apply(this, arguments); }
-							finally { this.BASE_NAME() = tmp; }
+							finally { this.BASE_NAME = tmp; }
 						}).pretend(val);
 #ifdef HELMA
 						// If versioning is used, set the new version now, and keep a reference to the
@@ -137,15 +137,20 @@ new function() { // bootstrap
 #endif // HELMA
 					}
 #ifdef BEANS
-					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/))) {
-						field = bean[3].toLowerCase() + bean[4];
-						if ((src.__lookupGetter__(field) || dest.__lookupGetter__(field)) || (src[field] || dest[field]) === undefined) {
-							dest['__define' + (bean[1] == 'set' ? 'S' : 'G') + 'etter__'](field, res);
+					// Do not execute the check for undefined if the destination or source has already a bean with that name.
+					// This test is performed by checking for a getter and is needed since checking for undefined would
+					// actually execute the getter. Since this might be called on a prototype object with defined beans,
+					// it would produce onforeseen results, as it is not an object produced through its own constructor.
+					// E.G. DomElement, where methods access this.$ which is not defined for the prototype itself, only for
+					// instances.
+					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/))
+						&& ((src.__lookupGetter__(key = bean[3].toLowerCase() + bean[4]) || dest.__lookupGetter__(key))
+							|| (src[key] || dest[key]) === undefined)) BEAN_BLOCK_OPEN
+						dest['__define' + (bean[1] == 'set' ? 'S' : 'G') + 'etter__'](key, res);
 #ifdef DONT_ENUM
-							dest.dontEnum(field);
+						dest.dontEnum(key);
 #endif // DONT_ENUM
-						}
-					}
+					BEAN_BLOCK_CLOSE
 #endif // BEANS
 				}
 #ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
@@ -179,13 +184,9 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifndef DONT_ENUM
-				if (visible(src, name) && !/^(prototype|constructor|toString|valueOf|statics|_generics|_beans)$/.test(name))
+				if (visible(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
 #else // DONT_ENUM
-				// On normal JS, we can hide statics through our dontEnum().
-				// on Rhino+dontEnum (e.g. Helma), the native dontEnum can only
-				// be called on fields that are defined already, as an added
-				// attribute. So we need to check against statics here...
-				if (!/^(prototype|constructor|toString|valueOf|statics|_generics|_beans|_hide)$/.test(name))
+				if (!/^(HIDDEN_FIELDS)$/.test(name))
 #endif // DONT_ENUM
 					field(name, generics);
 			// Do not create generics for these:
@@ -385,7 +386,7 @@ new function() { // bootstrap
 	     * this case). This simplifies abstraction in general code above.
 		 */
 		getBase: function() {
-			return this.BASE_NAME();
+			return this.BASE_NAME;
 		},
 
 #endif // HELMA
@@ -431,5 +432,41 @@ new function() { // bootstrap
 		}
 	});
 }
+
+#ifdef HELMA
+
+/*
+// Fix dontEnum for Helma's HopObject
+HopObject.prototype.dontEnum = function() {
+	if (!this.__dontEnum__)
+		this.__dontEnum__ = { __dontenum__: true, __dontEnum__: true };
+	for (var i = 0, l = arguments.length; i < l; i++)
+		this.__dontEnum__[arguments[i]] = true;
+}
+
+HopObject.prototype.__iterator__ = function() {
+	var en = toJava(this).properties();
+	while (en.hasMoreElements()) {
+		var key = en.nextElement();
+		if (!this.__dontEnum__ || !this.__dontEnum__[key])
+			yield key;
+		else
+			app.log("Filtering " + key);
+	}
+	throw StopIteration;
+}
+*/
+
+HopObject.prototype.__iterator__ = function() {
+	var en = toJava(this).properties();
+	while (en.hasMoreElements()) {
+		var key = en.nextElement();
+		if (key.charAt(0) != '_')
+			yield key;
+	}
+	throw StopIteration;
+}
+
+#endif // HELMA
 
 #endif // __lang_Core__
