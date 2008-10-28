@@ -183,6 +183,7 @@ Template.prototype = {
 		// the finding of closing tags counts nested tags, to make sub templates
 		// work
 		var skipLineBreak = false;
+		var skipWhiteSpace = false;
 		var tagCounter = 0;
 		var templateTag = null;
 		// Stack for control tags and loops
@@ -202,18 +203,27 @@ Template.prototype = {
 			if (buffer.length) {
 				// Write out text lines
 				var part = buffer.join('');
-				if (templateTag)
-					templateTag.buffer.push(part);
-				else // Encodes by escaping ",',\n,\r
+				// Filter out white space before real content if the <%-%> tag told us to do so:
+				if (part && skipWhiteSpace) {
+					part = part.match(/\s*([\u0000-\uffff]*)/);
+					if (part)
+						part = part[1];
+					skipWhiteSpace = false;
+				}
+				if (part) {
+					if (templateTag)
+						templateTag.buffer.push(part);
+					else // Encodes by escaping ",',\n,\r
 #ifdef RHINO
-					code.push('out.write(' + uneval(part) + ');');
+						code.push('out.write(' + uneval(part) + ');');
 #else // !RHINO
-					// Do not rely on uneval on the client side, although it's 
-					// there on some browsers...
-					// Unfortunatelly, part.replace(/["'\n\r]/mg, "\\$&") does
-					// not work on Safari. TODO: Report bug:
-					code.push('out.write("' + part.replace(/(["'\n\r])/mg, '\\$1') + '");');
+						// Do not rely on uneval on the client side, although it's 
+						// there on some browsers...
+						// Unfortunatelly, part.replace(/["'\n\r]/mg, "\\$&") does
+						// not work on Safari. TODO: Report bug:
+						code.push('out.write("' + part.replace(/(["'\n\r])/mg, '\\$1') + '");');
 #endif // !RHINO
+				}
 				buffer.length = 0;
 			}
 		}
@@ -264,8 +274,12 @@ Template.prototype = {
 									this.parseTemplateTag(templateTag, code);
 								templateTag = { tag: tag, buffer: [] };
 							} else {
+								// See if it's a special <%-%> tag that tells us to skip
+								// all the white space until the next content
 								if (templateTag)
 									templateTag.buffer.push(tag);
+								else if (tag == '<%-%>')
+									skipWhiteSpace = true;
 								else if (this.parseMacro(tag, code, stack, true) && end == line.length)
 									skipLineBreak = true;
 							}
@@ -572,9 +586,10 @@ Template.prototype = {
 	 * This is the core of the template parser
 	 */
 	parseMacro: function(tag, code, stack, allowControls, toString) {
-		// only process if it is not a comment or a swallow line break tag.
-		// return true tells parse() to swallow line break.
-		if (/^<%--/.test(tag) || tag == '<%-%>') return true;
+		// Only process if it is not a comment.
+		// Return true to tell parse() to swallow the following line break.
+		if (/^<%--/.test(tag))
+			return true;
 		// <%= tags cannot have unnamed parameters
 		var macro = this.parseMacroParts(tag, code, stack, allowControls);
 		if (!macro)
