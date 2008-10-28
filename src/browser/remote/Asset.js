@@ -21,6 +21,39 @@ Asset = new function() {
 		}) : {};
 	}
 
+	/*
+	Trial at syncronized loading for multiple script assets
+	but how to return the full set of assets, since they are created serially?
+	
+	function createMultiple(type, sources, options, sync) {
+		var props = getProperties(options), count = 0;
+		options = options || {};
+		var assets = new HtmlElements();
+		function load(src) {
+			props.onLoad = function() {
+				if (options.onProgress)
+					options.onProgress.call(this, src);
+				if (++count == sources.length && options.onComplete)
+					options.onComplete.call(this);
+			}
+			assets.push(Asset[type](src, props));
+		}
+		if (sync) {
+			var progress = options.onProgress;
+			options.onProgress = function(src) {
+				if (progress)
+					progress.call(this, src);
+				var next = sources[count + 1];
+				if (next)
+					load(next);
+			};
+			load(sources[0]);
+		} else {
+			sources.each(load);
+		}
+		return assets;
+	}
+	*/
 	function createMultiple(type, sources, options) {
 		var props = getProperties(options), count = 0;
 		options = options || {};
