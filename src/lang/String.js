@@ -31,20 +31,20 @@ String.inject({
 	},
 
 	camelize: function(separator) {
-		return this.replace(new RegExp(separator || '-', 'g'), function(match) {
+		return this.replace(new RegExp(separator || '\s-', 'g'), function(match) {
 			return match.charAt(1).toUpperCase();
 		});
 	},
 
 	uncamelize: function(separator) {
-		separator = separator || '-';
-		return this.replace(/[a-zA-Z][A-Z0-9]|[0-9][a-zA-Z]/g, function(match) {
-			return match.charAt(0) + separator + match.charAt(1);
+		separator = separator || ' ';
+		return this.replace(/[a-z][A-Z0-9]|[0-9][a-zA-Z]|[A-Z]{2}[a-z]/g, function(match) {
+			return match.charAt(0) + separator + match.substring(1);
 		});
 	},
 
 	hyphenate: function(separator) {
-		return this.uncamelize(separator).toLowerCase();
+		return this.uncamelize(separator || '-').toLowerCase();
 	},
 
 	capitalize: function() {
