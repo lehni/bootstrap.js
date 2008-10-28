@@ -49,7 +49,7 @@ DomElement.operators = new function() {
 			},
 			// FILTER
 			function(a, v) {
-				return a.substr(0, v.length) == v;
+				return a.substring(0, v.length) == v;
 			}
 		],
 
@@ -60,7 +60,7 @@ DomElement.operators = new function() {
 			},
 			// FILTER
 			function(a, v) {
-				return a.substr(a.length - v.length) == v;
+				return a.substring(a.length - v.length) == v;
 			}
 		],
 
