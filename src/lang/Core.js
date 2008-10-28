@@ -117,12 +117,7 @@ new function() { // bootstrap
 							// inheritance.
 							this.BASE_NAME = fromBase ? base[name] : prev;
 #ifdef DONT_ENUM
-#ifdef HELMA
-							if (!(this instanceof HopObject))
-								this.dontEnum('BASE_NAME');
-#else // !HELMA
 							this.dontEnum('BASE_NAME');
-#endif // !HELMA
 #endif // DONT_ENUM
 							try { return val.apply(this, arguments); }
 							finally { this.BASE_NAME = tmp; }
@@ -431,42 +426,27 @@ new function() { // bootstrap
 			has: visible
 		}
 	});
-}
 
 #ifdef HELMA
-
-/*
-// Fix dontEnum for Helma's HopObject
-HopObject.prototype.dontEnum = function() {
-	if (!this.__dontEnum__)
-		this.__dontEnum__ = { __dontenum__: true, __dontEnum__: true };
-	for (var i = 0, l = arguments.length; i < l; i++)
-		this.__dontEnum__[arguments[i]] = true;
-}
-
-HopObject.prototype.__iterator__ = function() {
-	var en = toJava(this).properties();
-	while (en.hasMoreElements()) {
-		var key = en.nextElement();
-		if (!this.__dontEnum__ || !this.__dontEnum__[key])
-			yield key;
-		else
-			app.log("Filtering " + key);
+	// Fix dontEnum for Helma's HopObject
+	// This does not need to be in this scope, but for tydiness it is.
+	HopObject.prototype.dontEnum = function() {
+		if (!this.__dontEnum__)
+			this.__dontEnum__ = { __dontEnum__: true };
+		for (var i = 0, l = arguments.length; i < l; i++)
+			this.__dontEnum__[arguments[i]] = true;
 	}
-	throw StopIteration;
-}
-*/
 
-HopObject.prototype.__iterator__ = function() {
-	var en = toJava(this).properties();
-	while (en.hasMoreElements()) {
-		var key = en.nextElement();
-		if (key.charAt(0) != '_')
-			yield key;
+	HopObject.prototype.__iterator__ = function() {
+		var en = toJava(this).properties();
+		while (en.hasMoreElements()) {
+			var key = en.nextElement();
+			if (!this.__dontEnum__ || !this.__dontEnum__[key])
+				yield key;
+		}
+		throw StopIteration;
 	}
-	throw StopIteration;
-}
-
 #endif // HELMA
+}
 
 #endif // __lang_Core__
