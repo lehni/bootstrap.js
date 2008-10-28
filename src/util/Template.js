@@ -116,23 +116,17 @@ Template.prototype = {
 			// Inherit from param.__param__ if it is set:
 			if (parentParam) {
 #ifdef RHINO
-				var prm;
+				// Convert to native JS since apparently we cannot inherit from java objects
 				if (parentParam instanceof java.util.Map) {
-					// Copy since apparently we cannot inherit from java objects
-					prm = {};
+					var prm = {};
 					for (var i in parentParam)
 						prm[i] = parentParam[i];
-				} else {
-					// Inherit form a native js object
-					function inherit() {};
-					inherit.prototype = parentParam;
-					prm = new inherit();
+					parentParam = param.__param__ = prm;
 				}
-#else // !RHINO
+#endif // RHINO
 				function inherit() {};
 				inherit.prototype = parentParam;
 				var prm = new inherit();
-#endif // !RHINO
 				// And copy over from param:
 				for (var i in param)
 					prm[i] = param[i];
