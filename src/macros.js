@@ -5,25 +5,32 @@
 #define BASE_NAME base
 
 #ifdef HELMA
-#comment Helma needs BEANS support to work around the base / _base problem.
+#comment Helma needs GETTER_SETTER support to work around the base / _base problem.
 #define DONT_ENUM
+#define GETTER_SETTER
 #define BEANS
 #define BASE_NAME _base
 #endif // HELMA
 
+#ifndef GETTER_SETTER
+#comment No beans without native getter / setter support
+#undef BEANS
+#endif // !GETTER_SETTER
+
 #ifdef DONT_ENUM
-#comment Define the _HIDE parameter, to be added to extend() after the object
-#comment that defines the fields to be injected, if dontEnum should be called
-#comment for these fields. This only does something if dontEnum() is there.
+#comment Define the _HIDE parameter, to be added to the object that defines the
+#comment fields to be injected, if dontEnum should be called for these fields.
+#comment This only does something if dontEnum() is there.
 #define _HIDE _hide: true,
 #else // !DONT_ENUM
 #define _HIDE
 #endif // !DONT_ENUM
 
 #ifdef BEANS
-#comment Define the _HIDE parameter, to be added to extend() after the object
-#comment that defines the fields to be injected, in order to produce beans from
-#comment getters and setters.
+#comment Define the _BEANS parameter, to be added to the object that defines the
+#comment fields to be injected, if getters and setters should be produced if the
+#comment function name matches this form: get/set/is[A-Z]...
+#comment This only does something if getter / setter support is there.
 #define _BEANS _beans: true,
 #else // !BEANS
 #define _BEANS
@@ -53,11 +60,11 @@
 #comment already.
 #endif // !SET_ITERATOR && !BROWSER_LEGACY
 
-#ifdef BEANS
+#ifdef GETTER_SETTER
 #define PROPERTY_CONDITION(obj, name, condition) !obj.__lookupGetter__(name) && condition
-#else // !BEANS
+#else // !GETTER_SETTER
 #define PROPERTY_CONDITION(obj, name, condition) condition
-#endif // !BEANS
+#endif // !GETTER_SETTER
 
 #ifdef CHECK_PROPERTY
 #define PROPERTY_IS_VISIBLE(obj, name, condition) PROPERTY_CONDITION(obj, name, condition) && CHECK_PROPERTY(name)

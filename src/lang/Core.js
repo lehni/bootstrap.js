@@ -65,30 +65,29 @@ new function() { // bootstrap
 		/**
 		 * Private function that injects one field with given name
 		 */
-		function field(name, generics) {
+		function field(name, val, generics) {
+			val = val || src[name];
+#ifdef BEANS
+			var type = typeof val, res = val, prev, bean;
+#else // !BEANS
+			var type = typeof val, res = val, prev;
+#endif // !BEANS
 			// Make generics first, as we might jump out bellow in the
-			// val.valueOf() === prev.valueOf() check,
+			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
 			// to produce generics of them.
-			// Also produce generics even if the value is already in
-			// src.__proto__ / Object.prototype, as checked bellow.
-			if (generics) generics[name] = function(bind) {
+			if (generics && type == 'function') generics[name] = function(bind) {
 				// Do not call Array.slice generic here, as on Safari,
 				// this seems to confuse scopes (calling another
 				// generic from generic-producing code).
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-#ifdef BEANS
-			var val = src[name], res = val, prev, bean, key;
-#else // !BEANS
-			var val = src[name], res = val, prev;
-#endif // !BEANS
 			// Use __proto__ if available, fallback to Object.prototype otherwise,
 			// since it must be a plain object on browser not natively supporting
 			// __proto__:
 			if (val !== (src.__proto__ || Object.prototype)[name]) {
-				if (typeof val == 'function') {
+				if (type == 'function') {
 #ifdef RHINO
 					// Don't touch native java code
 					if (/\[native code/.test(val))
@@ -132,37 +131,25 @@ new function() { // bootstrap
 #endif // HELMA
 					}
 #ifdef BEANS
-					// Do not execute the check for undefined if the destination or source has already a bean with that name.
-					// This test is performed by checking for a getter and is needed since checking for undefined would
-					// actually execute the getter. Since this might be called on a prototype object with defined beans,
-					// it would produce onforeseen results, as it is not an object produced through its own constructor.
-					// E.G. DomElement, where methods access this.$ which is not defined for the prototype itself, only for
-					// instances.
-					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/))
-						&& ((src.__lookupGetter__(key = bean[3].toLowerCase() + bean[4]) || dest.__lookupGetter__(key))
-							|| (src[key] || dest[key]) === undefined)) BEAN_BLOCK_OPEN
-						dest['__define' + (bean[1] == 'set' ? 'S' : 'G') + 'etter__'](key, res);
-#ifdef DONT_ENUM
-						dest.dontEnum(key);
-#endif // DONT_ENUM
-					BEAN_BLOCK_CLOSE
+					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/)))
+						field(bean[3].toLowerCase() + bean[4], {
+							_get: src['get' + bean[2]] || src['is' + bean[2]],
+							_set: src['set' + bean[2]]
+						});
 #endif // BEANS
 				}
-#ifdef HIDDEN // We don't need this for now. It causes problems since Hash.merge is not defined since the start
-				switch (typeof val) {
-					case 'function':
-						// INSERT THE ABOVE!
-						break;
-					case 'object':
-					case 'hash':
-						// Merge hashes and objects
-						// Make sure it's a simple object and not something native
-						if (prev && prev != val && val instanceof Object)
-							res = Hash.merge({}, prev, val);
-						break;
+#ifdef GETTER_SETTER
+				if (type == 'object' && (val._get || val._set)) {
+					if (val._get)
+						dest.__defineGetter__(name, val._get);
+					if (val._set)
+						dest.__defineSetter__(name, val._set);
+				} else {
+					dest[name] = res;
 				}
-#endif // HIDDEN
+#else // !GETTER_SETTER
 				dest[name] = res;
+#endif // !GETTER_SETTER
 #ifdef DONT_ENUM
 				if (src._hide && dest.dontEnum)
 					dest.dontEnum(name);
@@ -183,7 +170,7 @@ new function() { // bootstrap
 #else // DONT_ENUM
 				if (!/^(HIDDEN_FIELDS)$/.test(name))
 #endif // DONT_ENUM
-					field(name, generics);
+					field(name, null, generics);
 			// Do not create generics for these:
 			field('toString');
 			field('valueOf');
@@ -380,8 +367,10 @@ new function() { // bootstrap
 		 * here that returns it. BASE_NAME defines the name for base (_base in
 	     * this case). This simplifies abstraction in general code above.
 		 */
-		getBase: function() {
-			return this.BASE_NAME;
+		base: {
+			_get: function() {
+				return this.BASE_NAME;
+			}
 		},
 
 #endif // HELMA
