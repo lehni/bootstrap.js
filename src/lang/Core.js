@@ -131,7 +131,11 @@ new function() { // bootstrap
 #endif // HELMA
 					}
 #ifdef BEANS
-					if (src._beans && (bean = name.match(/^(set|get|is)(([A-Z])(.*))$/)))
+					// Only set produce bean properties when getters are specified.
+					// This does not produce properties for setter-only properties which
+					// makes sense and also avoids double-injection for beans with both
+					// getters and setters.
+					if (src._beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
 						field(bean[3].toLowerCase() + bean[4], {
 							_get: src['get' + bean[2]] || src['is' + bean[2]],
 							_set: src['set' + bean[2]]
