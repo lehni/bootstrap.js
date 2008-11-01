@@ -65,18 +65,23 @@ new function() { // bootstrap
 		/**
 		 * Private function that injects one field with given name
 		 */
+#ifdef GETTER_SETTER
 		function field(name, val, generics) {
-			val = val || src[name];
-#ifdef BEANS
-			var type = typeof val, res = val, prev, bean;
-#else // !BEANS
-			var type = typeof val, res = val, prev;
-#endif // !BEANS
+			if (!val) {
+				// If there's a getter, reproduce the property description from it.
+				var get = src.__lookupGetter__(name);
+				val = get ? { _get: get, _set: src.__lookupSetter__(name) } : src[name];
+			}
+			var type = typeof val, func = type == 'function', res = val, prev, getBEANS_VARIABLE;
+#else // !GETTER_SETTER
+		function field(name, generics) {
+			var val = src[name], func = typeof val == 'function', res = val, prevBEANS_VARIABLE;
+#endif // !GETTER_SETTER
 			// Make generics first, as we might jump out bellow in the
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
 			// to produce generics of them.
-			if (generics && type == 'function') generics[name] = function(bind) {
+			if (generics && func) generics[name] = function(bind) {
 				// Do not call Array.slice generic here, as on Safari,
 				// this seems to confuse scopes (calling another
 				// generic from generic-producing code).
@@ -87,7 +92,7 @@ new function() { // bootstrap
 			// since it must be a plain object on browser not natively supporting
 			// __proto__:
 			if (val !== (src.__proto__ || Object.prototype)[name]) {
-				if (type == 'function') {
+				if (func) {
 #ifdef RHINO
 					// Don't touch native java code
 					if (/\[native code/.test(val))
@@ -174,7 +179,11 @@ new function() { // bootstrap
 #else // DONT_ENUM
 				if (!/^(HIDDEN_FIELDS)$/.test(name))
 #endif // DONT_ENUM
+#ifdef GETTER_SETTER
 					field(name, null, generics);
+#else // !GETTER_SETTER
+					field(name, generics);
+#endif // !GETTER_SETTER
 			// Do not create generics for these:
 			field('toString');
 			field('valueOf');

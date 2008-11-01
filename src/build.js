@@ -1,4 +1,4 @@
-#include "macros.js"
+#include "macros/macros.js"
 #include "lang/Core.js"
 #include "lang/Function.js"
 #include "lang/Enumerable.js"
