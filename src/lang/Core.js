@@ -72,7 +72,7 @@ new function() { // bootstrap
 				var get = src.__lookupGetter__(name);
 				val = get ? { _get: get, _set: src.__lookupSetter__(name) } : src[name];
 			}
-			var type = typeof val, func = type == 'function', res = val, prev, getBEANS_VARIABLE;
+			var type = typeof val, func = type == 'function', res = val, prevBEANS_VARIABLE;
 #else // !GETTER_SETTER
 		function field(name, generics) {
 			var val = src[name], func = typeof val == 'function', res = val, prevBEANS_VARIABLE;
