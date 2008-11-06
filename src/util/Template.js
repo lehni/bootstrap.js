@@ -1154,6 +1154,14 @@ HopObject.prototype.template_macro = function(param, name) {
 	}
 }
 
+/* TODO: reconsider this for rendering through HopObject constructors:
+Function.prototype.renderTemplate = function(template, param, out) {
+	if (!this.instance)
+		this.instance = new this();
+	return this.instance.renderTemplate(template, param, out);
+}
+*/
+
 #else // !HELMA
 
 /**
