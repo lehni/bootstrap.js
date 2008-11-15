@@ -9,6 +9,7 @@
 DomDocument = DomElement.extend({
 	_BEANS
 	_type: 'document',
+	// TODO: Find out if this is needed here. Doesn't DomElement already define it?
 	_elements: DomElements,
 
 	initialize: function() {
