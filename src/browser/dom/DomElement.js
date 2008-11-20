@@ -50,7 +50,7 @@ DomElements = Array.extend(new function() {
 			for (var i = 0, l = items.length; i < l; ++i) {
 				var el = items[i];
 				// Try _wrapper first, for faster performance
-				if ((el = el && (el._wrapper || DomElement.get(el))) && el._unique != this._unique) {
+				if ((el = el && (el._wrapper || DomElement.wrap(el))) && el._unique != this._unique) {
 					el._unique = this._unique;
 					this[this.length++] = el;
 				}
@@ -180,15 +180,14 @@ DomElement = Base.extend(new function() {
 		var match;
 		// Check classCheck first, since it can override the _tag setting
 		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
-			// Check _tag settings for prototypes bound to tagNames, e.g. form, etc
+			// Check _tag settings for prototypes bound to tagNames, e.g. Form, etc
 			el.tagName && tags[el.tagName] ||
 			// Basic Html elements
 			el.className !== undefined && HtmlElement ||
-			// Check views / windows
-			// TODO: does this always work? What is the way to really know it's a view? How to distinguish DomView from HtmlView?
-			el.location && el.frames && el.history && HtmlView ||
-			// Check documents
-			el.nodeName == '#document' && (document.documentElement.nodeName.toLowerCase() == 'html' && HtmlDocument || DomDocument) ||
+			// Documents
+			el.nodeType == 9 && (el.documentElement.nodeName.toLowerCase() == 'html' && HtmlDocument || DomDocument) ||
+			// Windows
+			el.location && el.frames && el.history && DomWindow ||
 			// Everything else
 			DomElement;
 	}
@@ -200,8 +199,12 @@ DomElement = Base.extend(new function() {
 		// Tells Base.type the type to return when encountering an element.
 		_type: 'element',
 		_elements: DomElements,
+		// Tell extend to automatically call this.base in overridden initialize methods of DomElements
+		// See extend bellow for more information about this.
+		_initialize: true,
 
 		initialize: function(el, props, doc) {
+			if (!el) return null;
 			// Support element creating constructors on subclasses of DomElement
 			// that define prototype._tag and can take one argument, which 
 			// defines the properties to be set:
@@ -241,6 +244,10 @@ DomElement = Base.extend(new function() {
 				elements[elements.length] = el;
 			} catch (e) {} // Ignore error
 			if (props) this.set(props);
+			// Make sure we always return a value, even if it's this, so
+			// inerhiting prototypes can rely on this.base() to return an
+			// instance to work with.
+			return this;
 		},
 
 		statics: {
@@ -285,14 +292,14 @@ DomElement = Base.extend(new function() {
 				// Do not pass src to base, as we weed to fix #inject first.
 				var ret = this.base();
 				// If initialize is defined, explicitely calls this.base(el, props)
-				// here. This is a specialy case for DomElement extension that does
-				// not require the user to call this, since it is used for _class
+				// here. This is a specialy DomElement extension that does not
+				// require the user to call this.base(), since it is used for _class
 				// stuff often.
 				var init = src.initialize;
 				if (init) src.initialize = function(el, props) {
-					var ret = this.base(el, props);
+					var ret = this._initialize && this.base(el, props);
 					if (ret) return ret;
-					init.call(this);
+					init.apply(this, arguments);
 				}
 				// Undo overriding of the inject method above for subclasses,
 				// as only injecting into DomElement (not subclasses) shall also
@@ -324,24 +331,54 @@ DomElement = Base.extend(new function() {
 						// does not want to be lazily loaded, force wrapping of
 						// these elements on domready, so that initialize will be
 						// directly called and further dom manipulation can be done.
-						if (!src._lazy && src.initialize) Document.addEvent('domready', function() {
-							Document.getElements('.' + src._class);
+						if (!src._lazy && src.initialize) Browser.document.addEvent('domready', function() {
+							this.getElements('.' + src._class);
 						});
 					}
 				}
 				return ret;
 			},
 
-			get: function(el) {
+			/**
+			 * Wraps the passed element in a DomElement wrapper. 
+			 * It returns existing wrappers through el._wrapper, if defined.
+			 */
+			wrap: function(el) {
 				return el ? typeof el == 'string'
-					? Document.getElement(el)
+					? DomElement.get(el)
 					// Make sure we're using the right constructor.
 					: el._wrapper || el._elements && el || new (getConstructor(el))(el, dont)
 						: null;
 			},
 
 			/**
-			 * This is only a helper method that's used both in Document and DomElement.
+			 * Unwraps a wrapped element and returns its native dom element, or
+			 * the element itself if it is already native.
+			 */
+			unwrap: function(el) {
+				return el && el.$ || el;
+			},
+
+			/**
+			 * Returns the first element matching the given selector, within root
+			 * or Browser.document, if root is not specified.
+			 */
+			get: function(selector, root) {
+				// Do not use this for DomElement since $ is a link to DomElement.get
+				return (root && DomElement.wrap(root) || Browser.document).getElement(selector);
+			},
+
+			/**
+			 * Returns all elements matching the given selector, within root
+			 * or Browser.document, if root is not specified.
+			 */
+			getAll: function(selector, root) {
+				// Do not use this for DomElement since $$ is a link to DomElement.getAll
+				return (root && DomElement.wrap(root) || Browser.document).getElements(selector);
+			},
+
+			/**
+			 * This is only a helper method that's used both in DomDocument and DomElement.
 			 * It does not fully set props, only the values needed for a IE workaround.
 			 * It also returns an unwrapped object, that needs to further initalization
 			 * and setting of props.
@@ -360,10 +397,6 @@ DomElement = Base.extend(new function() {
 					tag = '<' + tag + '>';
 				}
 				return (DomElement.unwrap(doc) || document).createElement(tag);
-			},
-
-			unwrap: function(el) {
-				return el && el.$ || el;
 			},
 
 			collect: function(el) {
@@ -391,6 +424,13 @@ DomElement = Base.extend(new function() {
 		}
 	}
 });
+
+#ifdef DEFINE_GLOBALS
+
+$ = DomElement.get;
+$$ = DomElement.getAll;
+
+#endif // DEFINE_GLOBALS
 
 // Use the modified inject function from above which injects both into DomElement
 // and DomElements.
@@ -438,7 +478,7 @@ DomElement.inject(new function() {
 	function walk(el, name, start) {
 		el = el[start ? start : name];
 		while (el && Base.type(el) != 'element') el = el[name];
-		return DomElement.get(el);
+		return DomElement.wrap(el);
 	}
 
 	// A helper for calling toElement and returning results.
@@ -493,11 +533,11 @@ DomElement.inject(new function() {
 		},
 
 		getDocument: function() {
-			return DomElement.get(this.$.ownerDocument);
+			return DomElement.wrap(this.$.ownerDocument);
 		},
 
-		getView: function() {
-			return this.getDocument().getView();
+		getWindow: function() {
+			return this.getDocument().getWindow();
 		},
 
 		getPrevious: function() {
@@ -517,7 +557,7 @@ DomElement.inject(new function() {
 		},
 
 		getParent: function() {
-			return DomElement.get(this.$.parentNode);
+			return DomElement.wrap(this.$.parentNode);
 		},
 
 		getChildren: function() {
@@ -537,7 +577,7 @@ DomElement.inject(new function() {
 		},
 
 		appendChild: function(el) {
-			if (el = DomElement.get(el)) {
+			if (el = DomElement.wrap(el)) {
 				// Fix a bug on Mac IE when inserting Option elements to Select 
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
@@ -553,7 +593,7 @@ DomElement.inject(new function() {
 		// TODO: Consider naming this append
 		appendChildren: function() {
 			return Array.flatten(arguments).each(function(el) {
-				this.appendChild($(DomElement.get(el)));
+				this.appendChild($(DomElement.wrap(el)));
 			}, this);
 		},
 
@@ -562,6 +602,12 @@ DomElement.inject(new function() {
 			return this;
 		},
 
+		/**
+		 * Wraps the passed elements around the current one.
+		 * Elements are converted through toElements
+		 *
+		 * Inspired by: jQuery
+		 */
 		wrap: function() {
 			var el = this.injectBefore.apply(this, arguments), last;
 			do {
@@ -579,7 +625,7 @@ DomElement.inject(new function() {
 		},
 
 		removeChild: function(el) {
-			el = DomElement.get(el);
+			el = DomElement.wrap(el);
 			this.$.removeChild(el.$);
 			return el;
 		},
@@ -608,7 +654,7 @@ DomElement.inject(new function() {
 		},
 
 		clone: function(contents) {
-			return DomElement.get(this.$.cloneNode(!!contents));
+			return DomElement.wrap(this.$.cloneNode(!!contents));
 		},
 
 		getProperty: function(name) {

@@ -59,7 +59,7 @@ HtmlElement.inject(new function() {
 		getComputedStyle: function(name) {
 			var style;
 			return this.$.currentStyle && this.$.currentStyle[name.camelize()]
-				|| (style = this.getView().$.getComputedStyle(this.$, null)) && style.getPropertyValue(name.hyphenate())
+				|| (style = this.getWindow().$.getComputedStyle(this.$, null)) && style.getPropertyValue(name.hyphenate())
 				|| null;
 		},
 
@@ -128,7 +128,8 @@ HtmlElement.inject(new function() {
 				// array of four color arrays.
 				value = (type == 'array' ? value.flatten() : [value]).map(function(val) {
 					var part = parts[index++];
-					if (!part) throw Base.stop;
+					if (!part)
+						throw Base.stop;
 					return Base.type(val) == 'number' ? part.replace('@', name == 'opacity' ? val : Math.round(val)) : val;
 				}).join(' ');
 			}

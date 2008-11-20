@@ -46,3 +46,4 @@
 
 #include "enum.js"
 #include "hidden.js"
+#include "globals.js"

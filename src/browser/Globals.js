@@ -4,30 +4,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Globals
 
-#ifdef BROWSER_LEGACY
-if (!this.encodeURIComponent) {
-	encodeURIComponent = escape;
-	decodeURIComponent = unescape;
-}
-#endif // BROWSER_LEGACY
-
-// TODO: rename?
-Document = DomElement.get(document);
-Window = DomElement.get(window);
-
-// Garbage collection
-Window.addEvent('unload', DomElement.dispose);
-
-#ifdef DEFINE_GLOBALS
-
-function $(selector, root) {
-	return (DomElement.get(root) || Document).getElement(selector);
-}
-
-function $$(selector, root) {
-	return (DomElement.get(root) || Document).getElements(selector);
-}
-
-#endif // DEFINE_GLOBALS
+// Sort out garbage collection at the same time
+DEFINE_BROWSER_GLOBAL(document, DomElement.wrap(document));
+DEFINE_BROWSER_GLOBAL(window, DomElement.wrap(window).addEvent('unload', DomElement.dispose));
 
 #endif // __browser_Globals__

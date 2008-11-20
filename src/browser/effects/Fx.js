@@ -31,7 +31,7 @@ Fx = Base.extend(Chain, Callback, {
 	},
 
 	initialize: function(element, options) {
-		this.element = HtmlElement.get(element);
+		this.element = DomElement.wrap(element);
 		this.setOptions(options);
 	},
 

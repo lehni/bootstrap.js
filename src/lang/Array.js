@@ -307,7 +307,8 @@ Array.inject(new function() {
 				var that = this;
 				return Base.each(obj, function(name, index) {
 					this[name] = that[index];
-					if (index == that.length) throw Base.stop;
+					if (index == that.length)
+						throw Base.stop;
 				}, {});
 			} else {
 				// Produce a new bare object since we're deleting from it. 

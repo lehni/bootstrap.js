@@ -44,7 +44,7 @@ Request = Base.extend(Chain, Callback, new function() {
 	function createFrame(that, form) {
 		var id = 'request_' + unique++, onLoad = that.onFrameLoad.bind(that);
 		// IE Fix: Setting load event on iframes does not work, use onreadystatechange
-		var div = Document.getElement('body').injectBottom('div', {
+		var div = DomElement.get('body').injectBottom('div', {
 				styles: {
 					position: 'absolute', top: '0', marginLeft: '-10000px'
 				}
@@ -59,7 +59,7 @@ Request = Base.extend(Chain, Callback, new function() {
 		that.frame = {
 			id: id, div: div, form: form,
 			iframe: window.frames[id] || document.getElementById(id),
-			element: Document.getElement(id)
+			element: DomElement.get(id)
 		};
 		// Opera fix: force the iframe to be valid
 		div.offsetWidth;
@@ -149,7 +149,7 @@ Request = Base.extend(Chain, Callback, new function() {
 					// success above changes the whole html and would remove the
 					// iframe, as it can happen during editing. Since we remove
 					// it before already, it is untouched by this.
-					div.insertBottom(Document.getElement('body'));
+					div.insertBottom(DomElement.get('body'));
 					div.remove.delay(1, div);
 				}
 				this.frame = null;
@@ -169,13 +169,13 @@ Request = Base.extend(Chain, Callback, new function() {
 					return Base.type(el) != 'whitespace';
 				});
 				if (this.options.update)
-					DomElement.get(this.options.update).removeChildren().appendChildren(children);
+					DomElement.wrap(this.options.update).removeChildren().appendChildren(children);
 				if (this.options.evalScripts)
 					this.executeScript(stripped.scripts);
 				args = [ children, elements, html, stripped.scripts ];
 				*/
 				if (this.options.update)
-					DomElement.get(this.options.update).setHtml(stripped.html);
+					DomElement.wrap(this.options.update).setHtml(stripped.html);
 				if (this.options.evalScripts)
 					this.executeScript(stripped.javascript);
 				args = [ stripped.html, text ];
@@ -215,7 +215,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			if (window.execScript) {
 				window.execScript(script);
 			} else {
-				Document.getElement('head').injectBottom('script', {
+				DomElement.get('head').injectBottom('script', {
 					type: 'text/javascript', text: script
 				}).remove();
 			}
@@ -252,7 +252,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			var method = params.method || opts.method;
 			switch (Base.type(data)) {
 				case 'element':
-					var el = DomElement.get(data);
+					var el = DomElement.wrap(data);
 					// No need to post using forms if there are no files
 					if (el.getTag() != 'form' || !el.hasElement('input[type=file]'))
 						data = el.toQueryString();
@@ -270,7 +270,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				method = 'post';
 			}
 			if (Base.type(data) == 'element') { // A form: Use iframe
-		 		createFrame(this, DomElement.get(data));
+		 		createFrame(this, DomElement.wrap(data));
 			} else {
 				createRequest(this);
 				if (!this.transport) {
