@@ -15,7 +15,8 @@ Number.inject({
 	toFloat: String.prototype.toFloat,
 
 	times: function(func, bind) {
-		for (var i = 0; i < this; ++i) func.call(bind, i);
+		for (var i = 0; i < this; ++i)
+			func.call(bind, i);
 		return bind || this;
 	},
 
