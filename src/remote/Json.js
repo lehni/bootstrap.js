@@ -5,41 +5,38 @@
 // Json
 
 Json = new function() {
-#ifndef __RHINO // TODO: see bellow
-	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', '\\': '\\\\' };
-
-	function replace(chr) {
-		return special[chr] || '\\u00' + Math.floor(chr.charCodeAt() / 16).toString(16) + (chr.charCodeAt() % 16).toString(16);
-	}
-#endif // !RHINO
-
+	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
 	return {
-		encode: function(obj) {
-#ifdef HIDDEN // #ifdef RHINO // TODO: uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
+		encode: function(obj, singles) {
+#ifdef HIDDEN // TODO: On Rhino, uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
 			var str = uneval(obj);
 			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
-#else // !RHINO
+#endif // HIDDEN
 			switch (Base.type(obj)) {
 				case 'string':
 #ifdef RHINO
-					// Make sure it's a raw string, not an object
-					return uneval(obj.toString());
-#else
-					return '"' + obj.replace(/[\x00-\x1f\\"]/g, replace) + '"';
+					// Call toString() to Make sure it's a raw string, not an object
+					if (!singles)
+						return uneval(obj.toString());
 #endif
+					var quote = singles ? "'" : '"';
+					return quote + obj.replace(new RegExp('[\\x00-\\x1f\\\\' + quote + ']', 'g'), function(chr) {
+						return special[chr] || '\\u' + chr.charCodeAt(0).toPaddedString(4, 16);
+					}) + quote;
 				case 'array':
-					return '[' + obj.collect(Json.encode) + ']';
+					return '[' + obj.collect(function(val) {
+						return Json.encode(val, singles);
+					}) + ']';
 				case 'object':
 				case 'hash':
 					return '{' + Hash.collect(obj, function(val, key) {
-						val = Json.encode(val);
-						if (val) return Json.encode(key) + ':' + val;
+						val = Json.encode(val, singles);
+						if (val) return Json.encode(key, singles) + ':' + val;
 					}) + '}';
 				default:
 					return obj + '';
 			}
 			return null;
-#endif // !RHINO
 		},
 
 		decode: function(str, secure) {
