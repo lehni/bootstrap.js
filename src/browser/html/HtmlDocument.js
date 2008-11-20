@@ -7,8 +7,7 @@
 // HtmlDocument
 
 HtmlDocument = DomDocument.extend({
-	// TODO: Find out if this is needed here. Isn't it dangerous to inject
-	// HtmlDocument functions into HtmlElements
+	// Use HtmlElements collection instead of DomElements for HtmlDocuments
 	_elements: HtmlElements
 });
 

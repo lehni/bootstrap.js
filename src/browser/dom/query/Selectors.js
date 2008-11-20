@@ -208,14 +208,18 @@ DomElement.inject(new function() {
 			// is enough for trying getElementById first.
 			// So $() can also work like Mootools' $()
 			if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
-				el = document.getElementById(match[1]);
+				el = this.getDocument().$.getElementById(match[1]);
 			else if (type == 'element')
 				el = DomElement.unwrap(selector);
 			// if el was fetched by id above, but is not a child of this,
 			// use the real selector.
-			if (el && !DomElement.isAncestor(el, this.$)) el = null;
-			if (!el) el = this.getElements(selector, true)[0];
-			return DomElement.get(el);
+			if (el && !DomElement.isAncestor(el, this.$))
+				el = null;
+			// TODO: Is there a way to only fetch the first in getElements,
+			// with an optional third parameter?
+			if (!el)
+				el = this.getElements(selector, true)[0];
+			return DomElement.wrap(el);
 		},
 
 		hasElement: function(selector) {
@@ -235,7 +239,7 @@ DomElement.inject(new function() {
 			var params = parse(selector), doc = this.$.ownerDocument;
 			for (var el = this.$.parentNode; el && el != doc; el = el.parentNode)
 				if (match(el, params, {}))
-					return DomElement.get(el);
+					return DomElement.wrap(el);
 			return null;
 //			return !selector ? this.base() : this.getParents(selector)[0];
 		},

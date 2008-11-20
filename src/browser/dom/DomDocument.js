@@ -9,8 +9,6 @@
 DomDocument = DomElement.extend({
 	_BEANS
 	_type: 'document',
-	// TODO: Find out if this is needed here. Doesn't DomElement already define it?
-	_elements: DomElements,
 
 	initialize: function() {
 		if(Browser.IE)
@@ -24,7 +22,7 @@ DomDocument = DomElement.extend({
 		// Call DomElement.create, the internal creation helper. This does not
 		// fully set props, only the one needed for the IE workaround.
 		// set(props) is called after for all the others.
-		return DomElement.get(DomElement.create(tag, props, this.$)).set(props);
+		return DomElement.wrap(DomElement.create(tag, props, this.$)).set(props);
 	},
 
 	createTextNode: function(text) {
@@ -35,8 +33,8 @@ DomDocument = DomElement.extend({
 		return this;
 	},
 
-	getView: function() {
-		return DomElement.get(this.$.defaultView || this.$.parentWindow);
+	getWindow: function() {
+		return DomElement.wrap(this.$.defaultView || this.$.parentWindow);
 	},
 
 	open: function() {

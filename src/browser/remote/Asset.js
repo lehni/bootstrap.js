@@ -71,7 +71,7 @@ Asset = new function() {
 	return {
 		script: function(src, props) {
 			 // onLoad can be null
-			var script = Document.getElement('head').injectBottom('script', Hash.merge({
+			var script = DomElement.get('head').injectBottom('script', Hash.merge({
 				events: {
 					load: props.onLoad,
 					readystatechange: function() {
@@ -94,7 +94,7 @@ Asset = new function() {
 		stylesheet: function(src, props) {
 			return new HtmlElement('link', new Hash({
 				rel: 'stylesheet', media: 'screen', type: 'text/css', href: src
-			}, props)).insertInside(Document.getElement('head'));
+			}, props)).insertInside(DomElement.get('head'));
 		},
 
 		image: function(src, props) {

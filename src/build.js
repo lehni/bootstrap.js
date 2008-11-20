@@ -19,7 +19,7 @@
 // DomElement
 #include "browser/dom/DomElement.js"
 #include "browser/dom/DomDocument.js"
-#include "browser/dom/DomView.js"
+#include "browser/dom/DomWindow.js"
 #include "browser/dom/DomEvent.js"
 #include "browser/dom/DomEvent.Drag.js"
 
@@ -32,7 +32,6 @@
 // Html
 #include "browser/html/HtmlElement.js"
 #include "browser/html/HtmlDocument.js"
-#include "browser/html/HtmlView.js"
 #include "browser/html/Style.js"
 #include "browser/html/Dimension.js"
 #include "browser/html/Form.js"

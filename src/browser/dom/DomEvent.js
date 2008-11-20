@@ -44,7 +44,7 @@ DomEvent = Base.extend(new function() {
 		initialize: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = DomElement.get(event.target || event.srcElement);
+			this.target = DomElement.wrap(event.target || event.srcElement);
 			if (this.target.nodeType == 3)
 				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
@@ -75,7 +75,7 @@ DomEvent = Base.extend(new function() {
 				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = DomElement.get(event.relatedTarget ||
+					this.relatedTarget = DomElement.wrap(event.relatedTarget ||
 						this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
@@ -139,7 +139,7 @@ DomEvent = Base.extend(new function() {
 								}
 							})();
 						} else {
-							this.getView().addEvent('load', domReady);
+							this.getWindow().addEvent('load', domReady);
 							doc.addEvent('DOMContentLoaded', domReady);
 						}
 					}
@@ -188,7 +188,8 @@ DomElement.inject({
 					this.$['on' + name] = function(event) {
 						entries.each(function(entry) {
 							entry.bound(event);
-							if (event.event.cancelBubble) throw Base.stop;
+							if (event.event.cancelBubble)
+								throw Base.stop;
 						});
 						// Passing "this" for bind above breaks throw Base.stop
 						// on MACIE.

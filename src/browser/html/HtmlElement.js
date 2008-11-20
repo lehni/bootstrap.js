@@ -83,7 +83,7 @@ HtmlElement.inject({
 
 Array.inject({
 	toElement: function(doc) {
-		doc = DomElement.get(doc || document);
+		doc = DomElement.wrap(doc || document);
 		//	['div', { margin: 10 }, [ // Children
 		//		'span', { html: 'hello ' },
 		//		'<span>world</span>'
@@ -177,7 +177,7 @@ String.inject({
 		} else {
 			// Simply execute string as dom selector.
 			// Make sure doc is wrapped.
-			elements = DomElement.get(doc).getElements(this);
+			elements = DomElement.wrap(doc).getElements(this);
 		}
 		// Unbox if there's only one element in the array
 		return elements.length == 1 ? elements[0] : elements;

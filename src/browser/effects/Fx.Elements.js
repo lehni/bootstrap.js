@@ -15,7 +15,7 @@
 Fx.Elements = Fx.extend({
 	initialize: function(elements, options) {
 		this.base(null, options);
-		this.elements = Document.getElements(elements);
+		this.elements = DomElement.getAll(elements);
 	},
 
 	start: function(obj) {
@@ -38,7 +38,7 @@ Fx.Elements = Fx.extend({
 			} else if (isNaN(parseInt(key))) {
 				// A selector, for elements to be added, if they are not there
 				// already.
-				var els = Document.getElements(key);
+				var els = DomElement.getAll(key);
 				this.elements.append(els);
 				els.each(function(el) {
 					start(this, this.elements.indexOf(el), val);

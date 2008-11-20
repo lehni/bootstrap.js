@@ -29,7 +29,7 @@ HtmlElement.inject(new function() {
 				cur = next;
 				x += cur.$[left] || 0;
 				y += cur.$[top] || 0;
-			} while((next = HtmlElement.get(cur.$[parent])) && (!iter || iter(cur, next)))
+			} while((next = DomElement.wrap(cur.$[parent])) && (!iter || iter(cur, next)))
 #ifdef BROWSER_LEGACY
 			// Fix body on mac ie
 			if (fix) ['margin', 'padding'].each(function(val) {
@@ -83,31 +83,31 @@ HtmlElement.inject(new function() {
 
 		getSize: function() {
 			return body(this)
-				? this.getView().getSize()
+				? this.getWindow().getSize()
 				: { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
 
 		getOffset: function(positioned) {
 			return body(this)
-				? this.getView().getOffset()
+				? this.getWindow().getOffset()
 			 	: (positioned ? getPositioned : getCumulative)(this);
 		},
 
 		getScrollOffset: function() {
 			return body(this)
-				? this.getView().getScrollOffset()
+				? this.getWindow().getScrollOffset()
 			 	: getScrollOffset(this);
 		},
 
 		getScrollSize: function() {
 			return body(this)
-				? this.getView().getScrollSize()
+				? this.getWindow().getScrollSize()
 			 	: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
 		getBounds: function() {
 			if (body(this))
-				return this.getView().getBounds();
+				return this.getWindow().getBounds();
 			var off = this.getOffset(), el = this.$;
 			return {
 				left: off.x,
@@ -127,7 +127,7 @@ HtmlElement.inject(new function() {
 
 		setScrollOffset: function(x, y) {
 			if (body(this)) {
-				this.getView().setScrollOffset(x, y);
+				this.getWindow().setScrollOffset(x, y);
 			} else {
 				// Convert { x: y: } to x / y
 				var off = typeof x == 'object' ? x : { x: x, y: y };
@@ -140,7 +140,7 @@ HtmlElement.inject(new function() {
 		scrollTo: function(x, y) {
 			// Redirect to setScrollOffset, wich is there for symetry with getScrolloffset
 			// Do not simply point to the same function, since setScrollOffset is overridden
-			// for HtmlDocument and HtmlView.
+			// for DomDocument and DomWindow.
 			return this.setScrollOffset(x, y);
 		},
 
@@ -166,22 +166,23 @@ HtmlElement.inject(new function() {
 	return fields;
 });
 
-// Inject dimension methods into both HtmlDocument and HtmlView.
+// Inject dimension methods into both HtmlDocument and Window.
 // Use the bind object in each to do so:
-[HtmlDocument, HtmlView].each(function(ctor) {
+// TODO: Use DomDocument instead of HtmlDocument?
+[DomDocument, DomWindow].each(function(ctor) {
 	ctor.inject(this);
 }, {
 	_BEANS
 
 	getSize: function() {
-		var doc = this.getDocument().$, view = this.getView().$, html = doc.documentElement;
+		var doc = this.getDocument().$, view = this.getWindow().$, html = doc.documentElement;
 		return Browser.WEBKIT2 && { width: view.innerWidth, height: view.innerHeight }
 			|| Browser.OPERA && { width: doc.body.clientWidth, height: doc.body.clientHeight }
 			|| { width: html.clientWidth, height: html.clientHeight };
 	},
 
 	getScrollOffset: function() {
-		var doc = this.getDocument().$, view = this.getView().$, html = doc.documentElement;
+		var doc = this.getDocument().$, view = this.getWindow().$, html = doc.documentElement;
 		return {
 			x: view.pageXOffset || html.scrollLeft || doc.body.scrollLeft || 0,
 			y: view.pageYOffset || html.scrollTop || doc.body.scrollTop || 0
@@ -211,7 +212,7 @@ HtmlElement.inject(new function() {
 	setScrollOffset: function(x, y) {
 		// Convert { x: y: } to x / y
 		var off = typeof x == 'object' ? x : { x: x, y: y };
-		this.getView().$.scrollTo(off.x, off.y);
+		this.getWindow().$.scrollTo(off.x, off.y);
 		return this;
 	},
 
