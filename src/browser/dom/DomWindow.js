@@ -32,7 +32,7 @@ DomWindow = DomElement.extend({
 	 */
 	initialize: function(param) {
 		var win;
-		// Wrapping a window?
+		// Are we wrapping a window?
 		if (param.location && param.frames && param.history) {
 			// Do not return yet as we need to add some properties further down
 			win = this.base(param);
@@ -40,8 +40,6 @@ DomWindow = DomElement.extend({
 			// If param a string, convert to param object, using its value for url.
 			if (typeof param == 'string')
 				param = { url: param };
-			if (param.confirm && !window.confirm(param.confirm))
-				return null;
 			// Convert boolean values to 0 / 1:
 			(['toolbar','menubar','location','status','resizable','scrollbars']).each(function(key) {
 				param[key] = param[key] ? 1 : 0;
@@ -55,9 +53,9 @@ DomWindow = DomElement.extend({
 			}
 			// Now convert paramets to string.
 			var str = Base.each(param, function(val, key) {
-				// Filter out non-standard param names
+				// Filter out non-standard param names and convert boolean values to 0 / 1 simply by adding 0 to it
 				if (!/^(focus|confirm|url|name)$/.test(key))
-					this.push(key + '=' + val);
+					this.push(key + '=' + (val + 0));
 			}, []).join();
 			win = this.base(window.open(param.url, param.name.replace(/\s+|\.+|-+/gi, ''), str));
 			if (win && param.focus)
