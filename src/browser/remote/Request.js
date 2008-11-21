@@ -77,12 +77,15 @@ Request = Base.extend(Chain, Callback, new function() {
 
 	return {
 		options: {
+			headers: {
+				'X-Requested-With': 'XMLHttpRequest',
+				'Accept': 'text/javascript, text/html, application/xml, text/xml, */*'
+			},
 			method: 'post',
 			async: true,
 			urlEncoded: true,
 			encoding: 'utf-8',
 			emulation: true,
-			headers: {},
 			secure: false
 		},
 
@@ -95,10 +98,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			// argument though.
 			if (params.handler)
 				this.addEvents({ success: params.handler, failure: params.handler });
-			this.headers = new Hash({
-				'X-Requested-With': 'XMLHttpRequest',
-				'Accept': 'text/javascript, text/html, application/xml, text/xml, */*'
-			});
+			this.headers = new Hash(this.options.headers);
 			if (this.options.json) {
 				this.setHeader('Accept', 'application/json');
 				this.setHeader('X-Request', 'JSON');
@@ -309,8 +309,6 @@ Request = Base.extend(Chain, Callback, new function() {
 				try {
 					this.transport.open(method.toUpperCase(), url, opts.async);
 					this.transport.onreadystatechange = this.onStateChange.bind(this);
-					if (method == 'post' && this.transport.overrideMimeType)
-						this.setHeader('Connection', 'close');
 					new Hash(this.headers, opts.headers).each(function(header, name) {
 						try{
 							this.transport.setRequestHeader(name, header);
