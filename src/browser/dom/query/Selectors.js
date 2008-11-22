@@ -226,35 +226,18 @@ DomElement.inject(new function() {
 			return !!this.getElement(selector);
 		},
 
-		getParents: function(selector) {
-			var parents = [], doc = this.$.ownerDocument;
-			for (var el = this.$.parentNode; el && el != doc; el = el.parentNode)
-				parents.push(el);
-			// The context of getParents is the document, not the current node
-			return filter(parents, selector, doc, new this._elements(), {});
-		},
-
-		getParent: function(selector) {
-			if (!selector) return this.base();
-			var params = parse(selector), doc = this.$.ownerDocument;
-			for (var el = this.$.parentNode; el && el != doc; el = el.parentNode)
-				if (match(el, params, {}))
-					return DomElement.wrap(el);
-			return null;
-//			return !selector ? this.base() : this.getParents(selector)[0];
-		},
-
-		hasParent: function(selector) {
-			return typeof selector == 'string' ?
-				!!this.getParent(selector) : this.base(selector);
-		},
-
 		match: function(selector) {
 			return !selector || match(this.$, parse(selector), {});
 		},
 
 		filter: function(elements, selector) {
 			return filter(elements, selector, this.$, new this._elements(), {});
+		},
+
+		statics: {
+			match: function(el, selector) {
+				return !selector || match(DomElement.unwrap(el), parse(selector), {});
+			}
 		}
 	};
 });
