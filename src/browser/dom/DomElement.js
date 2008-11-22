@@ -78,10 +78,11 @@ DomElements = Array.extend(new function() {
 							var args = arguments, values;
 							// If there was a previous implementation under this name
 							// and the arguments match better, use that one instead.
-							// The strategy is very basic, if more arguments are used
-							// than the function provides and the previous implementation
-							// expects more, use that one.
-							if (prev && args.length > count && args.length <= prevCount)
+							// The strategy is very basic: If the same amount of arguments
+							// are provided as the previous one accepts, or if more arguments
+							// are provided than the new function can handle and the previous
+							// implementation expects more, use the previous one instead.
+							if (prev && args.length == prevCount || (args.length > count && args.length <= prevCount))
 								return prev.apply(this, args);
 							this.each(function(obj) {
 								// Try to use original method if it's there, in order
@@ -474,11 +475,18 @@ DomElement.inject(new function() {
 		else return that[prefix + 'Property'](name, value);
 	}
 
-	// A helper for walking the DOm
-	function walk(el, name, start) {
-		el = el[start ? start : name];
-		while (el && Base.type(el) != 'element') el = el[name];
-		return DomElement.wrap(el);
+	// A helper for walking the DOM
+	function walk(el, walk, start, match, all) {
+		var elements = all && new el._elements();
+		el = el.$[start || walk];
+		while (el) {
+			if (el.nodeType == 1 && (!match || DomElement.match(el, match))) {
+				if (!all) return DomElement.wrap(el);
+				elements.push(el);
+			}
+			el = el[walk];
+		}
+		return elements;
 	}
 
 	// A helper for calling toElement and returning results.
@@ -540,40 +548,66 @@ DomElement.inject(new function() {
 			return this.getDocument().getWindow();
 		},
 
-		getPrevious: function() {
-			return walk(this.$, 'previousSibling');
+		getPrevious: function(match) {
+			return walk(this, 'previousSibling', null, match);
 		},
 
-		getNext: function() {
-			return walk(this.$, 'nextSibling');
+		getAllPrevious: function(match) {
+			return walk(this, 'previousSibling', null, match, true);
 		},
 
-		getFirst: function() {
-			return walk(this.$, 'nextSibling', 'firstChild');
+		getNext: function(match) {
+			return walk(this, 'nextSibling', null, match);
 		},
 
-		getLast: function() {
-			return walk(this.$, 'previousSibling', 'lastChild');
+		getAllNext: function(match) {
+			return walk(this, 'nextSibling', null, match, true);
 		},
 
-		getParent: function() {
-			return DomElement.wrap(this.$.parentNode);
+		getFirst: function(match) {
+			return walk(this, 'nextSibling', 'firstChild', match);
 		},
 
-		getChildren: function() {
-		 	return new this._elements(this.$.childNodes);
-		},
-
-		hasChildren: function() {
-			return this.$.hasChildNodes();
-		},
-
-		hasParent: function(el) {
-			return DomElement.isAncestor(this.$, DomElement.unwrap(el));
+		getLast: function(match) {
+			return walk(this, 'previousSibling', 'lastChild', match);
 		},
 
 		hasChild: function(el) {
-			return DomElement.isAncestor(DomElement.unwrap(el), this.$);
+			return Base.type(match) == 'element'
+				? DomElement.isAncestor(DomElement.unwrap(el), this.$)
+				: !!this.getFirst(match);
+		},
+
+		getParent: function(match) {
+			return walk(this, 'parentNode', null, match);
+		},
+
+		getParents: function(match) {
+			return walk(this, 'parentNode', null, match, true);
+		},
+
+		hasParent: function(match) {
+			return Base.type(match) == 'element'
+				? DomElement.isAncestor(this.$, DomElement.unwrap(el))
+				: !!this.getParent(match);
+		},
+
+		// Returns all the Element's children excluding text nodes
+		getChildren: function(match) {
+			return walk(this, 'nextSibling', 'firstChild', match, true);
+		},
+
+		hasChildren: function(match) {
+			return !!this.getChildren(match).length;
+		},
+
+		// Returns all the Element's children including text nodes
+		getChildNodes: function() {
+		 	return new this._elements(this.$.childNodes);
+		},
+
+		hasChildNodes: function() {
+			return this.$.hasChildNodes();
 		},
 
 		appendChild: function(el) {
@@ -590,7 +624,6 @@ DomElement.inject(new function() {
 			return this;
 		},
 
-		// TODO: Consider naming this append
 		appendChildren: function() {
 			return Array.flatten(arguments).each(function(el) {
 				this.appendChild($(DomElement.wrap(el)));
