@@ -21,6 +21,9 @@ DomWindow = DomElement.extend({
 		return this;
 	},
 
+	// TODO: add get/setStatus, get/setLocation, and find way to deal with
+	// referencing of native fields at the end of initialize.
+
 	/**
 	 * A constructor for DomWindow that is based on window.open and extends it
 	 * to allow more options in the third parameter.
