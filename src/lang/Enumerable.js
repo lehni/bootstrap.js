@@ -242,7 +242,8 @@ Enumerable = new function() {
 		collect: ITERATE(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
 			 	val = ITERATOR(iter, bind, val, i, that, __map);
-				if (val != null) this[this.length] = val;
+				if (val != null)
+					this[this.length] = val;
 			}, []);
 		}, '__collect'),
 
