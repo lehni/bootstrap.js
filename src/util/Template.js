@@ -105,6 +105,8 @@ function Template(object, name, parent) {
 			parent.subTemplates[name] = this;
 			this.parent = parent;
 		}
+		// Counter for macro param variables.
+		this.macroParam = 0;
 		this.compile();
 	}
 }
@@ -483,11 +485,10 @@ Template.prototype = {
 			}
 		}
 
-		var macroParam = 0;
 		function nestedMacro(that, value, code, stack) {
 			if (/<%/.test(value)) {
 				var nested = value;
-				value = 'param_' + (macroParam++);
+				value = 'param_' + (this.macroParam++);
 				if (/^<%/.test(nested)) {
 					// A nested macro: render it, then set the result to a variable
 					code.push('var ' + value + ' = ' + that.parseMacro(nested, code, stack, false, true) + ';');
