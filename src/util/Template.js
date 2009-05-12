@@ -488,7 +488,7 @@ Template.prototype = {
 		function nestedMacro(that, value, code, stack) {
 			if (/<%/.test(value)) {
 				var nested = value;
-				value = 'param_' + (this.macroParam++);
+				value = 'param_' + (that.macroParam++);
 				if (/^<%/.test(nested)) {
 					// A nested macro: render it, then set the result to a variable
 					code.push('var ' + value + ' = ' + that.parseMacro(nested, code, stack, false, true) + ';');
