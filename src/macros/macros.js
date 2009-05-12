@@ -2,14 +2,11 @@
 #comment COMMENT allows the definition of comments that are removed even when
 #comment js comments are not stripped from the source code.
 
-#define BASE_NAME base
-
 #ifdef HELMA
 #comment Helma needs GETTER_SETTER support to work around the base / _base problem.
 #define DONT_ENUM
 #define GETTER_SETTER
 #define BEANS
-#define BASE_NAME _base
 #endif // HELMA
 
 #ifndef GETTER_SETTER

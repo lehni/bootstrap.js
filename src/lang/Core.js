@@ -115,16 +115,16 @@ new function() { // bootstrap
 #endif // HELMA
 						var fromBase = base && base[name] == prev;
 						res = (function() {
-							var tmp = this.BASE_NAME;
+							var tmp = this.base;
 							// Look up the base function each time if we can,
 							// to reflect changes to the base class after 
 							// inheritance.
-							this.BASE_NAME = fromBase ? base[name] : prev;
+							this.base = fromBase ? base[name] : prev;
 #ifdef DONT_ENUM
-							this.dontEnum('BASE_NAME');
+							this.dontEnum('base');
 #endif // DONT_ENUM
 							try { return val.apply(this, arguments); }
-							finally { this.BASE_NAME = tmp; }
+							finally { this.base = tmp; }
 						}).pretend(val);
 #ifdef HELMA
 						// If versioning is used, set the new version now, and keep a reference to the
@@ -372,21 +372,7 @@ new function() { // bootstrap
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
 		_HIDE
-#ifdef HELMA
-		_BEANS
 
-		/**
-		 * For Helma, we need to set _base instead of base, so define a getter
-		 * here that returns it. BASE_NAME defines the name for base (_base in
-	     * this case). This simplifies abstraction in general code above.
-		 */
-		base: {
-			_get: function() {
-				return this.BASE_NAME;
-			}
-		},
-
-#endif // HELMA
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
@@ -448,6 +434,21 @@ new function() { // bootstrap
 		}
 		throw StopIteration;
 	}
+	/**
+	 * For HopObjects, we need to set _base instead of base internally,
+	 * in order to make the object not want to persist a change. 
+	 */
+	HopObject.inject({
+		base: {
+			_get: function() {
+				return this._base;
+			},
+
+			_set: function(base) {
+				this._base = base;
+			}
+		}
+	});
 #endif // HELMA
 }
 
