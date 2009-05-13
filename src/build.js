@@ -20,8 +20,9 @@
 #include "browser/dom/DomElement.js"
 #include "browser/dom/DomDocument.js"
 #include "browser/dom/DomWindow.js"
+#include "browser/dom/Dimension.js"
 #include "browser/dom/DomEvent.js"
-#include "browser/dom/DomEvent.Drag.js"
+#include "browser/dom/Drag.js"
 
 // Dom Selectors
 #include "browser/dom/query/Selectors.js"
@@ -33,7 +34,6 @@
 #include "browser/html/HtmlElement.js"
 #include "browser/html/HtmlDocument.js"
 #include "browser/html/Style.js"
-#include "browser/html/Dimension.js"
 #include "browser/html/Form.js"
 #include "browser/html/Selection.js"
 

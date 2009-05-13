@@ -1,5 +1,5 @@
-#ifndef __browser_html_Dimension__
-#define __browser_html_Dimension__
+#ifndef __browser_dom_Dimension__
+#define __browser_dom_Dimension__
 
 #ifdef HIDDEN
 /**
@@ -10,12 +10,12 @@
  */
 #endif // HIDDEN
 
-#include "HtmlElement.js"
+#include "DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension
 
-HtmlElement.inject(new function() {
+DomElement.inject(new function() {
 #ifdef BROWSER_LEGACY
 	function cumulate(name, parent, iter, fix) {
 		fix = fix && Browser.MACIE;
@@ -166,9 +166,8 @@ HtmlElement.inject(new function() {
 	return fields;
 });
 
-// Inject dimension methods into both HtmlDocument and Window.
+// Inject dimension methods into both DomDocument and Window.
 // Use the bind object in each to do so:
-// TODO: Use DomDocument instead of HtmlDocument?
 [DomDocument, DomWindow].each(function(ctor) {
 	ctor.inject(this);
 }, {
@@ -237,4 +236,4 @@ HtmlElement.inject(new function() {
 	}
 });
 
-#endif // __browser_html_Dimension__
+#endif // __browser_dom_Dimension__
