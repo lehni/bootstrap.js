@@ -372,6 +372,7 @@ new function() { // bootstrap
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
 		_HIDE
+
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
@@ -433,6 +434,7 @@ new function() { // bootstrap
 		}
 		throw StopIteration;
 	}
+
 	/**
 	 * For HopObjects, we need to set _base instead of base internally,
 	 * in order to make the object not want to persist a change. 
