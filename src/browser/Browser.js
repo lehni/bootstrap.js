@@ -20,6 +20,7 @@ Browser = new function() {
 		IE55: js == 5.5,
 		IE6: js == 5.6,
 		IE7: js == 5.7,
+		IE8: js == 5.8,
 		MACIE: js && name == 'MAC',
 		XPATH: xpath
 	};
