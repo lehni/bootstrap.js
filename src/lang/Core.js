@@ -120,9 +120,11 @@ new function() { // bootstrap
 							// to reflect changes to the base class after 
 							// inheritance.
 							this.base = fromBase ? base[name] : prev;
-#ifdef DONT_ENUM
+#if defined(DONT_ENUM) && !defined(HELMA)
+							// Helma does define base as a getter / setter,
+							// and does not need dontEnum('base') here.
 							this.dontEnum('base');
-#endif // DONT_ENUM
+#endif // DONT_ENUM && !HELMA
 							try { return val.apply(this, arguments); }
 							finally { this.base = tmp; }
 						}).pretend(val);
@@ -416,20 +418,23 @@ new function() { // bootstrap
 	});
 
 #ifdef HELMA
+
+#define SETUP_DONT_ENUM() \
+	if (!this._dontEnum) this._dontEnum = { _dontEnum: true, _base: true }
+
 	// Fix dontEnum for Helma's HopObject
 	// This does not need to be in this scope, but for tydiness it is.
 	HopObject.prototype.dontEnum = function() {
-		if (!this.__dontEnum__)
-			this.__dontEnum__ = { __dontEnum__: true };
+		SETUP_DONT_ENUM();
 		for (var i = 0, l = arguments.length; i < l; i++)
-			this.__dontEnum__[arguments[i]] = true;
+			this._dontEnum[arguments[i]] = true;
 	}
 
 	HopObject.prototype.__iterator__ = function() {
 		var en = toJava(this).properties();
 		while (en.hasMoreElements()) {
 			var key = en.nextElement();
-			if (!this.__dontEnum__ || !this.__dontEnum__[key])
+			if (!this._dontEnum || !this._dontEnum[key])
 				yield key;
 		}
 		throw StopIteration;
@@ -446,6 +451,10 @@ new function() { // bootstrap
 			},
 
 			_set: function(base) {
+				// In order to speed things up and not call dontEnum here, 
+				// we use the same code as in dontEnum that marks _base as
+				// dontEnum inlined by default.
+				SETUP_DONT_ENUM();
 				this._base = base;
 			}
 		}
