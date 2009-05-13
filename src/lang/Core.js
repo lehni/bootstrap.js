@@ -372,7 +372,6 @@ new function() { // bootstrap
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
 		_HIDE
-
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
