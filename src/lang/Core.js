@@ -298,12 +298,18 @@ new function() { // bootstrap
 					res._version = true;
 					proto.onCodeUpdate = res;
 				}
-				// Support for initialize in HopObject: just copy over:
-				// We can do it that way, because the way HopObjects are defined
-				// at the moment, we won't ever call HopObject.extend at the
-				// moment (where proto.constructor is set).
-				if (proto.initialize)
-					proto.constructor = proto.initialize;
+				// Support for initialize in HopObject, in a way similar to
+				// how native inheritance ins handled: a unnamed closure that
+				// checks for initialize. Passing ctor.dont to it prevents that
+				// from happening. Boots is relying on this to work.
+				if (proto.initialize) {
+					var ctor = proto.constructor;
+					ctor.dont = {};
+					proto.constructor = function(dont) {
+						if (proto.initialize && dont !== ctor.dont)
+							return proto.initialize.apply(this, arguments);
+					}
+				}
 			}
 #endif // HELMA
 			// If there are more than one argument, loop through them and call
