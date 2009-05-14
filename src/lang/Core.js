@@ -299,9 +299,10 @@ new function() { // bootstrap
 					proto.onCodeUpdate = res;
 				}
 				// Support for initialize in HopObject, in a way similar to
-				// how native inheritance ins handled: a unnamed closure that
-				// checks for initialize. Passing ctor.dont to it prevents that
-				// from happening. Boots is relying on this to work.
+				// how native inheritance is handled: Produce an unnamed closure
+				// as the constructor that checks for initialize and calls it.
+				// Passing ctor.dont to it prevents that from happening.
+				// Boots is relying on this to work.
 				if (proto.initialize) {
 					var ctor = proto.constructor;
 					ctor.dont = {};
