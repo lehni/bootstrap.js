@@ -98,7 +98,7 @@ HtmlElement.inject(new function() {
 						size += this.getStyle('border-' + val + '-width').toInt() + this.getStyle('padding-' + val).toInt();
 					}, this);
 					return (this.$['offset' + name.capitalize()] - size) + 'px';
-				} else if (name.test(/border(.+)Width|margin|padding/)) {
+				} else if (/border(.+)Width|margin|padding/.test(name)) {
 					return '0px';
 				}
 			}
