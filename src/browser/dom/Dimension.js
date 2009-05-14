@@ -15,6 +15,8 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension
 
+// TODO: Consider splitting this into Position and Dimension, or naming it
+// Measure instead
 DomElement.inject(new function() {
 #ifdef BROWSER_LEGACY
 	function cumulate(name, parent, iter, fix) {
@@ -105,10 +107,10 @@ DomElement.inject(new function() {
 			 	: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
-		getBounds: function() {
+		getBounds: function(positioned) {
 			if (body(this))
 				return this.getWindow().getBounds();
-			var off = this.getOffset(), el = this.$;
+			var off = this.getOffset(positioned), el = this.$;
 			return {
 				left: off.x,
 				top: off.y,
