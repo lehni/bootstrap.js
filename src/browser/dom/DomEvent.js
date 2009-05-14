@@ -196,7 +196,7 @@ DomElement.inject(new function() {
 				var that = this, bound = listener.getParameters().length == 0
 					? listener.bind(this)
 					: function(event) { 
-						event = new DomEvent(event);
+						event = event.event ? event : new DomEvent(event);
 						if (listener.call(that, event) === false)
 							event.stop();
 					};
