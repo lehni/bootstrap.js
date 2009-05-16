@@ -245,10 +245,6 @@ DomElement = Base.extend(new function() {
 				elements[elements.length] = el;
 			} catch (e) {} // Ignore error
 			if (props) this.set(props);
-			// Make sure we always return a value, even if it's this, so
-			// inerhiting prototypes can rely on this.base() to return an
-			// instance to work with.
-			return this;
 		},
 
 		statics: {
