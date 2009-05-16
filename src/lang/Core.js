@@ -93,11 +93,6 @@ new function() { // bootstrap
 			// __proto__:
 			if (val !== (src.__proto__ || Object.prototype)[name]) {
 				if (func) {
-#ifdef RHINO
-					// Don't touch native java code
-					if (/\[native code/.test(val))
-						return;
-#endif // RHINO
 					if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
 						// If the base function has already the _version field set, 
@@ -381,7 +376,6 @@ new function() { // bootstrap
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
 		_HIDE
-
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
