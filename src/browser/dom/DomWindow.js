@@ -40,7 +40,7 @@ Window = DomWindow = DomElement.extend({
 		// Are we wrapping a window?
 		if (param.location && param.frames && param.history) {
 			// Do not return yet as we need to add some properties further down
-			win = this.base(param);
+			win = this.base(param) || this;
 		} else {
 			// If param a string, convert to param object, using its value for url.
 			if (typeof param == 'string')
@@ -62,7 +62,7 @@ Window = DomWindow = DomElement.extend({
 				if (!/^(focus|confirm|url|name)$/.test(key))
 					this.push(key + '=' + (val + 0));
 			}, []).join();
-			win = this.base(window.open(param.url, param.name.replace(/\s+|\.+|-+/gi, ''), str));
+			win = this.base(window.open(param.url, param.name.replace(/\s+|\.+|-+/gi, ''), str)) || this;
 			if (win && param.focus)
 				win.focus();
 		}
