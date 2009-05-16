@@ -1,3 +1,5 @@
+ 0.25  Renamed loop variables: $variable#first, #last, #even, #odd.
+
  0.24  Added browser support. Tested on Safari and Firefox. 
        Fixed a bug in conditional statements containing '=='.
   
