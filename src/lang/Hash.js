@@ -19,7 +19,6 @@
  */
 Hash = Base.extend(Enumerable, {
 	_HIDE
-	_BEANS
 	_generics: true,
 
 	/**
