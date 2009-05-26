@@ -896,20 +896,7 @@ Template.prototype = {
 #endif // !HELMA
 					value = macro.apply(object, args);
 				} catch (e) {
-					var tag = this.getTagFromException(e);
-					var message = e.message || e;
-					if (tag && tag.content) {
-						message += ' (' + e.fileName + '; line ' + tag.lineNumber + ': ' +
-#ifdef HELMA
-							encode(tag.content) + ')';
-#else // !HELMA
-							// TODO: How to handle encode on server / client side?
-							tag.content + ')';
-#endif // !HELMA
-					} else if (e.fileName) {
-						message += ' (' + e.fileName + '; line ' + e.lineNumber + ')';
-					}
-					out.write('[Macro error in ' + command + ': ' + message + ']');
+					this.reportMacroError(e, command, out);
 				}
 			} else {
 				value = object[name];
@@ -922,6 +909,23 @@ Template.prototype = {
 		if (unhandled)
 			out.write('[Macro unhandled: "' + command + '"]');
 		return value;
+	},
+
+	reportMacroError: function(error, command, out) {
+		var tag = this.getTagFromException(error);
+		var message = error.message || error;
+		if (tag && tag.content) {
+			message += ' (' + error.fileName + '; line ' + tag.lineNumber + ': ' +
+#ifdef HELMA
+				encode(tag.content) + ')';
+#else // !HELMA
+				// TODO: How to handle encode on server / client side?
+				tag.content + ')';
+#endif // !HELMA
+		} else if (error.fileName) {
+			message += ' (' + error.fileName + '; line ' + error.lineNumber + ')';
+		}
+		out.write('[Macro error in ' + command + ': ' + message + ']');
 	},
 
 	/**
@@ -1206,13 +1210,9 @@ Template.methods = new function() {
 		},
 
 		renderTemplate: function(template, param, out) {
-			try {
-				template = this.getTemplate(template);
-				if (template)
-					return template.render(this, param, out);
-			} catch (e) {
-				error(e);
-			}
+			template = this.getTemplate(template);
+			if (template)
+				return template.render(this, param, out);
 		},
 
 		template_macro: function(param, name) {
