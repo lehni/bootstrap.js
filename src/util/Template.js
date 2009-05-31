@@ -1172,6 +1172,8 @@ Function.prototype.renderTemplate = function(template, param, out) {
 /**
  * A dictionary with methods that can be injected into any prototype to 
  * get templating functionality.
+ *
+ * Set Template.directory to the place where you keep your templates.
  */
 Template.methods = new function() {
 	var templates = {};
@@ -1202,7 +1204,7 @@ Template.methods = new function() {
 			if (!template)
 				template = templates[name] = new Template(
 #ifdef RHINO
-					new java.io.File(baseDir + '/templates/' + name + '.jstl'));
+					new java.io.File(Template.directory, name + '.jstl'));
 #else // !RHINO
 					name);
 #endif // !RHINO
