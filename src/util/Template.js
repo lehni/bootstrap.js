@@ -112,28 +112,11 @@ function Template(object, name, parent) {
 }
 
 Template.prototype = {
-	render: function(object, param, out) {
+	render: function(object, param, parentParam, out) {
 		try {
-			var parentParam = param && param.__param__;
-			// Inherit from param.__param__ if it is set:
-			if (parentParam) {
-#ifdef RHINO
-				// Convert to native JS since apparently we cannot inherit from java objects
-				if (parentParam instanceof java.util.Map) {
-					var prm = {};
-					for (var i in parentParam)
-						prm[i] = parentParam[i];
-					parentParam = param.__param__ = prm;
-				}
-#endif // RHINO
-				function inherit() {};
-				inherit.prototype = parentParam;
-				var prm = new inherit();
-				// And copy over from param:
-				for (var i in param)
-					prm[i] = param[i];
-				param = prm;
-			}
+			// Inherit from parentParam if it is set:
+			if (parentParam)
+				param = this.inherit(param, parentParam);
 			// If out is null, render to a string and return it
 			var asString = !out;
 #ifdef HELMA
@@ -155,6 +138,26 @@ Template.prototype = {
 		}
 	},
 
+	inherit: function(object, parent) {
+#ifdef RHINO
+		// Convert to native JS since apparently we cannot inherit from java objects
+		if (parent instanceof java.util.Map) {
+			var obj = {};
+			for (var i in parent)
+				obj[i] = parent[i];
+			parent = obj;
+		}
+#endif // RHINO
+		// Create an object inheriting fields from parent
+		function inherit() {};
+		inherit.prototype = parent;
+		var obj = new inherit();
+		// And copy over from object:
+		for (var i in object)
+			obj[i] = object[i];
+		return obj;
+	},
+
 	/**
 	 * Returns the sub template, if it exists. The name is specified without
 	 * the trailing #
@@ -167,10 +170,11 @@ Template.prototype = {
 	 * Renders the sub template on object. The name is specified without
 	 * the trailing #
 	 */
-	renderSubTemplate: function(object, name, param, out) {
+	renderSubTemplate: function(object, name, param, parentParam, out) {
 		var template = this.subTemplates[name];
-		if (!template) throw 'Unknown sub template: ' + name;
-		return template.render(object, param, out);
+		if (!template)
+			throw 'Unknown sub template: ' + name;
+		return template.render(object, param, parentParam, out);
 	},
 
 	/**
@@ -846,7 +850,7 @@ Template.prototype = {
 						else if (func.exec) // filter regexp
 							value = func.exec(value)[0];
 					} else {
-						// TODO: How to handle encode on server / client side?
+						// TODO: How to handle encode of error on server / client side?
 						// see renderMacro()
 						out.write('[Filter unhandled: "' + filter.command + '"]');
 					}
@@ -868,32 +872,33 @@ Template.prototype = {
 	 * This is called at rendering time, not parsing time.
 	 */
 	renderMacro: function(command, object, name, param, args, out) {
-		var unhandled = false, value;
+		var unhandled = false, value, macro;
 		if (object) {
-			// See  if there's a macro with that name, and if not, assume a property
-			var macro = object[name + '_macro'];
+			// Add a reference to this template and the param
+			// object of the template as the parent to inherit from.
+			// Handle template macro calls directly so we have the reference to the template
+			if (name == 'template') {
+				var that = this;
+				macro = function(prm, name) {
+					if (name[0] == '#') {
+						return (that.parent || that).renderSubTemplate(object, name.substring(1), prm, param);
+					} else {
+						var template = object.getTemplate(name);
+						return template && template.render(object, prm, param);
+					}
+				}
+			} else {
+				// See if there's a macro with that name, and if not, assume a property
+				macro = object[name + '_macro'];
+			}
 			if (macro) {
 				try {
-					// Add a reference to this template and the param
-					// object of the template as the parent to inherit from.
+					// If a macro sets param=, inherit values from it, just like in templates
 					var prm = args[0];
-					// If a macro sets param=, all the fields from this object
-					// are to be merged into its param object. But only if they
-					// are not defined already:
-					if (prm.param)
-						for (var i in prm.param)
-							if (prm[i] === undefined)
-								prm[i] = prm.param[i];
-					prm.__template__ = this.parent || this;
-					prm.__param__ = param;
-					// Also pass __out__, so if a macro wants to directly render
-					// there and does not want to rely on res to be around (e.g.)
-					// compatibility with browser and server), it can:
-					prm.__out__ = out;
-#ifdef HELMA
-					// On Helma, dontEnum these fields, so for-in does not see them.
-					prm.dontEnum('__template__', '__param__', '__out__');
-#endif // !HELMA
+					if (prm && prm.param) {
+						prm = args[0] = this.inherit(prm, prm.param);
+						delete prm.param;
+					}
 					value = macro.apply(object, args);
 				} catch (e) {
 					this.reportMacroError(e, command, out);
@@ -1148,15 +1153,7 @@ HopObject.prototype.getTemplate = function(template) {
 HopObject.prototype.renderTemplate = function(template, param, out) {
 	template = this.getTemplate(template);
 	if (template)
-		return template.render(this, param, out);
-}
-
-HopObject.prototype.template_macro = function(param, name) {
-	if (name[0] == '#') {
-		return param.__template__.renderSubTemplate(this, name.substring(1), param);
-	} else {
-		return this.renderTemplate(name, param);
-	}
+		return template.render(this, param, null, out);
 }
 
 /* TODO: reconsider this for rendering through HopObject constructors:
@@ -1214,15 +1211,7 @@ Template.methods = new function() {
 		renderTemplate: function(template, param, out) {
 			template = this.getTemplate(template);
 			if (template)
-				return template.render(this, param, out);
-		},
-
-		template_macro: function(param, name) {
-			if (name[0] == '#') {
-				return param.__template__.renderSubTemplate(this, name.substring(1), param);
-			} else {
-				return this.renderTemplate(name, param);
-			}
+				return template.render(this, param, null, out);
 		}
 	};
 };
