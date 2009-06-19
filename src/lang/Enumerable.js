@@ -50,21 +50,24 @@ Enumerable = new function() {
 			// returned unmodified, and values to compare to.
 			// Wherever this private function is used in the Enumerable functions
 			// bellow, a RegExp object, a Function or null may be passed.
-			if (!iter) iter = function(val) { return val };
-			else if (typeof iter != 'function') iter = function(val) { return val == iter };
+			var func = !iter
+				? function(val) { return val }
+				: typeof iter != 'function'
+					? function(val) { return val == iter }
+					: iter;
 			/*
 			// For RegExp support, used this:
 			else switch (Base.type(iter)) {
 				case 'function': break;
-				case 'regexp': iter = function(val) { return iter.test(val) }; break;
-				default: iter = function(val) { return val == iter };
+				case 'regexp': func = function(val) { return iter.test(val) }; break;
+				default: func = function(val) { return val == iter };
 			}
 			*/
 			if (!bind) bind = this;
 #ifdef SET_ITERATOR
 			// Backup previous value of the field, and set iterator.
 			var prev = bind[name];
-			bind[name] = iter;
+			bind[name] = func;
 #ifdef DONT_ENUM
 			// On Rhino+dontEnum, we can only dontEnum once the property is defined.
 			bind.dontEnum(name);
@@ -78,10 +81,10 @@ Enumerable = new function() {
 			// 'this' in .each differently)
 #ifdef SET_ITERATOR
 			// Allways restore previous value in the end.
-			try { return fn.call(this, iter, bind, this); }
+			try { return fn.call(this, func, bind, this); }
 			finally { prev ? bind[name] = prev : delete bind[name] }
 #else // !SET_ITERATOR
-			return fn.call(this, iter, bind, this);
+			return fn.call(this, func, bind, this);
 #endif// !SET_ITERATOR
 		};
 	};
