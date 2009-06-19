@@ -285,7 +285,7 @@ DomElement.inject(new function() {
 
 		triggerEvent: callEvent(false),
 
-		dispose: function() {
+		finalize: function() {
 			this.removeEvents();
 		}
 	};
