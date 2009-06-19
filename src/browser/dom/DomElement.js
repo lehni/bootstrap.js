@@ -126,7 +126,7 @@ DomElement = Base.extend(new function() {
 				(!el.parentNode || !el.offsetParent))) {
 	            if (el) {
 					var obj = el._wrapper;
-					if (obj && obj.dispose) obj.dispose();
+					if (obj && obj.finalize) obj.finalize();
 					el._wrapper = el._unique = null;
 				}
 				if (!force) elements.splice(i, 1);
@@ -441,10 +441,10 @@ DomElement.inject(new function() {
 		text: Browser.IE ? 'innerText' : 'textContent', html: 'innerHTML',
 		// Make sure that setting both class and className uses this.$.className instead of setAttribute
 		'class': 'className', className: 'className', 'for': 'htmlFor'
-	}, [ // camels
+	}, [ // camels and other values that need to be accessed directly, not through getAttribute
 		'value', 'accessKey', 'cellPadding', 'cellSpacing', 'colSpan',
 		'frameBorder', 'maxLength', 'readOnly', 'rowSpan', 'tabIndex',
-		'useMap'
+		'useMap', 'width', 'height'
 	].associate(function(name) {
 		return name.toLowerCase();
 	}), bools);
@@ -660,9 +660,9 @@ DomElement.inject(new function() {
 		},
 
 		removeChildren: function() {
-			var children = this.getChildren();
-			children.remove();
-			return children;
+			var nodes = this.getChildNodes();
+			nodes.remove();
+			return nodes;
 		},
 
 		replaceWith: function(el) {
