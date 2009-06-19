@@ -523,6 +523,8 @@ Template.prototype = {
 				// is specified.
 				append = true;
 			} else if (/\w=$/.test(part)) { // Named param, but not double ==
+				// This can't be a setter since we have named params.
+				macro.isSetter = false;
 				// TODO: Calling nextPart here should only return values, nothing else!
 				// add error handling...
 				var key = part.substring(0, part.length - 1), value = nextPart();
@@ -580,8 +582,11 @@ Template.prototype = {
 				values['default'] = /^'"/.test(def) ? '"' + global[values.encoder](def.substring(1, def.length - 1)) + '"'
 					: values.encoder + '(' + def + ')';
 		}
-		// All control macros swallow line breaks:
-		macro.swallow = swallow || macro.isControl;
+		// Make sure we're not marking something like <% $obj.macro %> as a setter
+		if (macro.isSetter && !macro.opcode.length)
+			macro.isSetter = false;
+		// All control and setter macros swallow line breaks:
+		macro.swallow = swallow || macro.isControl || macro.isSetter;
 		macro.tag = tag;
 		return macro;
 	},
