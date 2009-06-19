@@ -11,7 +11,7 @@
 Math.rand = function(first, second) {
 	return second == undefined
 		? Math.rand(0, first)
-		: Math.floor(Math.random() * (max - min) + min);
+		: Math.floor(Math.random() * (second - first) + first);
 }
 
 #endif // __lang_Math__
