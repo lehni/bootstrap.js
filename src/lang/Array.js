@@ -371,8 +371,12 @@ Array.inject(new function() {
 		shuffle: function() {
 			var res = this.clone();
 			var i = this.length;
-			while (i--) res.swap(i, Math.rand(0, i + 1));
+			while (i--) res.swap(i, Math.rand(i + 1));
 			return res;
+		},
+
+		pick: function() {
+			return this[Math.rand(this.length)];
 		},
 
 		statics: {
