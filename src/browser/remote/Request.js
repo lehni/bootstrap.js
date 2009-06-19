@@ -165,7 +165,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				var html = stripped.html, javascript = stripped.scripts;
 				var node = new Element('div', { html: html });
 				var elements = node.getElements();
-				var children = Array.create(node.childNodes).filter(function(el) {
+				var children = Array.create(node.getChildNodes()).filter(function(el) {
 					return Base.type(el) != 'whitespace';
 				});
 				if (this.options.update)
