@@ -198,11 +198,6 @@ Template.prototype = {
 		var buffer = [];
 		// Container for the generated code lines.
 		var code = [ 'this.__render__ = function(param, template, out) {' ];
-#ifdef RHINO
-		var lineBreak = java.lang.System.getProperty('line.separator');
-#else // !RHINO
-		var lineBreak = '\n';
-#endif // !RHINO
 		// Append strings in buffer either to templateTag or to code, depending
 		// on the mode we're in.
 		function append() {
@@ -253,7 +248,7 @@ Template.prototype = {
 							if (skipLineBreak)
 								skipLineBreak = false;
 							else
-								buffer.push(line.substring(end), lineBreak);
+								buffer.push(line.substring(end), Template.lineBreak);
 							break;
 						}
 					} else {
@@ -292,7 +287,7 @@ Template.prototype = {
 							// Now buffer collects lines between tags
 							buffer.length = 0;
 						} else {
-							buffer.push(line.substring(start), lineBreak);
+							buffer.push(line.substring(start), Template.lineBreak);
 							break;
 						}
 					}
@@ -321,7 +316,7 @@ Template.prototype = {
 				this.tags.unshift(null);
 			}
 			code.push('}');
-			return code.join(lineBreak);
+			return code.join(Template.lineBreak);
 		} catch (e) {
 			this.throwError(e, code.length);
 		}
@@ -1116,6 +1111,12 @@ Template.prototype = {
 			return this.getTagFromCodeLine(e.lineNumber);
 	}
 }
+
+#ifdef RHINO
+Template.lineBreak = java.lang.System.getProperty('line.separator');
+#else // !RHINO
+Template.lineBreak = '\n';
+#endif // !RHINO
 
 #ifdef HELMA
 
