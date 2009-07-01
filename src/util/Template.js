@@ -539,11 +539,6 @@ Template.prototype = {
 			} else if (part == '|') { // start a filter
 				isFirst = true;
 			} else { // unnamed param
-				// Detect setters. isSetter is turned on first for any tag starting
-				// with '<% $'. Since this might also be a template var setter,
-				// detect variable setter here by checking the first part for '='.
-				if (macro.isSetter && !macro.unnamed.length && part[0] != '=')
-					macro.isSetter = false;
 				// Unnamed parameters are not allowed in <%= tags, in control tags
 				// or when setting variables.
 				if (!macro.isData && !macro.isControl) {
@@ -606,12 +601,12 @@ Template.prototype = {
 		if (!macro)
 			throw 'Invalid tag';
 		var values = macro.values, result;
+		var codeIndexBefore = code.length;
 		// Put it all into a conditional block if the 'if' param is defined:
 		var condition = values['if'];
 		if (condition)
 			code.push(								'if (' + condition + ') {');
 		var postProcess = !!(values.prefix || values.suffix || values.filters);
-		var codeIndexBefore = code.length;
 		if (macro.isData) { // param, response, request, session, or a <%= %> tag
 			result = this.parseLoopVariables(macro.opcode
 				? macro.command + ' ' + macro.opcode : macro.command, stack);
@@ -739,7 +734,7 @@ Template.prototype = {
 													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' +
 															macro.name + '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ', out);',
 								// Trim if swallow is defined:						
-								macro.swallow	?	'if (val) val = val.toString().trim()' : null,
+								macro.swallow	?	'if (val) val = val.toString().trim();' : null,
 								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', ' + values.prefix + ', ' +
 															values.suffix + ', null, out);' : null);
 				result = 'val';
@@ -756,11 +751,7 @@ Template.prototype = {
 				code.push(							'template.write(' + result + ', ' + values.filters + ', ' + values.prefix + ', ' +
 															values.suffix + ', ' + values['default']  + ', out);');
 			else {
-				if (toString) {
-					// This is needed for nested macros. Whenn there is no post processing,
-					// we can actually simply return the value
-					return result;
-				} else {
+				if (!toString) {
 					// Dereference to local variable if it's a call, a lookup, or a more complex construct (containg whitespaces)
 					// TODO: Detect strings and simple values and do not do if check bellow if it is valid!
 					if (/[.()\s]/.test(result)) {
@@ -780,14 +771,14 @@ Template.prototype = {
 			// rendering code and return out.pop(). Due to the post processing
 			// we cannot simply return a variable...
 			code.splice(codeIndexBefore, 0,			'out.push();');
-			return 'out.pop()';
+			result = 'out.pop()';
 		}
 		// Close the condition block now, if needed.
 		if (condition)
 			code.push(								'}');
-		// Tell parse() wether to swallow the line break or not.
-		if (!toString)
-			return macro.swallow;
+		// toString is needed for nested macros.
+		// Otherwise, tell parse() wether to swallow the line break or not.
+		return toString ? result : macro.swallow;
 	},
 
 	/**
