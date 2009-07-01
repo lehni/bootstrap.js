@@ -104,6 +104,7 @@ function Template(object, name, parent) {
 		if (parent) {
 			parent.subTemplates[name] = this;
 			this.parent = parent;
+			this.pathName = parent.pathName + this.pathName;
 		}
 		// Counter for macro param variables.
 		this.macroParam = 0;
@@ -310,7 +311,7 @@ Template.prototype = {
 			for (var i = 0; i < this.renderTemplates.length; i++) {
 				var template = this.renderTemplates[i];
 				// Trim at render-time, if required:
-				code.splice(1, 0, 'var $' + template.name + ' = template.renderSubTemplate(this, "' +
+				code.splice(1, 0, 'var ' + template.name + ' = template.renderSubTemplate(this, "' +
 					template.name + '", param)' + (template.trim ? '.trim()' : ''));
 				// Shift tags as well, so line numbers are still right
 				this.tags.unshift(null);
@@ -480,6 +481,13 @@ Template.prototype = {
 					macro.isData = isEqualTag;
 #endif // !HELMA
 					macro.isSetter = next[0] == '$'; 
+					// If there was no whitespace between variable name and equals, 
+					// we need to manually move the = sign to opcode
+					var match = macro.isSetter && next.match(/(\$\w*)(=)$/);
+					if (match) {
+						macro.opcode.push(match[2]);
+						macro.command = match[1];
+					}
 				}
 			}
 		}
@@ -816,9 +824,9 @@ Template.prototype = {
 	 * to a varible.
 	 */
 	parseTemplateTag: function(tag, code) {
-		var match = tag.tag.match(/^<%\s*([$#])(\S*)\s*([+-]?)%>$/);
+		var match = tag.tag.match(/^<%\s*([$#]\S*)\s*([+-]?)%>$/);
 		if (match) {
-			var name = match[2], content = tag.buffer.join(''), end = match[3];
+			var name = match[1], content = tag.buffer.join(''), end = match[2];
 			// If the tag ends with -%>, trim the whole content.
 			// If it does not end with +%>, cut away first and last empty line:
 			// If it ends with +%>, keep the whitespaces.
@@ -827,7 +835,7 @@ Template.prototype = {
 			new Template(content, name, this);
 			// If it is a variable, push it onto renderTemplates, so it is
 			// rendered at the beginning of the generated render function.
-			if (match[1] == '$')
+			if (name[0] == '$')
 				this.renderTemplates.push({ name: name, trim: end == '-' });
 		} else
 			throw 'Syntax error in template';
@@ -881,7 +889,7 @@ Template.prototype = {
 				var that = this;
 				macro = function(prm, name) {
 					if (name[0] == '#') {
-						return (that.parent || that).renderSubTemplate(object, name.substring(1), prm, param);
+						return (that.parent || that).renderSubTemplate(object, name, prm, param);
 					} else {
 						var template = object.getTemplate(name);
 						return template && template.render(object, prm, param);
@@ -1128,7 +1136,7 @@ HopObject.prototype.getTemplate = function(template) {
 		if (pos != -1) {
 			template = this.getTemplate(name.substring(0, pos));
 			if (template)
-				return template.getSubTemplate(name.substring(pos + 1));
+				return template.getSubTemplate(name.substring(pos));
 		}
 		// Use a hashtable in __proto__.constructor as a cache for
 		// template objects
@@ -1200,7 +1208,7 @@ Template.methods = new function() {
 				if (pos != -1) {
 					template = this.getTemplate(name.substring(0, pos));
 					if (template)
-						return template.getSubTemplate(name.substring(pos + 1));
+						return template.getSubTemplate(name.substring(pos));
 				}
 				template = templates[name];
 			}
