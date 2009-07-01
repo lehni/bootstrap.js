@@ -483,11 +483,9 @@ Template.prototype = {
 					macro.isSetter = next[0] == '$'; 
 					// If there was no whitespace between variable name and equals, 
 					// we need to manually move the = sign to opcode
-					var match = macro.isSetter && next.match(/(\$\w*)(=)$/);
-					if (match) {
-						macro.opcode.push(match[2]);
+					var match = macro.isSetter && next.match(/(\$\w*)=$/);
+					if (match)
 						macro.command = match[1];
-					}
 				}
 			}
 		}
@@ -544,18 +542,19 @@ Template.prototype = {
 				// Detect setters. isSetter is turned on first for any tag starting
 				// with '<% $'. Since this might also be a template var setter,
 				// detect variable setter here by checking the first part for '='.
-				if (macro.isSetter && !macro.opcode.length && part[0] != '=')
+				if (macro.isSetter && !macro.unnamed.length && part[0] != '=')
 					macro.isSetter = false;
 				// Unnamed parameters are not allowed in <%= tags, in control tags
 				// or when setting variables.
-				if (!macro.isData && !macro.isControl && !macro.isSetter) {
-					part = nestedMacro(this, part, code, stack);
-					macro.unnamed.push(part);
+				if (!macro.isData && !macro.isControl) {
+					// Do not add = of setters.
+					if (!macro.isSetter || part != '=') {
+						part = nestedMacro(this, part, code, stack);
+						macro.unnamed.push(part);
+					}
 					// Appending to macro opcode not allowed after first parameter
 					append = false;
 				} else if (append) { // Appending to the opcode...
-					if (macro.isSetter) // Add support of nested macros in setters too
-						part = nestedMacro(this, part, code, stack);
 					macro.opcode.push(part);
 				} else {
 					throw "Syntax error: '" + part + "'";
@@ -586,8 +585,7 @@ Template.prototype = {
 					: values.encoder + '(' + def + ')';
 		}
 		// Make sure we're not marking something like <% $obj.macro %> as a setter
-		if (macro.isSetter && !macro.opcode.length)
-			macro.isSetter = false;
+		macro.isSetter = macro.isSetter && !!macro.unnamed.length;
 		// All control and setter macros swallow line breaks:
 		macro.swallow = swallow || macro.isControl || macro.isSetter;
 		macro.tag = tag;
@@ -714,12 +712,8 @@ Template.prototype = {
 				}
 			}
 		} else { // A normal <% %> macro
-			if (macro.opcode) {
-				// Setting a value? If not, this is a syntax error.
-				if (macro.isSetter)
-					code.push(						'var ' + macro.command + ' ' + this.parseLoopVariables(macro.opcode, stack) + ';');
-				else
-					throw 'Syntax error'; // No opcodes allowed in macros
+			if (macro.isSetter) {
+				code.push(							'var ' + macro.command + ' = ' + this.parseLoopVariables(macro.unnamed.join(''), stack) + ';');
 			} else {
 				var object = macro.object;
 #ifdef HELMA
