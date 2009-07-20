@@ -383,7 +383,7 @@ DomElement = Base.extend(new function() {
 			 * prototype when using new HtmlElement(name, props).
 			 */
 			create: function(tag, props, doc) {
-				if (Browser.IE && props) {
+				if (Browser.TRIDENT && props) {
 					['name', 'type', 'checked'].each(function(key) {
 						if (props[key]) {
 							tag += ' ' + key + '="' + props[key] + '"';
@@ -408,11 +408,11 @@ DomElement = Base.extend(new function() {
 			},
 
 			isAncestor: function(el, parent) {
-				// TODO: See Ext for a faster implementation
-				if (parent != document)
-					for (el = el && el.parentNode; el != parent; el = el.parentNode)
-						if (!el) return false;
-				return true;
+				return !el ? false : Browser.WEBKIT && Browser.VERSION < 420
+					? Array.create(parent.getElementsByTagName(el.tagName)).indexOf(el) != -1
+					: parent.contains 
+						? parent != el && parent.contains(el)
+						: !!(parent.compareDocumentPosition(el) & 16);
 			},
 
 			dispose: function() {
@@ -438,9 +438,9 @@ DomElement.inject(new function() {
 		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
 	].associate();
 	var properties = Hash.merge({ // props
-		text: Browser.IE ? 'innerText' : 'textContent', html: 'innerHTML',
+		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420 ? 'innerText' : 'textContent',
 		// Make sure that setting both class and className uses this.$.className instead of setAttribute
-		'class': 'className', className: 'className', 'for': 'htmlFor'
+		html: 'innerHTML', 'class': 'className', className: 'className', 'for': 'htmlFor'
 	}, [ // camels and other values that need to be accessed directly, not through getAttribute
 		'value', 'accessKey', 'cellPadding', 'cellSpacing', 'colSpan',
 		'frameBorder', 'maxLength', 'readOnly', 'rowSpan', 'tabIndex',
@@ -568,9 +568,9 @@ DomElement.inject(new function() {
 			return walk(this, 'previousSibling', 'lastChild', match);
 		},
 
-		hasChild: function(el) {
+		hasChild: function(match) {
 			return Base.type(match) == 'element'
-				? DomElement.isAncestor(DomElement.unwrap(el), this.$)
+				? DomElement.isAncestor(DomElement.unwrap(match), this.$)
 				: !!this.getFirst(match);
 		},
 
@@ -584,7 +584,7 @@ DomElement.inject(new function() {
 
 		hasParent: function(match) {
 			return Base.type(match) == 'element'
-				? DomElement.isAncestor(this.$, DomElement.unwrap(el))
+				? DomElement.isAncestor(this.$, DomElement.unwrap(match))
 				: !!this.getParent(match);
 		},
 
@@ -612,7 +612,7 @@ DomElement.inject(new function() {
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
 				// This is still needed on IE7, so do not mark it BROWSER_LEGACY
-				var text = Browser.IE && el.$.text;
+				var text = Browser.TRIDENT && el.$.text;
 				if (text) el.$.text = '';
 				this.$.appendChild(el.$);
 				if (text) el.$.text = text;
@@ -744,7 +744,7 @@ DomElement.inject(new function() {
 				// Fix a bug on Mac IE when inserting Option elements to Select 
 				// elements, where the text on these objects is lost after insertion.
 				// -> DomElement#appendChild does the same.
-				var text = Browser.IE && dest.$.text;
+				var text = Browser.TRIDENT && dest.$.text;
 				if (text) dest.$.text = '';
 				dest.$.parentNode.insertBefore(source.$, dest.$);
 				if (text) dest.$.text = text;

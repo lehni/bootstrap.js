@@ -38,7 +38,7 @@ Request = Base.extend(Chain, Callback, new function() {
 	function createRequest(that) {
 		if (!that.transport)
 			that.transport = window.XMLHttpRequest && new XMLHttpRequest()
-				|| Browser.IE && new ActiveXObject('Microsoft.XMLHTTP');
+				|| Browser.TRIDENT && new ActiveXObject('Microsoft.XMLHTTP');
 	}
 
 	function createFrame(that, form) {
@@ -136,7 +136,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
 				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
 				// First tag in IE ends up in <head>, safe it
-				var head = Browser.IE && doc.getElementsByTagName('head')[0];
+				var head = Browser.TRIDENT && doc.getElementsByTagName('head')[0];
 				text = (head && head.innerHTML || '') + text;
 				// Remove div
 				var div = this.frame.div;
@@ -292,7 +292,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			// Check frame first, as this is never reused.
 			if (this.frame) {
 #ifdef BROWSER_LEGACY
-				if (Browser.IE5)
+				if (Browser.TRIDENT5)
 					this.timer = checkFrame.periodic(50, this);
 #endif // !BROWSER_LEGACY
 				if (this.frame.form)

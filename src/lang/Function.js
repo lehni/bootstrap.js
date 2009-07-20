@@ -139,7 +139,7 @@ if (!Function.prototype.apply) {
 				finally { obj.__f = undefined; }
 			} else {
 				// This should be executed in window to be compliant, but
-				// for some reasion, on MacIE execution there is much slower
+				// for some reasion, on MACIE execution there is much slower
 				// than on an empty object. so do not rely on this to point
 				// to the global scope when not set otherwise
 				return fn({ __f: this }, args);

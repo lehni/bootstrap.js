@@ -158,7 +158,7 @@ String.inject({
 				div = div.firstChild;
 			
 			// Remove IE's autoinserted <tbody> from table fragments
-			if (Browser.IE) {
+			if (Browser.TRIDENT) {
 				var els = [];
 				if (!str.indexOf('<table') && str.indexOf('<tbody') < 0) {
 					// String was a <table>, *may* have spurious <tbody>

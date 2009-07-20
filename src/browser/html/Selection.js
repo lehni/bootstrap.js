@@ -10,7 +10,7 @@ FormElement.inject({
 	setSelection: function(start, end) {
 		var sel = end == undefined ? start : { start: start, end: end };
 		this.focus();
-		if(Browser.IE) {
+		if(Browser.TRIDENT) {
 			var range = this.$.createTextRange();
 			range.collapse(true);
 			range.moveStart('character', sel.start);
@@ -21,7 +21,7 @@ FormElement.inject({
 	},
  
 	getSelection: function() {
-		if(Browser.IE) {
+		if(Browser.TRIDENT) {
 			this.focus();
 			var range = document.selection.createRange();
 			var tmp = range.duplicate();
@@ -34,7 +34,7 @@ FormElement.inject({
  
 	getSelectedText: function() {
 /* needed? the other should allways produce the right result.
-		if(Browser.IE)
+		if(Browser.TRIDENT)
 			return document.selection.createRange().text;
 */
  		var range = this.getSelection();
