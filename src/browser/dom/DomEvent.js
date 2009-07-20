@@ -132,7 +132,7 @@ DomEvent = Base.extend(new function() {
 									// This throws an error when the dom is not ready, except for framesets,
 									// where the second line is needed and will throw an error when not ready.
 									temp.$.doScroll('left');
-                                    temp.insertBottom(DomElement.get('body')).setHtml('temp').remove();
+									temp.insertBottom(DomElement.get('body')).setHtml('temp').remove();
 									doc.onDomReady();
 								} catch (e) {
 									arguments.callee.delay(50);

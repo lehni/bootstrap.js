@@ -109,15 +109,15 @@ if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
 				return this.base(search, replace);
 			var parts = [], pos = 0, a;
 			while (a = search.exec(this)) {
-			    a.push(a.index, a.input);
-			    parts.push(this.substring(pos, a.index), replace.apply(null, a));
-			    pos = a.index + a[0].length;
-			    if (!search.global) break;
+				a.push(a.index, a.input);
+				parts.push(this.substring(pos, a.index), replace.apply(null, a));
+				pos = a.index + a[0].length;
+				if (!search.global) break;
 			}
 			if (!parts.length) return this;
 			parts.push(this.substring(pos));
 			return parts.join('');
-	    }
+		}
 	});
 }
 
