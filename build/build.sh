@@ -9,18 +9,18 @@
 # The build script that produces all the different versions of the
 # bootstrap library:
 #
-# bootstrap.browser.js  For new generation browsers.
-# bootstrap-legacy.js   For legacy browsers (IE 5, Opera 7, etc)
-# bootsrap-rhino.js     For Rhino based JS engines in Java
-# bootstrap-helma.js    For Helma, the JS Web Application Server
+# bootstrap.browser.js	For new generation browsers.
+# bootstrap-legacy.js	For legacy browsers (IE 5, Opera 7, etc)
+# bootsrap-rhino.js		For Rhino based JS engines in Java
+# bootstrap-helma.js	For Helma, the JS Web Application Server
 # 
 # Usage:
 # build.sh MODE
 #
 # MODE:
-#     commented    Preprocessed but still formated and commented (default)
-#     stripped     Formated but without comments
-#     compressed   No comments and no whitespaces
+#	commented		Preprocessed but still formated and commented (default)
+#	stripped		Formated but without comments
+#	compressed		No comments and no whitespaces
 
 if [ $# -eq 0 ]
 then

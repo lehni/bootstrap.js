@@ -15,12 +15,12 @@
 # preprocess.sh SOURCE DESTINATION ARGUMENTS MODE
 #
 # ARGUMENTS:
-#     e.g. "-DBROWSER -DBROWSER_LEGACY"
+#	e.g. "-DBROWSER -DBROWSER_LEGACY"
 #
 # MODE:
-#     commented    Preprocessed but still formated and commented
-#     stripped     Formated but without comments
-#     compressed   No comments and no whitespaces
+#	commented	Preprocessed but still formated and commented
+#	stripped	Formated but without comments
+#	compressed	No comments and no whitespaces
 
 case $4 in
 	stripped)

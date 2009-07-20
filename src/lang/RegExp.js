@@ -23,12 +23,12 @@ if (!/ /g.global) {
 				this.global = /\/[^\/]*g[^\/]*$/.test(this);
 				this.multiline = /\/[^\/]*m[^\/]*$/.test(this);
 				this.ignoreCase = /\/[^\/]*i[^\/]*$/.test(this);
-			    this.lastIndex = 0;
+				this.lastIndex = 0;
 			}
 			var last = this.lastIndex, res = this.base(str.substring(last));
 			if (!res) {
-			    this.lastIndex = 0;
-			    return res;
+				this.lastIndex = 0;
+				return res;
 			}
 			this.lastIndex = RegExp.lastIndex + last;
 			res.index = this.lastIndex - res[0].length;
