@@ -90,7 +90,7 @@ HtmlElement.inject(new function() {
 			var color = style && style.match(/rgb[a]?\([\d\s,]+\)/);
 			if (color) return style.replace(color[0], color[0].rgbToHex());
 #endif // !__lang_Color__
-			if (Browser.IE && isNaN(parseInt(style))) {
+			if (Browser.PRESTO || (Browser.TRIDENT && isNaN(parseInt(style)))) {
 				// Fix IE style:
 				if (/^(width|height)$/.test(name)) {
 					var size = 0;
@@ -98,9 +98,9 @@ HtmlElement.inject(new function() {
 						size += this.getStyle('border-' + val + '-width').toInt() + this.getStyle('padding-' + val).toInt();
 					}, this);
 					return (this.$['offset' + name.capitalize()] - size) + 'px';
-				} else if (/border(.+)Width|margin|padding/.test(name)) {
-					return '0px';
 				}
+				if (Browser.PRESTO && /px/.test(style)) return style;
+				if (/border(.+)Width|margin|padding/.test(name)) return '0px';
 			}
 			return style;
 		},
@@ -110,7 +110,7 @@ HtmlElement.inject(new function() {
 			var el = this.$;
 			switch (name) {
 				case 'float':
-					name = Browser.IE ? 'styleFloat' : 'cssFloat';
+					name = Browser.TRIDENT ? 'styleFloat' : 'cssFloat';
 					break;
 				case 'clip':
 					// Setting clip to true sets it to the current bounds
@@ -148,7 +148,7 @@ HtmlElement.inject(new function() {
 					// otherwise... TODO: Find better solution?
 					if (!value) value = 1;
 					if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
-					if (Browser.IE) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
+					if (Browser.TRIDENT) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
 					el.style.opacity = value;
 					return this;
 			}

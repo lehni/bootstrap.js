@@ -109,38 +109,43 @@ DomEvent = Base.extend(new function() {
 				mousewheel: { type: Browser.GECKO ? 'DOMMouseScroll' : 'mousewheel' },
 
 				domready: function(func) {
-					if (Browser.loaded) func.call(this);
-					else if (!this.domReady) {
+					var win = this.getWindow(), doc = this.getDocument();
+					if (Browser.loaded) {
+						func.call(this);
+					} else if (!doc.onDomReady) {
 						// Only install it once, since fireEvent calls all the
 						// handlers.
-						this.domReady = true;
-						var domReady = function() {
+						doc.onDomReady = function() {
 							if (!Browser.loaded) {
 								Browser.loaded = true;
-								this.fireEvent('domready');
+								doc.fireEvent('domready');
+								win.fireEvent('domready');
 							}
-						}.bind(this);
-						var doc = this.getDocument();
-						if (Browser.WEBKIT) {
-							(function() {
-								if (/^(loaded|complete)$/.test(doc.$.readyState)) domReady();
-								else arguments.callee.delay(50);
-							})();
-						} else if (Browser.IE) {
+						}
+						if (Browser.TRIDENT) {
 							// From: http://www.hedgerwow.com/360/dhtml/ie-dom-ondocumentready.html
 							var temp = doc.createElement('div');
+							// Do not call immediatelly. Call it right after the event handler
+							// is actually installed, through delay 0.
 							(function() {
 								try {
+									// This throws an error when the dom is not ready, except for framesets,
+									// where the second line is needed and will throw an error when not ready.
 									temp.$.doScroll('left');
-									temp = null;
-									domReady();
+                                    temp.insertBottom(DomElement.get('body')).setHtml('temp').remove();
+									doc.onDomReady();
 								} catch (e) {
 									arguments.callee.delay(50);
 								}
+							}).delay(0);
+						} else if (Browser.WEBKIT && Browser.VERSION < 525){
+							(function() {
+								/^(loaded|complete)$/.test(doc.$.readyState)
+									? doc.onDomReady() : arguments.callee.delay(50);
 							})();
 						} else {
-							this.getWindow().addEvent('load', domReady);
-							doc.addEvent('DOMContentLoaded', domReady);
+							win.addEvent('load', doc.onDomReady);
+							doc.addEvent('DOMContentLoaded', doc.onDomReady);
 						}
 					}
 				}
@@ -187,6 +192,8 @@ DomElement.inject(new function() {
 				if (pseudo) {
 					if (typeof pseudo == 'function') pseudo = pseudo.call(this, func);
 					listener = pseudo && pseudo.listener || listener;
+					// name should contain the name of the native handler that should
+					// be remove in removeEvent. It's ok for this to be empty.
 					name = pseudo && pseudo.type;
 				}
 				// Check if the function takes a parameter. If so, it must

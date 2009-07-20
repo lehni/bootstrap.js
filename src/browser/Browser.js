@@ -5,26 +5,44 @@
 // Browser
 
 Browser = new function() {
-	var name = (navigator.platform.match(/(MAC)|(WIN)|(LINUX)|(NIX)/i) || ['OTHER'])[0].toUpperCase();
-	var js/*@cc_on=@_jscript_version@*/, xpath = !!document.evaluate;
-	var webkit = document.childNodes && !document.all && !navigator.taintEnabled;
+	var name = window.orientation != undefined ? 'ipod'
+			: (navigator.platform.match(/mac|win|linux|nix/i) || ['other'])[0].toLowerCase();
 	var ret = {
 		PLATFORM: name,
-		WEBKIT: webkit,
-		WEBKIT2: webkit && !xpath,
-		WEBKIT3: webkit && xpath,
-		OPERA: !!window.opera,
-		GECKO: !!document.getBoxObjectFor,
-		IE: !!js,
-		IE5: js >= 5 && js < 5.5,
-		IE55: js == 5.5,
-		IE6: js == 5.6,
-		IE7: js == 5.7,
-		IE8: js == 5.8,
-		MACIE: js && name == 'MAC',
-		XPATH: xpath
+		XPATH: !!document.evaluate,
+		QUERY: !!document.querySelector
 	};
-	ret[name] = true;
+	var engines = {
+		presto: function() {
+			return !window.opera ? false : arguments.callee.caller ? 960 : document.getElementsByClassName ? 950 : 925;
+		},
+
+		trident: function() {
+			var ver/*@cc_on=@_jscript_version@*/;
+			return !ver ? false : ver >= 5 && ver < 5.5 ? 5 : ver == 5.5 ? 5.5 : ver * 10 - 50;
+		},
+
+		webkit: function() {
+			return navigator.taintEnabled ? false : ret.XPATH ? ret.QUERY ? 525 : 420 : 419;
+		},
+
+		gecko: function() {
+			return !document.getBoxObjectFor ? false : document.getElementsByClassName ? 19 : 18;
+		}
+	};
+	for (var engine in engines) {
+		var version = engines[engine]();
+		if (version) {
+			ret.ENGINE = engine;
+			ret.VERSION = version;
+			engine = engine.toUpperCase();
+			ret[engine] = true;
+			ret[(engine + version).replace(/\./g, '')] = true;
+			break;
+		}
+	}
+	// Add platform name directly in uppercase too
+	ret[name.toUpperCase()] = true;
 	return ret;
 };
 

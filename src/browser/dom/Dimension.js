@@ -20,7 +20,7 @@
 DomElement.inject(new function() {
 #ifdef BROWSER_LEGACY
 	function cumulate(name, parent, iter, fix) {
-		fix = fix && Browser.MACIE;
+		fix = fix && Browser.TRIDENT && Browser.MAC;
 #else // !BROWSER_LEGACY
 	function cumulate(name, parent, iter) {
 #endif // !BROWSER_LEGACY
@@ -176,25 +176,22 @@ DomElement.inject(new function() {
 	_BEANS
 
 	getSize: function() {
-		var doc = this.getDocument().$, view = this.getWindow().$, html = doc.documentElement;
-		return Browser.WEBKIT2 && { width: view.innerWidth, height: view.innerHeight }
-			|| Browser.OPERA && { width: doc.body.clientWidth, height: doc.body.clientHeight }
-			|| { width: html.clientWidth, height: html.clientHeight };
+		if (Browser.PRESTO || Browser.WEBKIT) {
+			var win = this.getWindow().$;
+			return { width: win.innerWidth, height: win.innerHeight };
+		}
+		var doc = this.getCompatElement();
+		return { width: doc.clientWidth, height: doc.clientHeight };
 	},
 
 	getScrollOffset: function() {
-		var doc = this.getDocument().$, view = this.getWindow().$, html = doc.documentElement;
-		return {
-			x: view.pageXOffset || html.scrollLeft || doc.body.scrollLeft || 0,
-			y: view.pageYOffset || html.scrollTop || doc.body.scrollTop || 0
-		}
+		var win = this.getWindow().$, doc = this.getCompatElement();
+		return { x: win.pageXOffset || doc.scrollLeft, y: win.pageYOffset || doc.scrollTop };
 	},
 
 	getScrollSize: function() {
-		var doc = this.getDocument().$, html = doc.documentElement;
-		return Browser.IE && { x: Math.max(html.clientWidth, html.scrollWidth), y: Math.max(html.clientHeight, html.scrollHeight) }
-			|| Browser.WEBKIT && { x: doc.body.scrollWidth, y: doc.body.scrollHeight }
-			|| { x: html.scrollWidth, y: html.scrollHeight };
+		var doc = this.getCompatElement(), min = this.getSize();
+		return { width: Math.max(doc.scrollWidth, min.width), width: Math.max(doc.scrollHeight, min.height) };
 	},
 
 	getOffset: function() {
@@ -235,6 +232,11 @@ DomElement.inject(new function() {
 			if (max < 0) break;
 		}
 		return el;
+	},
+
+	getCompatElement: function() {
+		var doc = this.getDocument();
+		return !doc.compatMode || doc.compatMode == 'CSS1Compat' ? doc.html : doc.body;
 	}
 });
 
