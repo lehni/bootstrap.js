@@ -408,11 +408,15 @@ DomElement = Base.extend(new function() {
 			},
 
 			isAncestor: function(el, parent) {
-				return !el ? false : Browser.WEBKIT && Browser.VERSION < 420
-					? Array.create(parent.getElementsByTagName(el.tagName)).indexOf(el) != -1
-					: parent.contains 
-						? parent != el && parent.contains(el)
-						: !!(parent.compareDocumentPosition(el) & 16);
+				// Handle el.ownerDocumet == parent specially for efficiency and
+				// also since documents dont define neither contains nor
+				// compareDocumentPosition
+				return !el ? false : el.ownerDocument == parent ? true
+					: Browser.WEBKIT && Browser.VERSION < 420
+						? Array.create(parent.getElementsByTagName(el.tagName)).indexOf(el) != -1
+						: parent.contains 
+							? parent != el && parent.contains(el)
+							: !!(parent.compareDocumentPosition(el) & 16)
 			},
 
 			dispose: function() {
