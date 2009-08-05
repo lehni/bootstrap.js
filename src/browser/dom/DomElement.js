@@ -64,13 +64,13 @@ DomElements = Array.extend(new function() {
 		},
 
 		statics: {
-			inject: function(src) {
+			inject: function(src/*, ... */) {
 				// For each function that is injected into DomElements, create a
 				// new function that iterates that calls the function on each of
 				// the collection's elements.
 				// src can either be a function to be called, or a object literal.
 				var proto = this.prototype;
-				return this.base(Base.each(src || {}, function(val, key) {
+				this.base(Base.each(src || {}, function(val, key) {
 					if (typeof val == 'function') {
 						var func = val, prev = proto[key];
 						var count = func.getParameters().length, prevCount = prev && prev.getParameters().length;
@@ -102,6 +102,9 @@ DomElements = Array.extend(new function() {
 					}
 					this[key] = val; 
 				}, {}));
+				for (var i = 1, l = arguments.length; i < l; i++)
+					this.inject(arguments[i]);
+				return this;
 			}
 		}
 	};
@@ -248,7 +251,7 @@ DomElement = Base.extend(new function() {
 		},
 
 		statics: {
-			inject: function(src) {
+			inject: function(src/*, ... */) {
 				if (src) {
 					// Produce generic-versions for each of the injected
 					// non-static methods, so that they function on native
@@ -282,6 +285,8 @@ DomElement = Base.extend(new function() {
 					// are "multiplied" for each of the elements of the collection.
 					proto._elements.inject(src);
 				}
+				for (var i = 1, l = arguments.length; i < l; i++)
+					this.inject(arguments[i]);
 				return this;
 			},
 
