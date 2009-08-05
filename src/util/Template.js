@@ -412,17 +412,20 @@ Template.prototype = {
 			if (data) {
 				// Allow lookup to session.user, everything else goes to session.data
 				if (!/^session\.user\b/.test(data)) {
-					// Use  arrays of strings for each pseudo parameter. The name
-					// will be inserted at position 1 and the result will be joined.
-					// This allows both getProperty('name') and session.data.name
-					var buf = {
-						response: ['res.data.'], request: ['req.data.'], 
-						session: ['session.data.'], param: ['param.'],
-						properties: ['getProperty("', '")']
-					}[data[1]];
-					// Now insert the name at position 1
-					buf.splice(1, 0, data[2]);
-					return buf.join('');
+					// Split chains of . seperated name lookups like
+					//     one.two.three
+					// into the form of:
+					//     ["one"]["two"]["three"]
+					// and prepend with the right data source:
+					return {
+						response: 'res.data',
+						request: 'req.data', 
+						session: 'session.data',
+						param: 'param',
+						properties: 'app.properties'
+					}[data[1]] + data[2].split('.').map(function(part) {
+						return '["' + part + '"]';
+					}).join('');
 				}
 			}
 			return param;
@@ -470,22 +473,24 @@ Template.prototype = {
 					// Is this a control macro?
 					macro.isControl = allowControls && /^(foreach|if|elseif|else|end)$/.test(next);
 					// Is this a data macro?
-#ifdef HELMA
-					var param = parseParam(macro.command);
-					// Tell the parseMacro code to simply output the value
-					// If parseParam produces a result different from macro.command,
-					// we are using a pseudo parameter which is data as well:
-					macro.isData = isEqualTag || param != macro.command;
-					macro.command = param;
-#else // !HELMA
 					macro.isData = isEqualTag;
-#endif // !HELMA
-					macro.isSetter = next[0] == '$'; 
-					// If there was no whitespace between variable name and equals, 
-					// we need to manually move the = sign to opcode
-					var match = macro.isSetter && next.match(/(\$\w*)=$/);
-					if (match)
-						macro.command = match[1];
+					macro.isSetter = !isEqualTag && next[0] == '$'; 
+					if (macro.isSetter) {
+						// If there was no whitespace between variable name and equals, 
+						// we need to manually move the = sign to opcode
+						var match = next.match(/(\$\w*)=$/);
+						if (match)
+							macro.command = match[1];
+#ifdef HELMA
+					} else if (!isEqualTag) {
+						// If parseParam produces a result different from macro.command,
+						// we are using a pseudo parameter which is data as well:
+						var param = parseParam(macro.command);
+						// Tell the parseMacro code to simply output the value
+						macro.isData = param != macro.command;
+						macro.command = param;
+#endif // HELMA
+					}
 				}
 			}
 		}
@@ -539,14 +544,16 @@ Template.prototype = {
 			} else if (part == '|') { // start a filter
 				isFirst = true;
 			} else { // unnamed param
-				// Unnamed parameters are not allowed in <%= tags, in control tags
-				// or when setting variables.
-				if (!macro.isData && !macro.isControl) {
+
+				if (macro.isSetter) {
 					// Do not add = of setters.
-					if (!macro.isSetter || part != '=') {
-						part = nestedMacro(this, part, code, stack);
+					if (part != '=')
 						macro.unnamed.push(part);
-					}
+					append = false;
+				} else if (!macro.isData && !macro.isControl) {
+					// Unnamed parameters are not allowed in <%= tags, in control tags
+					// or when setting variables.
+					macro.unnamed.push(nestedMacro(this, part, code, stack));
 					// Appending to macro opcode not allowed after first parameter
 					append = false;
 				} else if (append) { // Appending to the opcode...
@@ -954,14 +961,14 @@ Template.prototype = {
 			var lines;
 			if  (this.resource) {
 #ifdef HIDDEN
-			 	var content = this.resource.getContent(getProperty('skinCharset'));
+			 	var content = this.resource.getContent(app.properties.skinCharset);
 			 	// Store the original lines:
 			 	var lines = content.split(/\r\n|\n|\r/mg);
 #endif // HIDDEN
 				// Use java.io.BufferedReader for reading the lines into a line array,
 				// as this is much faster than the regexp above
 #ifdef HELMA
-				var charset = getProperty('skinCharset');
+				var charset = app.properties.skinCharset;
 				var reader = new java.io.BufferedReader(
 					charset ? new java.io.InputStreamReader(this.resource.getInputStream(), charset) :
 						new java.io.InputStreamReader(this.resource.getInputStream())
