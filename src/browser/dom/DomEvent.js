@@ -21,7 +21,7 @@ DomEvent = Base.extend(new function() {
 	var keys = {
 		 '8': 'backspace',
 		'13': 'enter',
-		'27': 'esc',
+		'27': 'escape',
 		'32': 'space',
 		'37': 'left',
 		'38': 'up',
