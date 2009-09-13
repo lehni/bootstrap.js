@@ -105,7 +105,12 @@ new function() { // bootstrap
 						// making sure we do not end up in aspect-like changes of the 
 						// multiple instances of the same function, compiled in different
 						// cicles.
-						if (prev._version && prev._version != version)
+						// Since Helma always recompiles code from all repositories for a
+						// given prototype when a change happens in one of them, we
+						// also need to compare dest, and skip backwards until we find
+						// the first version that is not compiled for this prototype
+						// (== dest). Otherwise we would produce referential loops.
+						while (prev._version && prev._version != version && prev._dest == dest)
 							prev = prev._previous;
 #endif // HELMA
 						var fromBase = base && base[name] == prev;
@@ -129,6 +134,11 @@ new function() { // bootstrap
 						if (version) {
 							res._version = version;
 							res._previous = prev;
+							// Store this function's destination as well, since
+							// it is needed when searching for the right previous
+							// version of a function when code is updated.
+							// See above.
+							res._dest = dest;
 						}
 #endif // HELMA
 					}
@@ -261,7 +271,8 @@ new function() { // bootstrap
 			// (AOP-like), or the same function in the real super prototype.
 			// _version is only added to constructors that are or inherit from HopObject,
 			// and is automatically increased in onCodeUpdate, as defined bellow.
-			var version = (this == HopObject || proto instanceof HopObject) && (proto.constructor._version || (proto.constructor._version = 1));
+			var version = (this == HopObject || proto instanceof HopObject)
+					&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
 			inject(proto, src, base && base.prototype, src && src._generics && this);
@@ -278,19 +289,20 @@ new function() { // bootstrap
 			if (version) {
 				// See if it is already defined, and override in a way that
 				// allows outside definitions of onCodeUpdate to coexist with
-				// Bootstrap.js. Use _version to flag the function that
+				// Bootstrap.js. Use _wrapped to flag the function that
 				// increases _version. Only override if it's another function or
 				// if it is not defined yet.
 				var update = proto.onCodeUpdate;
-				if (!update || !update._version) {
+				if (!update || !update._wrapped) {
 					var res = function(name) {
 						// "this" points to the prototype here. Update its constructor's _version
 						this.constructor._version = (this.constructor._version || 0) + 1;
 						// Call the previously defined funciton, if any
-						if (update) update.call(this, name);
+						if (update)
+							update.call(this, name);
 					};
 					// Flag it so we know it the next time 
-					res._version = true;
+					res._wrapped = true;
 					proto.onCodeUpdate = res;
 				}
 				// Support for initialize in HopObject, in a way similar to
