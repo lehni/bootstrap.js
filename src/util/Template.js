@@ -107,7 +107,6 @@ function Template(object, name, parent) {
 			this.pathName = parent.pathName + this.pathName;
 		}
 		// Counter for macro param variables.
-		this.macroParam = 0;
 		this.compile();
 	}
 }
@@ -246,10 +245,12 @@ Template.prototype = {
 							append();
 							// Now buffer collects tag lines
 						} else {
+							// Just a normal line. Append its text, and a linebreak
+							// if we are not at the end.
 							if (skipLineBreak)
 								skipLineBreak = false;
 							else
-								buffer.push(line.substring(end), Template.lineBreak);
+								buffer.push(line.substring(end), i < lines.length - 1 ? Template.lineBreak : null);
 							break;
 						}
 					} else {
@@ -282,6 +283,8 @@ Template.prototype = {
 									templateTag.buffer.push(tag);
 								else if (tag == '<%-%>')
 									skipWhiteSpace = true;
+								// Only tell code above to skip line break if we're really at the end
+								// of the line:
 								else if (this.parseMacro(tag, code, stack, true) && end == line.length)
 									skipLineBreak = true;
 							}
@@ -958,6 +961,7 @@ Template.prototype = {
 	compile: function() {
 		try {
 #ifdef RHINO
+			this.macroParam = 0;
 			var lines;
 			if  (this.resource) {
 #ifdef HIDDEN
