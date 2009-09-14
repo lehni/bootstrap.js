@@ -118,6 +118,8 @@ Array.inject(new function() {
 
 		/**
 		 * Returns the index of the given object if found, -1 otherwise.
+		 *
+		 * TODO: Why is this here and not in browser legacy above?
 		 */
 		indexOf: proto.indexOf || function(obj, i) {
 			i = i || 0;
@@ -129,6 +131,8 @@ Array.inject(new function() {
 
 		/**
 		 * Returns the last index of the given object if found, -1 otherwise.
+		 *
+		 * TODO: Why is this here and not in browser legacy above?
 		 */
 		lastIndexOf: proto.lastIndexOf || function(obj, i) {
 			i = i != null ? i : this.length - 1;
@@ -197,6 +201,10 @@ Array.inject(new function() {
 			if (entry.key != null)
 				this.splice(entry.key, 1);
 			return entry.value;
+		},
+
+		contains: function(obj) {
+			return this.indexOf(obj) != -1;
 		},
 
 		/**
