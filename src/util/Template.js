@@ -19,10 +19,14 @@
 #ifdef HELMA
 
 // Define global encodeHtml and encodeAll, used for encoding
+// TODO: Consider referencing these internally, and checking
+// global['encode' + encoder.capitalize()] as a fallback scenario
 if (!global.encodeHtml)
 	encodeHtml = format;
 if (!global.encodeAll)
 	encodeAll = encode;
+if (!global.encodeParagraphs)
+	encodeParagraphs = formatParagraphs;
 
 #else // !HELMA
 
@@ -549,8 +553,11 @@ Template.prototype = {
 			} else { // unnamed param
 
 				if (macro.isSetter) {
-					// Do not add = of setters.
-					if (part != '=')
+					// Do not add = of setters, but remember that it has one,
+					// so we can set isSetter correctly at the end of the parsing
+					if (part == '=')
+						macro.hasEquals = true;
+					else
 						macro.unnamed.push(part);
 					append = false;
 				} else if (!macro.isData && !macro.isControl) {
@@ -590,7 +597,7 @@ Template.prototype = {
 					: values.encoder + '(' + def + ')';
 		}
 		// Make sure we're not marking something like <% $obj.macro %> as a setter
-		macro.isSetter = macro.isSetter && !!macro.unnamed.length;
+		macro.isSetter = macro.isSetter && macro.hasEquals && !!macro.unnamed.length;
 		// All control and setter macros swallow line breaks:
 		macro.swallow = swallow || macro.isControl || macro.isSetter;
 		macro.tag = tag;
@@ -763,7 +770,7 @@ Template.prototype = {
 			else {
 				if (!toString) {
 					// Dereference to local variable if it's a call, a lookup, or a more complex construct (containg whitespaces)
-					// TODO: Detect strings and simple values and do not do if check bellow if it is valid!
+					// TODO: Detect strings and simple values and do not do if-check bellow if it is valid!
 					if (/[.()\s]/.test(result)) {
 						code.push(					'var val = ' + result + ';');
 						result = 'val';
