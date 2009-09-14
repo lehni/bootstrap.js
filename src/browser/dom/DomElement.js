@@ -418,7 +418,7 @@ DomElement = Base.extend(new function() {
 				// compareDocumentPosition
 				return !el ? false : el.ownerDocument == parent ? true
 					: Browser.WEBKIT && Browser.VERSION < 420
-						? Array.indexOf(parent.getElementsByTagName(el.tagName), el) != -1
+						? Array.contains(parent.getElementsByTagName(el.tagName), el)
 						: parent.contains 
 							? parent != el && parent.contains(el)
 							: !!(parent.compareDocumentPosition(el) & 16)
