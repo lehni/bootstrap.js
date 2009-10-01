@@ -25,9 +25,17 @@ Hash = Base.extend(Enumerable, {
 	 * Constructs a new Hash. The constructor takes a variable amount of
 	 * argument objects of which the fields are all merged into the hash.
 	 */
-	initialize: function() {
+	initialize: function(arg) {
+		// If the first argument is a string, assume pairs of key/value arguments,
+		// to be set on the hash.
+		if (typeof arg == 'string') {
+			for (var i = 0, l = arguments.length; i < l; i += 2)
+				this[arguments[i]] = arguments[i + 1];
+		} else {
+			this.merge.apply(this, arguments);
+		}
 		// Explicitly return object as it is used in Hash.create's return statement
-		return this.merge.apply(this, arguments);
+		return this;
 	},
 
 	/**
@@ -73,7 +81,7 @@ Hash = Base.extend(Enumerable, {
 		create: function(obj) {
 			return arguments.length == 1 && obj.constructor == Hash
 				? obj : Hash.prototype.initialize.apply(new Hash(), arguments);
-		}
+		},
 	}
 });
 
