@@ -497,16 +497,19 @@ DomElement.inject(new function() {
 	// A helper for calling toElement and returning results.
 	function toElements(elements) {
 		// Support passing things as argument lists, without the first wrapping array
-		if (Base.type(elements) != 'array')
-			elements = Array.create(arguments);
+		// Do not reset elements, since this causes a circular reference on Opera
+		// where arguments inherits from array and therefore is returned umodified
+		// by Array.create, and where setting elements to a new value modifies
+		// this arguments list directly.
+		var els = Base.type(elements) == 'array' ? elements : Array.create(arguments);
 		// Find out if elements are created, or if they were already bassed.
 		// The convention is to return the newly created elements if they are not
 		// elements already, otherwise return this.
-		var created = elements.find(function(el) {
+		var created = els.find(function(el) {
 			return Base.type(el) != 'element';
 		});
 		// toElement can either return a single DomElement or a DomElements array.
-		var result = elements.toElement(this.getDocument());
+		var result = els.toElement(this.getDocument());
 		return {
 			// Make sure we always return an array of the resulted elements as well,
 			// for simpler handling in inserters below
