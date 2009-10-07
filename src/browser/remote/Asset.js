@@ -84,7 +84,7 @@ Asset = new function() {
 			// On Safari < 3, execute a Request for the same resource at
 			// the same time. The resource will only be loaded once, and the
 			// Request will recieve a notification, while the script does not.
-			if (Browser.WEBKIT2)
+			if (Browser.WEBKIT && Browser.VERSION < 420)
 				new Request({ url: src, method: 'get' }).addEvent('success', function() {
 					script.fireEvent.delay(1, script, ['load']);
 				}).send();
