@@ -96,7 +96,8 @@ Input = FormElement.extend({
 	// needed that does that, e.g. set / getCurrent
 	setValue: function(val) {
 		if (/^(checkbox|radio)$/.test(this.$.type)) this.$.checked = this.$.value == val;
-		else this.$.value = val;
+		// Fix IE bug where string values set to null appear as 'null' instead of ''
+		else this.$.value = val != null ? val : '';
 		return this;
 	}
 });
