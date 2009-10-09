@@ -38,12 +38,11 @@ FormElement.inject({
 				pos.end = pos.start + range.text.length;
 			} else {
 				var value = this.getValue();
-				var offset = value.length - value.match(/[\n\r]*$/)[0].length;
 				dup.moveToElementText(this.$);
 				dup.setEndPoint('StartToEnd', range);
-				pos.end = offset - dup.text.length;
+				pos.end = value.length - dup.text.length;
 				dup.setEndPoint('StartToStart', range);
-				pos.start = offset - dup.text.length;
+				pos.start = value.length - dup.text.length;
 			}
 			return pos;
 		}
