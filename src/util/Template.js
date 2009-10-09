@@ -486,8 +486,10 @@ Template.prototype = {
 						// If there was no whitespace between variable name and equals, 
 						// we need to manually move the = sign to opcode
 						var match = next.match(/(\$\w*)=$/);
-						if (match)
+						if (match) {
 							macro.command = match[1];
+							macro.hasEquals = true;
+						}
 #ifdef HELMA
 					} else if (!isEqualTag) {
 						// If parseParam produces a result different from macro.command,
@@ -551,20 +553,15 @@ Template.prototype = {
 			} else if (part == '|') { // start a filter
 				isFirst = true;
 			} else { // unnamed param
-
-				if (macro.isSetter) {
+				// Unnamed parameters are not allowed in <%= tags, in control tags.
+				if (!macro.isData && !macro.isControl) {
 					// Do not add = of setters, but remember that it has one,
-					// so we can set isSetter correctly at the end of the parsing
-					if (part == '=')
+					// so we can set isSetter correctly at the end of the parsing.
+					if (macro.isSetter && part == '=')
 						macro.hasEquals = true;
 					else
-						macro.unnamed.push(part);
-					append = false;
-				} else if (!macro.isData && !macro.isControl) {
-					// Unnamed parameters are not allowed in <%= tags, in control tags
-					// or when setting variables.
-					macro.unnamed.push(nestedMacro(this, part, code, stack));
-					// Appending to macro opcode not allowed after first parameter
+						macro.unnamed.push(nestedMacro(this, part, code, stack));
+					// Appending to macro opcode not allowed after first parameter.
 					append = false;
 				} else if (append) { // Appending to the opcode...
 					macro.opcode.push(part);
