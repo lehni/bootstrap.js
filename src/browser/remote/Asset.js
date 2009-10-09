@@ -70,10 +70,17 @@ Asset = new function() {
 
 	return {
 		script: function(src, props) {
-			 // onLoad can be null
 			var script = DomElement.get('head').injectBottom('script', Hash.merge({
 				events: {
-					load: props.onLoad,
+				 	// props.onLoad can be null
+					load: props.onLoad && function() {
+						// We receive this event more than once on Opera, filter
+						// out here...
+						if (!this.loaded) {
+							this.loaded = true;
+							props.onLoad.call(this);
+						}
+					},
 					readystatechange: function() {
 						if (/loaded|complete/.test(this.$.readyState))
 							this.fireEvent('load');
