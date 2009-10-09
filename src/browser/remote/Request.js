@@ -42,7 +42,7 @@ Request = Base.extend(Chain, Callback, new function() {
 	}
 
 	function createFrame(that, form) {
-		var id = 'request_' + unique++, onLoad = that.onFrameLoad.bind(that);
+		var id = 'request_' + unique++, load = that.onFrameLoad.bind(that);
 		// IE Fix: Setting load event on iframes does not work, use onreadystatechange
 		var div = DomElement.get('body').injectBottom('div', {
 				styles: {
@@ -50,8 +50,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				}
 			}, [
 				'iframe', {
-					name: id, id: id, events: { load: onLoad },
-					onreadystatechange: onLoad
+					name: id, id: id, events: { load: load, readystatechange: load }
 				}
 			]
 		);
@@ -136,6 +135,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
 				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
 				// First tag in IE ends up in <head>, safe it
+				// TODO: Is this still the case or only on Mac IE?
 				var head = Browser.TRIDENT && doc.getElementsByTagName('head')[0];
 				text = (head && head.innerHTML || '') + text;
 				// Remove div
@@ -264,30 +264,31 @@ Request = Base.extend(Chain, Callback, new function() {
 					data = data.toString();
 			}
 			this.running = true;
+			var query = typeof data == 'string';
 			if (opts.emulation && /^(put|delete)$/.test(method)) {
-				if (typeof data == 'string') data += '&_method=' + method;
-				else data.setValue('_method', method); // form
+				if (query) data += '&_method=' + method;
+				else data.setValue('_method', method); 
 				method = 'post';
 			}
-			if (Base.type(data) == 'element') { // A form: Use iframe
-		 		createFrame(this, DomElement.wrap(data));
-			} else {
+			if (query) { 
 				createRequest(this);
 				if (!this.transport) {
 					createFrame(this);
 					// No support for POST when using iframes. We could fake
 					// it through a hidden form that's produced on the fly,
-					// parse data and url for query values, but that feels
-					// like too much code.
+					// parse data and url for query values, but that's going a bit
+					// far for legacy support.
 					method = 'get';
 #ifdef BROWSER_LEGACY
 					if (!url.contains('?')) url += '?'; // for MACIE to load .js
 #endif // !BROWSER_LEGACY
 				}
 				if (data && method == 'get') {
-					url = url + (url.contains('?') ? '&' : '?') + data;
+					url += (url.contains('?') ? '&' : '?') + data;
 					data = null;
 				}
+			} else {
+		 		createFrame(this, DomElement.wrap(data));
 			}
 			// Check frame first, as this is never reused.
 			if (this.frame) {
