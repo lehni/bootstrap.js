@@ -504,7 +504,7 @@ Template.prototype = {
 			}
 		}
 
-		function nestedMacro(that, value, code, stack) {
+		function nestedMacro(that, macro, value, code, stack) {
 			if (/<%/.test(value)) {
 				var nested = value;
 				value = 'param_' + (that.macroParam++);
@@ -522,7 +522,7 @@ Template.prototype = {
 				}
 			}
 #ifdef HELMA
-			return parseParam(value);
+			return macro.isSetter ? value : parseParam(value);
 #else // !HELMA
 			return value;
 #endif // !HELMA
@@ -543,7 +543,7 @@ Template.prototype = {
 				// TODO: Calling nextPart here should only return values, nothing else!
 				// add error handling...
 				var key = part.substring(0, part.length - 1), value = nextPart();
-				value = nestedMacro(this, value, code, stack);
+				value = nestedMacro(this, macro, value, code, stack);
 				macro.param.push('"' + key + '": ' + value);
 				// Override defaults only:
 				if (macro.values[key] !== undefined)
@@ -560,7 +560,7 @@ Template.prototype = {
 					if (macro.isSetter && part == '=')
 						macro.hasEquals = true;
 					else
-						macro.unnamed.push(nestedMacro(this, part, code, stack));
+						macro.unnamed.push(nestedMacro(this, macro, part, code, stack));
 					// Appending to macro opcode not allowed after first parameter.
 					append = false;
 				} else if (append) { // Appending to the opcode...
