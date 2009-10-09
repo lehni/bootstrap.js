@@ -161,6 +161,9 @@ DomElement = Base.extend(new function() {
 				return this.$[name];
 			}
 			src['set' + part] = function(value) {
+				// Fix IE bug where string values set to null appear as 'null' instead of ''
+				if (value == null && typeof this.$[name] == 'string')
+					value = '';
 				this.$[name] = value;
 				return this;
 			}
