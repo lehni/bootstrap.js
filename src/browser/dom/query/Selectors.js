@@ -128,7 +128,7 @@ DomElement.inject(new function() {
 		if (params.id && params.id != el.id)
 			return false;
 
-		if (params.tag && params.tag != '*' && params.tag != el.tagName.toLowerCase())
+		if (params.tag && params.tag != '*' && params.tag != (el.tagName || '').toLowerCase())
 			return false;
 
 		for (var i = params.classes.length; i--;)
@@ -209,9 +209,9 @@ DomElement.inject(new function() {
 			// So $() can also work like Mootools' $()
 			if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
 				el = this.getDocument().$.getElementById(match[1]);
-			else if (type == 'element')
+			else if (/^(element|textnode)$/.test(type))
 				el = DomElement.unwrap(selector);
-			// if el was fetched by id above, but is not a child of this,
+			// If el was fetched by id above, but is not a child of this,
 			// use the real selector.
 			if (el && !DomElement.isAncestor(el, this.$))
 				el = null;
