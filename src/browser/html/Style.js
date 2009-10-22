@@ -91,13 +91,14 @@ HtmlElement.inject(new function() {
 			if (color) return style.replace(color[0], color[0].rgbToHex());
 #endif // !__lang_Color__
 			if (Browser.PRESTO || (Browser.TRIDENT && isNaN(parseInt(style)))) {
-				// Fix IE style:
+				// Fix IE / Opera style that falsly include border and padding:
 				if (/^(width|height)$/.test(name)) {
 					var size = 0;
 					(name == 'width' ? ['left', 'right'] : ['top', 'bottom']).each(function(val) {
 						size += this.getStyle('border-' + val + '-width').toInt() + this.getStyle('padding-' + val).toInt();
 					}, this);
-					return (this.$['offset' + name.capitalize()] - size) + 'px';
+					// TODO: Should 'scroll' be used instead, as 'offset' also includes the scroll bars?
+					return this.$['offset' + name.capitalize()] - size + 'px';
 				}
 				if (Browser.PRESTO && /px/.test(style)) return style;
 				if (/border(.+)Width|margin|padding/.test(name)) return '0px';
