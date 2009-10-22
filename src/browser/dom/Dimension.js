@@ -107,6 +107,13 @@ DomElement.inject(new function() {
 			 	: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
+		getInnerSize: function() {
+			// Returns the element size without border and padding.
+			return body(this)
+				? this.getWindow().getScrollSize()
+			 	: { width: this.getStyle('width').toInt(), height: this.getStyle('height').toInt() };
+		},
+
 		getBounds: function(positioned) {
 			if (body(this))
 				return this.getWindow().getBounds();
