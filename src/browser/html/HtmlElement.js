@@ -38,6 +38,10 @@ HtmlElement.inject({
 		return this.$.className;
 	},
 
+	setClass: function(cls) {
+		this.$.className = cls;
+	},
+
 	modifyClass: function(name, add) {
 		if (!this.hasClass(name) ^ !add) // xor
 			this.$.className = (add ? this.$.className + ' ' + name : 
