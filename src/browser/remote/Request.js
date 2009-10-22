@@ -161,23 +161,10 @@ Request = Base.extend(Chain, Callback, new function() {
 			if (this.options.html) {
 				var match = text.match(/<body[^>]*>([\u0000-\uffff]*?)<\/body>/i);
 				var stripped = this.stripScripts(match ? match[1] : text);
-				/*
-				var html = stripped.html, javascript = stripped.scripts;
-				var node = new Element('div', { html: html });
-				var elements = node.getElements();
-				var children = Array.create(node.getChildNodes()).filter(function(el) {
-					return Base.type(el) != 'whitespace';
-				});
-				if (this.options.update)
-					DomElement.wrap(this.options.update).removeChildren().appendChildren(children);
-				if (this.options.evalScripts)
-					this.executeScript(stripped.scripts);
-				args = [ children, elements, html, stripped.scripts ];
-				*/
 				if (this.options.update)
 					DomElement.wrap(this.options.update).setHtml(stripped.html);
 				if (this.options.evalScripts)
-					this.executeScript(stripped.javascript);
+					this.executeScript(stripped.script);
 				args = [ stripped.html, text ];
 			} else if (this.options.json) {
 				args = [ Json.decode(text, this.options.secure), text ];
@@ -195,7 +182,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				script += arguments[1] + '\n';
 				return '';
 			});
-			return { html: html, javascript: script };
+			return { html: html, script: script };
 		},
 
 		processScripts: function(text) {
@@ -206,7 +193,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				// Strip scripts from text and execute bellow
 				var stripped = this.stripScripts(text);
 				if (this.options.evalScripts)
-					this.executeScript(stripped.javascript);
+					this.executeScript(stripped.script);
 				return stripped.html;
 			}
 		},
