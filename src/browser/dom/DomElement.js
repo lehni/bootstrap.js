@@ -483,7 +483,7 @@ DomElement.inject(new function() {
 		else return that[prefix + 'Property'](name, value);
 	}
 
-	// A helper for walking the DOM
+	// A helper for walking the DOM, skipping text nodes
 	function walk(el, walk, start, match, all) {
 		var elements = all && new el._elements();
 		el = el.$[start || walk];
@@ -544,7 +544,7 @@ DomElement.inject(new function() {
 		},
 
 		getTag: function() {
-			return this.$.tagName.toLowerCase();
+			return (this.$.tagName || '').toLowerCase();
 		},
 
 		getId: function() {
@@ -642,8 +642,11 @@ DomElement.inject(new function() {
 		},
 
 		appendText: function(text) {
-			this.$.appendChild(this.getDocument().createTextNode(text));
-			return this;
+			return this.injectBottom(this.getDocument().createTextNode(text));
+		},
+
+		prependText: function(text) {
+			return this.injectTop(this.getDocument().createTextNode(text));
 		},
 
 		/**
