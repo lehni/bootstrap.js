@@ -460,6 +460,8 @@ DomElement.inject(new function() {
 	].associate(function(name) {
 		return name.toLowerCase();
 	}), bools);
+	// Values to manually copy over when cloning with content
+	var clones = { input: 'checked', option: 'selected', textarea: Browser.WEBKIT && Browser.VERSION < 420 ? 'innerHTML' : 'value' };
 
 	// handle() handles both get and set calls for any given property name.
 	// prefix is either set or get, and is used for lookup of getter / setter
@@ -701,7 +703,26 @@ DomElement.inject(new function() {
 		},
 
 		clone: function(contents) {
-			return DomElement.wrap(this.$.cloneNode(!!contents));
+			var clone = this.$.cloneNode(!!contents);
+			function clean(left, right) {
+				if (Browser.TRIDENT) {
+					left.clearAttributes();
+					left.mergeAttributes(right);
+					left.removeAttribute('_wrapper');
+					left.removeAttribute('_unique');
+					if (left.options)
+						for (var l = left.options, r = right.options, i = l.length; i--;)
+							l[i].selected = r[i].selected;
+				}
+				var name = clones[right.tagName.toLowerCase()];
+				if (name && right[name])
+					left[name] = right[name];
+			}
+			if (contents)
+				for (var l = clone.getElementsByTagName('*'), r = this.$.getElementsByTagName('*'), i = l.length; i--;)
+					clean(l[i], r[i]);
+			clean(clone, this.$);
+			return DomElement.wrap(clone);
 		},
 
 		getProperty: function(name) {
