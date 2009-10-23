@@ -92,7 +92,7 @@ DomElements = Array.extend(new function() {
 								// Only collect return values if defined and not
 								// returning 'this'.
 								if (ret !== undefined && ret != obj) {
-									values = values || (Base.type(ret) == 'element'
+									values = values || (/^(element|textnode)$/.test(Base.type(ret))
 										? new obj._elements() : []);
 									values.push(ret);
 								}
@@ -509,7 +509,7 @@ DomElement.inject(new function() {
 		// The convention is to return the newly created elements if they are not
 		// elements already, otherwise return this.
 		var created = els.find(function(el) {
-			return Base.type(el) != 'element';
+			return !/^(element|textnode)$/.test(Base.type(el));
 		});
 		// toElement can either return a single DomElement or a DomElements array.
 		var result = els.toElement(this.getDocument());
@@ -584,7 +584,7 @@ DomElement.inject(new function() {
 		},
 
 		hasChild: function(match) {
-			return Base.type(match) == 'element'
+			return /^(element|textnode)$/.test(Base.type(match))
 				? DomElement.isAncestor(DomElement.unwrap(match), this.$)
 				: !!this.getFirst(match);
 		},
@@ -598,7 +598,7 @@ DomElement.inject(new function() {
 		},
 
 		hasParent: function(match) {
-			return Base.type(match) == 'element'
+			return /^(element|textnode)$/.test(Base.type(match))
 				? DomElement.isAncestor(this.$, DomElement.unwrap(match))
 				: !!this.getParent(match);
 		},
