@@ -57,10 +57,9 @@ HtmlElement.inject(new function() {
 		_BEANS
 
 		getComputedStyle: function(name) {
-			var style;
-			return this.$.currentStyle && this.$.currentStyle[name.camelize()]
-				|| (style = this.getWindow().$.getComputedStyle(this.$, null)) && style.getPropertyValue(name.hyphenate())
-				|| null;
+			if (this.$.currentStyle) return this.$.currentStyle[name.camelize()];
+			var style = this.getWindow().$.getComputedStyle(this.$, null);
+			return style ? style.getPropertyValue(name.hyphenate()) : null;
 		},
 
 		getStyle: function(name) {
@@ -101,7 +100,7 @@ HtmlElement.inject(new function() {
 					return this.$['offset' + name.capitalize()] - size + 'px';
 				}
 				if (Browser.PRESTO && /px/.test(style)) return style;
-				if (/border(.+)Width|margin|padding/.test(name)) return '0px';
+				if (/border(.+)[wW]idth|margin|padding/.test(name)) return '0px';
 			}
 			return style;
 		},
