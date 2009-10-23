@@ -31,8 +31,8 @@ String.inject({
 	},
 
 	camelize: function(separator) {
-		return this.replace(new RegExp(separator || '\s-', 'g'), function(match) {
-			return match.charAt(1).toUpperCase();
+		return this.replace(separator ? new RegExp('[' + separator + '](\\w)', 'g') : /-(\w)/g, function(all, chr) {
+			return chr.toUpperCase();
 		});
 	},
 
