@@ -94,8 +94,8 @@ Array.inject({
 		//	]]
 		var elements = new HtmlElements();
 		for (var i = 0; i < this.length;) {
-			var value = this[i++], element = null;
-			if (typeof value == 'string') {
+			var value = this[i++], element = null, type = Base.type(value);
+			if (type == 'string') {
 				// If the string is html, convert it through String#toElement.
 				// Otherwise assume it's a tag name, and look see the following 
 				// value is a properties hash. Use these to create the element:
@@ -106,6 +106,9 @@ Array.inject({
 				// See if it has children defined, and add them through Array#toElement
 				if (Base.type(this[i]) == 'array')
 					element.injectBottom(this[i++].toElement(doc));
+			} else if (/^(element|textnode)$/.test(type)) {
+				// Raw nodes / elements
+				element = value;
 			} else if (value && value.toElement) {
 				// Anything else
 				element = value.toElement(doc);
