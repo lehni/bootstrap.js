@@ -795,7 +795,10 @@ DomElement.inject(new function() {
 		 */
 		after: function(source, dest) {
 			if (source && dest && dest.$.parentNode) {
-				var next = dest.getNext();
+				// Do not use getNext(), since we want to receive text nodes
+				// as well, in order to insert before anything that is alread
+				// in the element.
+				var next = dest.$.nextSibling;
 				// Do not use the native methods since these do not include the
 				// workaround for legacy browsers above. Once that part is
 				// deprecated, we can change strategy here. Might be bit faster.
@@ -817,7 +820,8 @@ DomElement.inject(new function() {
 		 */
 		top: function(source, dest) {
 			if (source && dest) {
-				var first = dest.getFirst();
+				// Do not use getFirst(), for the same reason as in 'after'
+				var first = dest.$.firstChild;
 				if (first) source.insertBefore(first);
 				else dest.appendChild(source);
 			}
