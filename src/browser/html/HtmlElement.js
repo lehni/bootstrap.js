@@ -21,7 +21,7 @@ HtmlElements = DomElements.extend();
 // HtmlElement
 
 HtmlElement = DomElement.extend({
-	_elements: HtmlElements
+	_collection: HtmlElements
 });
 
 // DomElement.extend sets inject to the version that does not alter

@@ -8,7 +8,7 @@
 
 HtmlDocument = DomDocument.extend({
 	// Use HtmlElements collection instead of DomElements for HtmlDocuments
-	_elements: HtmlElements
+	_collection: HtmlElements
 });
 
 #endif // __browser_html_HtmlDocument__

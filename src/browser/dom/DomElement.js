@@ -93,7 +93,7 @@ DomElements = Array.extend(new function() {
 								// returning 'this'.
 								if (ret !== undefined && ret != obj) {
 									values = values || (/^(element|textnode)$/.test(Base.type(ret))
-										? new obj._elements() : []);
+										? new obj._collection() : []);
 									values.push(ret);
 								}
 							});
@@ -205,7 +205,7 @@ DomElement = Base.extend(new function() {
 		_BEANS
 		// Tells Base.type the type to return when encountering an element.
 		_type: 'element',
-		_elements: DomElements,
+		_collection: DomElements,
 		// Tell extend to automatically call this.base in overridden initialize methods of DomElements
 		// See extend bellow for more information about this.
 		_initialize: true,
@@ -281,12 +281,12 @@ DomElement = Base.extend(new function() {
 					}, src.statics || {});
 					inject.call(this, src);
 					// Remove toString, as we do not want it to be multiplied in
-					// _elements (it would not return a string but an array then).
+					// _collection (it would not return a string but an array then).
 					delete src.toString;
 					// Now, after src was processed in #inject, inject not only
 					// into this, but also into DomElements where the functions
 					// are "multiplied" for each of the elements of the collection.
-					proto._elements.inject(src);
+					proto._collection.inject(src);
 				}
 				for (var i = 1, l = arguments.length; i < l; i++)
 					this.inject(arguments[i]);
@@ -352,7 +352,7 @@ DomElement = Base.extend(new function() {
 				return el ? typeof el == 'string'
 					? DomElement.get(el)
 					// Make sure we're using the right constructor.
-					: el._wrapper || el._elements && el || new (getConstructor(el))(el, dont)
+					: el._wrapper || el._collection && el || new (getConstructor(el))(el, dont)
 						: null;
 			},
 
@@ -487,7 +487,7 @@ DomElement.inject(new function() {
 
 	// A helper for walking the DOM, skipping text nodes
 	function walk(el, walk, start, match, all) {
-		var elements = all && new el._elements();
+		var elements = all && new el._collection();
 		el = el.$[start || walk];
 		while (el) {
 			if (el.nodeType == 1 && (!match || DomElement.match(el, match))) {
@@ -616,7 +616,8 @@ DomElement.inject(new function() {
 
 		// Returns all the Element's children including text nodes
 		getChildNodes: function() {
-		 	return new this._elements(this.$.childNodes);
+			// TODO: Use DomNodes instead of DomElements collection here
+		 	return new this._collection(this.$.childNodes);
 		},
 
 		hasChildNodes: function() {
