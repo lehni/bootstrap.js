@@ -155,7 +155,7 @@ new function() { // bootstrap
 #endif // BEANS
 				}
 #ifdef GETTER_SETTER
-				if (type == 'object' && (val._get || val._set)) {
+				if (val && type == 'object' && (val._get || val._set)) {
 					if (val._get)
 						dest.__defineGetter__(name, val._get);
 					if (val._set)
