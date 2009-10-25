@@ -189,7 +189,7 @@ DomElement.inject(new function() {
 		_BEANS
 
 		getElements: function(selectors, nowrap) {
-			var elements = nowrap ? [] : new this._elements();
+			var elements = nowrap ? [] : new this._collection();
 			selectors = !selectors ? ['*'] : typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
@@ -231,7 +231,7 @@ DomElement.inject(new function() {
 		},
 
 		filter: function(elements, selector) {
-			return filter(elements, selector, this.$, new this._elements(), {});
+			return filter(elements, selector, this.$, new this._collection(), {});
 		},
 
 		statics: {
