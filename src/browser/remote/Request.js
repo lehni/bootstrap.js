@@ -133,7 +133,13 @@ Request = Base.extend(Chain, Callback, new function() {
 			if (frame && frame.location != 'about:blank' && this.running) {
 				this.running = false;
 				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
-				var text = doc && doc.body && (doc.body.textContent || doc.body.innerText || doc.body.innerHTML) || '';
+				// Try fetching value from the first tetarea in the document first,
+				// since that's the convention to send data with iframes now, just
+				// like in dojo.
+				// TODO: Handle xml, html, json separately
+				var text = doc && (doc.getElementsByTagName('textarea')[0].value
+					|| doc.body && (doc.body.textContent || doc.body.innerText
+							|| doc.body.innerHTML)) || '';
 				// First tag in IE ends up in <head>, safe it
 				// TODO: Is this still the case or only on Mac IE?
 				var head = Browser.TRIDENT && doc.getElementsByTagName('head')[0];
