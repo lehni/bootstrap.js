@@ -33,6 +33,8 @@ Json = new function() {
 						val = Json.encode(val, singles);
 						if (val) return Json.encode(key, singles) + ':' + val;
 					}) + '}';
+				case 'function':
+					return null;
 				default:
 					return obj + '';
 			}
