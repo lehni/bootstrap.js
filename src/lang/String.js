@@ -1,6 +1,7 @@
 #ifndef __lang_String__
 #define __lang_String__
 
+#include "Number.js"
 #include "Array.js"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -22,13 +23,9 @@ String.inject({
 		return this ? this.split(/\s+/) : [];
 	},
 
-	toInt: function(base) {
-		return parseInt(this, base || 10);
-	},
+	toInt: Number.prototype.toInt,
 
-	toFloat: function() {
-		return parseFloat(this);
-	},
+	toFloat: Number.prototype.toFloat,
 
 	camelize: function(separator) {
 		return this.replace(separator ? new RegExp('[' + separator + '](\\w)', 'g') : /-(\w)/g, function(all, chr) {
@@ -78,8 +75,8 @@ String.inject({
 		return this.replace(/\s{2,}/g, ' ').trim();
 	},
 
-	contains: function(string, s) {
-		return (s ? (s + this + s).indexOf(s + string + s) : this.indexOf(string)) != -1;
+	contains: function(string, sep) {
+		return (sep ? (sep + this + sep).indexOf(sep + string + sep) : this.indexOf(string)) != -1;
 	},
 
 	times: function(count) {

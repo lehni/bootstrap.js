@@ -4,20 +4,26 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Number
 
-#include "String.js"
-
 Number.inject({
 	// tell Base.type that number objects are numbers too.
 	_type: 'number',
 
-	toInt: String.prototype.toInt,
-
-	toFloat: String.prototype.toFloat,
+	limit: function(min, max){
+		return Math.min(max, Math.max(min, this));
+	},
 
 	times: function(func, bind) {
 		for (var i = 0; i < this; ++i)
 			func.call(bind, i);
 		return bind || this;
+	},
+
+	toInt: function(base) {
+		return parseInt(this, base || 10);
+	},
+
+	toFloat: function() {
+		return parseFloat(this);
 	},
 
 	toPaddedString: function(length, base, prefix) {
