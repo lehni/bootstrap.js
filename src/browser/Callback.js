@@ -71,6 +71,16 @@ Callback = {
 			if (typeof val == 'function' && (i = i.match(/^on([A-Z]\w*)/)))
 				this.addEvent(i[1].toLowerCase(), val);
 		}, this);
+	},
+
+	statics: {
+		inject: function(/* ... */) {
+			var proto = this.prototype, options = proto.options;
+			this.base.apply(this, arguments);
+			if (proto.options != options)
+				proto.options = Hash.merge({}, options, proto.options);
+			return this;
+		}
 	}
 };
 
