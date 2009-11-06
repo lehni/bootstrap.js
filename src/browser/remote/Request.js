@@ -168,7 +168,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				var match = text.match(/<body[^>]*>([\u0000-\uffff]*?)<\/body>/i);
 				var stripped = this.stripScripts(match ? match[1] : text);
 				if (this.options.update)
-					DomElement.wrap(this.options.update).setHtml(stripped.html);
+					DomElement.get(this.options.update).setHtml(stripped.html);
 				if (this.options.evalScripts)
 					this.executeScript(stripped.script);
 				args = [ stripped.html, text ];
@@ -245,7 +245,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			var method = params.method || opts.method;
 			switch (Base.type(data)) {
 				case 'element':
-					var el = DomElement.wrap(data);
+					var el = DomNode.wrap(data);
 					// No need to post using forms if there are no files
 					if (el.getTag() != 'form' || !el.hasElement('input[type=file]'))
 						data = el.toQueryString();
@@ -281,7 +281,7 @@ Request = Base.extend(Chain, Callback, new function() {
 					data = null;
 				}
 			} else {
-		 		createFrame(this, DomElement.wrap(data));
+		 		createFrame(this, DomNode.wrap(data));
 			}
 			// Check frame first, as this is never reused.
 			if (this.frame) {
