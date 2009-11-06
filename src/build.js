@@ -5,8 +5,8 @@
 #include "lang/Base.js"
 #include "lang/Hash.js"
 #include "lang/Array.js"
-#include "lang/String.js"
 #include "lang/Number.js"
+#include "lang/String.js"
 #include "lang/RegExp.js"
 #include "lang/Date.js"
 #include "lang/Math.js"
@@ -18,7 +18,9 @@
 #include "browser/Browser.js"
 
 // DomElement
+#include "browser/dom/DomNode.js"
 #include "browser/dom/DomElement.js"
+#include "browser/dom/DomTextNode.js"
 #include "browser/dom/DomDocument.js"
 #include "browser/dom/DomWindow.js"
 #include "browser/dom/Dimension.js"
@@ -48,6 +50,7 @@
 
 // Effects
 #include "browser/effects/Fx.js"
+#include "browser/effects/Fx.Scroll.js"
 #include "browser/effects/Fx.CSS.js"
 #include "browser/effects/Fx.Style.js"
 #include "browser/effects/Fx.Styles.js"

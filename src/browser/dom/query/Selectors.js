@@ -57,7 +57,7 @@ DomElement.inject(new function() {
 				var uniques = {};
 				function add(item) {
 					if (!item._unique)
-						DomElement.unique(item);
+						DomNode.unique(item);
 					if (!uniques[item._unique] && match(item, params, data)) {
 						uniques[item._unique] = true;
 						found.push(item);
@@ -209,17 +209,18 @@ DomElement.inject(new function() {
 			// So $() can also work like Mootools' $()
 			if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
 				el = this.getDocument().$.getElementById(match[1]);
-			else if (/^(element|textnode)$/.test(type))
+			// TODO!
+			else if (DomNode.isNode(type))
 				el = DomElement.unwrap(selector);
-			// If el was fetched by id above, but is not a child of this,
+			// If el was fetched by id above, but is not a child of this or is this,
 			// use the real selector.
-			if (el && !DomElement.isAncestor(el, this.$))
+			if (el && el != this.$ && !DomElement.isAncestor(el, this.$))
 				el = null;
 			// TODO: Is there a way to only fetch the first in getElements,
 			// with an optional third parameter?
 			if (!el)
 				el = this.getElements(selector, true)[0];
-			return DomElement.wrap(el);
+			return DomNode.wrap(el);
 		},
 
 		hasElement: function(selector) {

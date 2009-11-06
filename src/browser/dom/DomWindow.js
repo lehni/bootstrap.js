@@ -16,7 +16,7 @@ Window = DomWindow = DomElement.extend({
 	_methods: ['close', 'alert', 'prompt', 'confirm', 'blur', 'focus', 'reload'],
 
 	getDocument: function() {
-		return DomElement.wrap(this.$.document);
+		return DomNode.wrap(this.$.document);
 	},
 
 	getWindow: function() {

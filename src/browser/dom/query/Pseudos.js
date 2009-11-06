@@ -40,7 +40,7 @@ DomElement.pseudos = new function() {
 							var child = children[i];
 							if (child.nodeType == 1) {
 								if (!child._unique)
-									DomElement.unique(child);
+									DomNode.unique(item);
 								data.indices[child._unique] = count++;
 							}
 						}

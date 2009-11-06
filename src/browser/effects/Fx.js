@@ -21,30 +21,29 @@
 
 Fx = Base.extend(Chain, Callback, {
 	options: {
+		fps: 50,
+		unit: false,
+		duration: 500,
+		wait: true,
 		transition: function(p) {
 			return -(Math.cos(Math.PI * p) - 1) / 2;
-		},
-		duration: 500,
-		unit: false,
-		wait: true,
-		fps: 50
+		}
 	},
 
 	initialize: function(element, options) {
-		this.element = DomElement.wrap(element);
+		this.element = DomElement.get(element);
 		this.setOptions(options);
 	},
 
 	step: function() {
-		var time = new Date().getTime();
+		var time = Date.now();
 		if (time < this.time + this.options.duration) {
 			this.delta = this.options.transition((time - this.time) / this.options.duration);
 			this.update(this.get());
 		} else {
 			this.stop(true);
 			this.update(this.to);
-			this.fireEvent('complete', [this.element]);
-			this.callChain();
+			this.fireEvent('complete', [this.element]).callChain();
 		}
 	},
 
@@ -67,7 +66,7 @@ Fx = Base.extend(Chain, Callback, {
 		else if (this.timer) return this;
 		this.from = from;
 		this.to = to;
-		this.time = new Date().getTime();
+		this.time = Date.now();
 		// Fx.Elements allows effects to be run in slave mode.
 		if (!this.slave) {
 			this.timer = this.step.periodic(Math.round(1000 / this.options.fps), this);
@@ -81,7 +80,7 @@ Fx = Base.extend(Chain, Callback, {
 	stop: function(end) {
 		if (this.timer) {
 			this.timer = this.timer.clear();
-			if (!end) this.fireEvent('cancel', [this.element]);
+			if (!end) this.fireEvent('cancel', [this.element]).clearChain();
 		}
 		return this;
 	}

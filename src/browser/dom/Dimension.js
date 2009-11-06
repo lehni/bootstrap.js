@@ -31,9 +31,9 @@ DomElement.inject(new function() {
 				cur = next;
 				x += cur.$[left] || 0;
 				y += cur.$[top] || 0;
-			} while((next = DomElement.wrap(cur.$[parent])) && (!iter || iter(cur, next)))
+			} while((next = DomNode.wrap(cur.$[parent])) && (!iter || iter(cur, next)))
 #ifdef BROWSER_LEGACY
-			// Fix body on mac ie
+			// Fix body on Mac IE
 			if (fix) ['margin', 'padding'].each(function(val) {
 				x += that.getStyle(val + '-left').toInt() || 0;
 				y += that.getStyle(val + '-top').toInt() || 0;
@@ -104,7 +104,7 @@ DomElement.inject(new function() {
 		getScrollSize: function() {
 			return body(this)
 				? this.getWindow().getScrollSize()
-			 	: { width: this.$.scrollWidth, height: this.$.scrollHeight };
+				: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
 		getInnerSize: function() {
@@ -198,7 +198,7 @@ DomElement.inject(new function() {
 
 	getScrollSize: function() {
 		var doc = this.getCompatElement(), min = this.getSize();
-		return { width: Math.max(doc.scrollWidth, min.width), width: Math.max(doc.scrollHeight, min.height) };
+		return { width: Math.max(doc.scrollWidth, min.width), height: Math.max(doc.scrollHeight, min.height) };
 	},
 
 	getOffset: function() {
