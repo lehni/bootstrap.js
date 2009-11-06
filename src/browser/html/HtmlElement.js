@@ -24,11 +24,6 @@ HtmlElement = DomElement.extend({
 	_collection: HtmlElements
 });
 
-// DomElement.extend sets inject to the version that does not alter
-// Dom / HtmlElements. Set it back here again, as we want everything injected
-// into HtmlElement be injeted as a multiplie version into HtmlElements as well.
-HtmlElement.inject = DomElement.inject;
-
 // Use the modified inject function from above which injects both into HtmlElement
 // and HtmlElements.
 HtmlElement.inject({
@@ -71,23 +66,15 @@ HtmlElement.inject({
 
 	setHtml: function(html) {
 		return this.setProperty('html', html);
-	},
-
-	getText: function() {
-		return this.getProperty('text');
-	},
-
-	setText: function(text) {
-		return this.setProperty('text', text);
 	}
 });
 
 ////////////////////////////////////////////////////////////////////////////////
-// toElement conversion for Array and String
+// toNode conversion for Array and String
 
 Array.inject({
-	toElement: function(doc) {
-		doc = DomElement.wrap(doc || document);
+	toNode: function(doc) {
+		doc = DomNode.wrap(doc || document);
 		//	['div', { margin: 10 }, [ // Children
 		//		'span', { html: 'hello ' },
 		//		'<span>world</span>'
@@ -96,22 +83,22 @@ Array.inject({
 		for (var i = 0; i < this.length;) {
 			var value = this[i++], element = null, type = Base.type(value);
 			if (type == 'string') {
-				// If the string is html, convert it through String#toElement.
+				// If the string is html, convert it through String#toNode.
 				// Otherwise assume it's a tag name, and look see the following 
 				// value is a properties hash. Use these to create the element:
 				var props = /^(object|hash)$/.test(Base.type(this[i])) && this[i++];
 				element = value.isHtml()
-					? value.toElement(doc).set(props)
+					? value.toNode(doc).set(props)
 					: doc.createElement(value, props);
-				// See if it has children defined, and add them through Array#toElement
+				// See if it has children defined, and add them through Array#toNode
 				if (Base.type(this[i]) == 'array')
-					element.injectBottom(this[i++].toElement(doc));
-			} else if (/^(element|textnode)$/.test(type)) {
+					element.injectBottom(this[i++].toNode(doc));
+			} else if (DomNode.isNode(type)) {
 				// Raw nodes / elements
 				element = value;
-			} else if (value && value.toElement) {
+			} else if (value && value.toNode) {
 				// Anything else
-				element = value.toElement(doc);
+				element = value.toNode(doc);
 			}
 			// Append arrays and push single elements.
 			if (element)
@@ -123,7 +110,7 @@ Array.inject({
 });
 
 String.inject({
-	toElement: function(doc) {
+	toNode: function(doc) {
 		var doc = doc || document, elements;
 		// See if it contains tags. If so, produce nodes, otherwise execute
 		// the string as a selector
@@ -184,7 +171,7 @@ String.inject({
 		} else {
 			// Simply execute string as dom selector.
 			// Make sure doc is wrapped.
-			elements = DomElement.wrap(doc).getElements(this);
+			elements = DomNode.wrap(doc).getElements(this);
 		}
 		// Unbox if there's only one element in the array
 		return elements.length == 1 ? elements[0] : elements;

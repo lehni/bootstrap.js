@@ -76,7 +76,7 @@ Base.inject({
 
 		type: function(obj) {
 #ifdef BROWSER
-			// Handle elements, as needed by DomElement.js
+			// Handle elements, as needed by DomNode.js
 			return (obj || obj === 0) && (
 				(obj._type || obj.nodeName && (
 					obj.nodeType == 1 && 'element' ||

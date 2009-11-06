@@ -22,7 +22,7 @@ DomDocument = DomElement.extend({
 		// Call DomElement.create, the internal creation helper. This does not
 		// fully set props, only the one needed for the IE workaround.
 		// set(props) is called after for all the others.
-		return DomElement.wrap(DomElement.create(tag, props, this.$)).set(props);
+		return DomNode.wrap(DomElement.create(tag, props, this.$)).set(props);
 	},
 
 	createTextNode: function(text) {
@@ -37,7 +37,7 @@ DomDocument = DomElement.extend({
 	},
 
 	getWindow: function() {
-		return DomElement.wrap(this.$.defaultView || this.$.parentWindow);
+		return DomNode.wrap(this.$.defaultView || this.$.parentWindow);
 	},
 
 	open: function() {

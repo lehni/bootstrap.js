@@ -44,8 +44,8 @@ DomEvent = Base.extend(new function() {
 		initialize: function(event) {
 			this.event = event = event || window.event;
 			this.type = event.type;
-			this.target = DomElement.wrap(event.target || event.srcElement);
-			if (this.target.nodeType == 3)
+			this.target = DomNode.wrap(event.target || event.srcElement);
+			if (this.target && this.target.$.nodeType == 3)
 				this.target = this.target.getParent(); // Safari
 			this.shift = event.shiftKey;
 			this.control = event.ctrlKey;
@@ -75,7 +75,7 @@ DomEvent = Base.extend(new function() {
 				}
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
-					this.relatedTarget = DomElement.wrap(event.relatedTarget ||
+					this.relatedTarget = DomNode.wrap(event.relatedTarget ||
 						this.type == 'mouseout' ? event.toElement : event.fromElement);
 			}
 		},
@@ -196,15 +196,13 @@ DomElement.inject(new function() {
 					// be remove in removeEvent. It's ok for this to be empty.
 					name = pseudo && pseudo.type;
 				}
-				// Check if the function takes a parameter. If so, it must
-				// want an event. Wrap it so it recieves a wrapped event, and
-				// bind it to that at the same time, as on PC IE, event listeners
-				// are not called bound to their objects.
-				var that = this, bound = listener.getParameters().length == 0
-					? listener.bind(this)
-					: function(event) { 
-						event = event && event.event ? event : new DomEvent(event);
-						if (listener.call(that, event) === false)
+				// Wrap the event handler in another function that checks if an event 
+				// object was passed or globally set. The DomEvent contstructor
+				// handles window.event as well.
+				var that = this, bound = function(event) {
+						if (event || window.event)
+						 	event = event && event.event ? event : new DomEvent(event);
+						if (listener.call(that, event) === false && event)
 							event.stop();
 					};
 				if (name) {
