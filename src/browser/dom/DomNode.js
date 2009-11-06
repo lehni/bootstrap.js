@@ -64,7 +64,8 @@ DomNodes = Array.extend(new function() {
 				this.base(Base.each(src || {}, function(val, key) {
 					if (typeof val == 'function') {
 						var func = val, prev = proto[key];
-						var count = func.getParameters().length, prevCount = prev && prev.getParameters().length;
+						var count = func.getParameters().length,
+							prevCount = prev && prev.getParameters().length;
 						val = function() {
 							var args = arguments, values;
 							// If there was a previous implementation under this name
@@ -73,7 +74,8 @@ DomNodes = Array.extend(new function() {
 							// are provided as the previous one accepts, or if more arguments
 							// are provided than the new function can handle and the previous
 							// implementation expects more, use the previous one instead.
-							if (prev && args.length == prevCount || (args.length > count && args.length <= prevCount))
+							if (prev && args.length == prevCount
+								|| (args.length > count && args.length <= prevCount))
 								return prev.apply(this, args);
 							this.each(function(obj) {
 								// Try to use original method if it's there, in order
