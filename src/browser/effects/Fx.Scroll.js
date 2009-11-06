@@ -18,15 +18,7 @@
 Fx.Scroll = Fx.extend({
 	options: {
 		offset: { x: 0, y: 0 },
-		wheelStops: true,
-		// TODO: merge options when extending fx!
-		fps: 50,
-		unit: false,
-		duration: 500,
-		wait: true,
-		transition: function(p) {
-			return -(Math.cos(Math.PI * p) - 1) / 2;
-		}
+		wheelStops: true
 	},
 
 	initialize: function(element, options) {
