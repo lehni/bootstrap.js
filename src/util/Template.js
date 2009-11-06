@@ -1024,7 +1024,7 @@ Template.prototype = {
 			this.throwError(e);
 		}
 #ifdef HELMA
-		this.lastChecked = new Date().getTime();
+		this.lastChecked = Date.now();
 #endif // !HELMA
 	},
 
@@ -1050,7 +1050,7 @@ Template.prototype = {
 	 * in case it has changed. Only checks every second.
 	 */
 	checkResource: function() {
-		var now = new Date().getTime();
+		var now = Date.now();
 		// only check for modifications every second.
 		if (now - this.lastChecked > 1000) {
 			this.lastChecked = now;
