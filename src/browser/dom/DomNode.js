@@ -187,7 +187,7 @@ DomNode = Base.extend(new function() {
 			// Elements
 			el.nodeType == 1 && DomElement ||
 			// TextNodes
-//			el.nodeType == 3 && DomTextNode ||
+			el.nodeType == 3 && DomTextNode ||
 			// Documents
 			el.nodeType == 9 && (el.documentElement.nodeName.toLowerCase() == 'html' && HtmlDocument || DomDocument) ||
 			// Windows
@@ -486,7 +486,15 @@ DomNode.inject(new function() {
 			return DomNode.wrap(this.$.nextSibling);
 		},
 
-		getParentNode: function(match) {
+		getFirstNode: function() {
+			return DomNode.wrap(this.$.firstChild);
+		},
+
+		getLastNode: function() {
+			return DomNode.wrap(this.$.lastChild);
+		},
+
+		getParentNode: function() {
 			return DomNode.wrap(this.$.parentNode);
 		},
 
@@ -636,9 +644,6 @@ DomNode.inject(new function() {
 		 */
 		after: function(source, dest) {
 			if (source && dest && dest.$.parentNode) {
-				// Do not use getNext(), since we want to receive text nodes
-				// as well, in order to insert before anything that is alread
-				// in the element.
 				var next = dest.$.nextSibling;
 				// Do not use the native methods since these do not include the
 				// workaround for legacy browsers above. Once that part is
@@ -661,7 +666,6 @@ DomNode.inject(new function() {
 		 */
 		top: function(source, dest) {
 			if (source && dest) {
-				// Do not use getFirst(), for the same reason as in 'after'
 				var first = dest.$.firstChild;
 				if (first) source.insertBefore(first);
 				else dest.appendChild(source);
