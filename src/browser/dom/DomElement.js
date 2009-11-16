@@ -94,9 +94,6 @@ DomElement.inject(new function() {
 		return elements;
 	}
 
-	// Values to manually copy over when cloning with content
-	var clones = { input: 'checked', option: 'selected', textarea: Browser.WEBKIT && Browser.VERSION < 420 ? 'innerHTML' : 'value' };
-
 	return {
 		_BEANS
 
@@ -159,29 +156,6 @@ DomElement.inject(new function() {
 
 		hasChildren: function(match) {
 			return !!this.getChildren(match).length;
-		},
-
-		clone: function(contents) {
-			var clone = this.base(contents);
-			function clean(left, right) {
-				if (Browser.TRIDENT) {
-					left.clearAttributes();
-					left.mergeAttributes(right);
-					left.removeAttribute('_wrapper');
-					left.removeAttribute('_unique');
-					if (left.options)
-						for (var l = left.options, r = right.options, i = l.length; i--;)
-							l[i].selected = r[i].selected;
-				}
-				var name = clones[right.tagName.toLowerCase()];
-				if (name && right[name])
-					left[name] = right[name];
-			}
-			if (contents)
-				for (var l = clone.$.getElementsByTagName('*'), r = this.$.getElementsByTagName('*'), i = l.length; i--;)
-					clean(l[i], r[i]);
-			clean(clone.$, this.$);
-			return clone;
 		},
 
 		/**

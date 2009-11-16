@@ -391,7 +391,10 @@ DomNode.inject(new function() {
 		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
 	].associate();
 	var properties = Hash.merge({ // props
-		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420 ? 'innerText' : 'textContent',
+		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420
+			? function(node) {
+				return node.$.innerText !== undefined ? 'innerText' : 'nodeValue'
+			} : 'textContent',
 		// Make sure that setting both class and className uses this.$.className instead of setAttribute
 		html: 'innerHTML', 'class': 'className', className: 'className', 'for': 'htmlFor'
 	}, [ // camels and other values that need to be accessed directly, not through getAttribute
@@ -401,6 +404,9 @@ DomNode.inject(new function() {
 	].associate(function(name) {
 		return name.toLowerCase();
 	}), bools);
+
+	// Values to manually copy over when cloning with content
+	var clones = { input: 'checked', option: 'selected', textarea: Browser.WEBKIT && Browser.VERSION < 420 ? 'innerHTML' : 'value' };
 
 	// handle() handles both get and set calls for any given property name.
 	// prefix is either set or get, and is used for lookup of getter / setter
@@ -420,8 +426,9 @@ DomNode.inject(new function() {
 			fn = list[name] = that[prefix + name.capitalize()] || null;
 		// If the passed value is an array, use it as the argument
 		// list for the call.
-		if (fn) return fn[Base.type(value) == 'array' ? 'apply' : 'call'](that, value);
-		else return that[prefix + 'Property'](name, value);
+		return fn
+			? fn[Base.type(value) == 'array' ? 'apply' : 'call'](that, value)
+			: that[prefix + 'Property'](name, value);
 	}
 
 	// A helper for calling toNode and returning results.
@@ -572,13 +579,50 @@ DomNode.inject(new function() {
 		},
 
 		clone: function(contents) {
-			return DomNode.wrap(this.$.cloneNode(!!contents));
+			var clone = this.$.cloneNode(!!contents);
+			function clean(left, right) {
+				if (Browser.TRIDENT) {
+					left.clearAttributes();
+					left.mergeAttributes(right);
+					left.removeAttribute('_wrapper');
+					left.removeAttribute('_unique');
+					if (left.options)
+						for (var l = left.options, r = right.options, i = l.length; i--;)
+							l[i].selected = r[i].selected;
+				}
+				var name = clones[right.tagName.toLowerCase()];
+				if (name && right[name])
+					left[name] = right[name];
+				if (contents)
+					for (var l = left.childNodes, r = right.childNodes, i = l.length; i--;)
+						clean(l[i], r[i]);
+			}
+			clean(clone, this.$);
+			return DomNode.wrap(clone);
 		},
 
 		getProperty: function(name) {
-			var key = properties[name];
+			var key = properties[name], value;
+			// Support key branching through functions, as needed by 'text' on IE
+			key = key && typeof key == 'function' ? key(this) : key;
 			var value = key ? this.$[key] : this.$.getAttribute(name);
-			return (bools[name]) ? !!value : value;
+			return bools[name] ? !!value : value;
+		},
+
+		setProperty: function(name, value) {
+			var key = properties[name], defined = value !== undefined;
+			key = key && typeof key == 'function' ? key(this) : key;
+			if (key && bools[name]) value = value || !defined ? true : false;
+			else if (!defined) return this.removeProperty(name);
+			key ? this.$[key] = value : this.$.setAttribute(name, value);
+			return this;
+		},
+
+		removeProperty: function(name) {
+			var key = properties[name], bool = key && bools[name];
+			key = key && typeof key == 'function' ? key(this) : key;
+			key ? this.$[key] = bool ? false : '' : this.$.removeAttribute(name);
+			return this;
 		},
 
 		getProperties: function() {
@@ -588,24 +632,10 @@ DomNode.inject(new function() {
 			return props;
 		},
 
-		setProperty: function(name, value) {
-			var key = properties[name], defined = value != undefined;
-			if (key && bools[name]) value = value || !defined ? true : false;
-			else if (!defined) return this.removeProperty(name);
-			key ? this.$[key] = value : this.$.setAttribute(name, value);
-			return this;
-		},
-
 		setProperties: function(src) {
 			return Base.each(src, function(value, name) {
 				this.setProperty(name, value);
 			}, this);
-		},
-
-		removeProperty: function(name) {
-			var key = properties[name], bool = key && bools[name];
-			key ? this.$[key] = bool ? false : '' : this.$.removeAttribute(name);
-			return this;
 		},
 
 		removeProperties: function() {
