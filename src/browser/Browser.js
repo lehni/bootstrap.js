@@ -7,7 +7,7 @@
 Browser = new function() {
 	var name = window.orientation != undefined ? 'ipod'
 			: (navigator.platform.match(/mac|win|linux|nix/i) || ['other'])[0].toLowerCase();
-	var ret = {
+	var fields = {
 		PLATFORM: name,
 		XPATH: !!document.evaluate,
 		QUERY: !!document.querySelector
@@ -23,7 +23,7 @@ Browser = new function() {
 		},
 
 		webkit: function() {
-			return navigator.taintEnabled ? false : ret.XPATH ? ret.QUERY ? 525 : 420 : 419;
+			return navigator.taintEnabled ? false : fields.XPATH ? fields.QUERY ? 525 : 420 : 419;
 		},
 
 		gecko: function() {
@@ -33,17 +33,29 @@ Browser = new function() {
 	for (var engine in engines) {
 		var version = engines[engine]();
 		if (version) {
-			ret.ENGINE = engine;
-			ret.VERSION = version;
+			fields.ENGINE = engine;
+			fields.VERSION = version;
 			engine = engine.toUpperCase();
-			ret[engine] = true;
-			ret[(engine + version).replace(/\./g, '')] = true;
+			fields[engine] = true;
+			fields[(engine + version).replace(/\./g, '')] = true;
 			break;
 		}
 	}
 	// Add platform name directly in uppercase too
-	ret[name.toUpperCase()] = true;
-	return ret;
+	fields[name.toUpperCase()] = true;
+
+	// Add console loggin on most browsers as good as we can.
+	fields.log = function() {
+		// IE does not seem to join with ' ' and has problems with apply
+		if (!Browser.TRIDENT && window.console && console.log)
+			console.log.apply(console, arguments);
+		else 
+			(window.console && console.log
+				|| window.opera && opera.postError 
+				|| alert)(Array.join(arguments, ' '));
+	}
+
+	return fields;
 };
 
 #ifdef BROWSER_LEGACY
