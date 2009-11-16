@@ -81,7 +81,7 @@ Fx.Scroll = Fx.extend({
 	},
 
 	toElement: function(el) {
-		var offset = DomElement.get(el).getOffset(true);
+		var offset = DomElement.get(el).getOffset();
 		return this.start(offset.x, offset.y);
 	}
 });
@@ -91,7 +91,7 @@ Fx.SmoothScroll = Fx.Scroll.extend({
 		context = DomElement.get(context || document);
 		var doc = context.getDocument(), win = context.getWindow();
 		this.base(doc, options);
-		this.links = this.options.links ? $$(this.options.links) : $$(doc.$.links);
+		this.links = this.options.links ? $$(this.options.links) : $$('a', context);
 		var loc = win.location.href.match(/^[^#]*/)[0] + '#';
 		this.links.each(function(link) {
 			if (link.$.href.indexOf(loc) != 0) return;
