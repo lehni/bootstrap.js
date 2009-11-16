@@ -68,7 +68,7 @@ DomElement.inject(new function() {
 		return that.getTag() == 'body';
 	}
 
-	var getCumulative = cumulate('offset', 'offsetParent', Browser.WEBKIT ? function(cur, next) {
+	var getAbsolute = cumulate('offset', 'offsetParent', Browser.WEBKIT ? function(cur, next) {
 		// Safari returns margins on body which is incorrect if the
 		// child is absolutely positioned.
 		return next.$ != document.body || cur.getStyle('position') != 'absolute';
@@ -89,10 +89,22 @@ DomElement.inject(new function() {
 				: { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
 
-		getOffset: function(positioned) {
-			return body(this)
-				? this.getWindow().getOffset()
-			 	: (positioned ? getPositioned : getCumulative)(this);
+		/**
+		 * relative can either be a boolean value, indicating positioned (true)
+		 * or absolute (false) offsets, or it can be an element in relation to
+		 * which the offset is returned.
+		 */
+		getOffset: function(relative) {
+			if (body(this))
+				return this.getWindow().getOffset();
+		 	if (relative && !DomNode.isNode(relative))
+				return getPositioned(this);
+			var off = getAbsolute(this);
+			if (relative) {
+				var rel = getAbsolute(DomNode.wrap(relative));
+				off = { x: off.x - rel.x, y: off.y - rel.y };
+			}
+			return off;
 		},
 
 		getScrollOffset: function() {
@@ -107,17 +119,19 @@ DomElement.inject(new function() {
 				: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
+		/**
+		 * Returns the element size without border and padding.
+		 */
 		getInnerSize: function() {
-			// Returns the element size without border and padding.
 			return body(this)
 				? this.getWindow().getScrollSize()
 			 	: { width: this.getStyle('width').toInt(), height: this.getStyle('height').toInt() };
 		},
 
-		getBounds: function(positioned) {
+		getBounds: function(relative) {
 			if (body(this))
 				return this.getWindow().getBounds();
-			var off = this.getOffset(positioned), el = this.$;
+			var off = this.getOffset(relative), el = this.$;
 			return {
 				left: off.x,
 				top: off.y,
