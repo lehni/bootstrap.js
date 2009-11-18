@@ -91,12 +91,12 @@ Fx.SmoothScroll = Fx.Scroll.extend({
 		context = DomElement.get(context || document);
 		var doc = context.getDocument(), win = context.getWindow();
 		this.base(doc, options);
-		this.links = this.options.links ? $$(this.options.links) : $$('a', context);
+		var links = this.options.links ? $$(this.options.links) : $$('a', context);
 		var loc = win.location.href.match(/^[^#]*/)[0] + '#';
-		this.links.each(function(link) {
+		links.each(function(link) {
 			if (link.$.href.indexOf(loc) != 0) return;
 			var hash = link.$.href.substring(loc.length);
-			var anchor = hash && DomElement.get(hash);
+			var anchor = hash && DomElement.get(hash, context);
 			if (anchor) {
 				link.addEvent('click', function(event) {
 					this.toElement(anchor);
