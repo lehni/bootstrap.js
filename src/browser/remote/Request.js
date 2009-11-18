@@ -46,7 +46,7 @@ Request = Base.extend(Chain, Callback, new function() {
 		// IE Fix: Setting load event on iframes does not work, use onreadystatechange
 		var div = DomElement.get('body').injectBottom('div', {
 				styles: {
-					position: 'absolute', top: '0', marginLeft: '-10000px'
+					position: 'absolute', width: 0, height: 0, top: 0, marginLeft: '-10000px'
 				}
 			}, [
 				'iframe', {
@@ -86,6 +86,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			encoding: 'utf-8',
 			emulation: true,
 			secure: false
+			// TODO: Instead of json: true / html: true / xml: true, use type = 'json' etc.?
 		},
 
 		initialize: function(/* url: 'string', options: 'object', handler: 'function' */) {
@@ -96,7 +97,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			// failure events. Only the success event will recieve a result
 			// argument though.
 			if (params.handler)
-				this.addEvents({ success: params.handler, failure: params.handler });
+				this.addEvent('complete', params.handler);
 			this.headers = new Hash(this.options.headers);
 			if (this.options.json) {
 				this.setHeader('Accept', 'application/json');
@@ -132,33 +133,34 @@ Request = Base.extend(Chain, Callback, new function() {
 			var frame = this.frame && this.frame.iframe;
 			if (frame && frame.location != 'about:blank' && this.running) {
 				this.running = false;
-				var doc = (frame.contentDocument || frame.contentWindow || frame).document;
 				// Try fetching value from the first tetarea in the document first,
 				// since that's the convention to send data with iframes now, just
 				// like in dojo.
-				// TODO: Handle xml, html, json separately
-				var text = doc && (doc.getElementsByTagName('textarea')[0].value
-					|| doc.body && (doc.body.textContent || doc.body.innerText
-							|| doc.body.innerHTML)) || '';
+				// TODO: Handle xml, html, json separately?
+				var doc = (frame.contentDocument || frame.contentWindow || frame).document,
+					area = !this.options.html && doc.getElementsByTagName('textarea')[0];
+				var text = doc && (area && area.value || doc.body
+					&& (this.options.html && doc.body.innerHTML
+						|| doc.body.textContent || doc.body.innerText)) || '';
 				// First tag in IE ends up in <head>, safe it
 				// TODO: Is this still the case or only on Mac IE?
-				var head = Browser.TRIDENT && doc.getElementsByTagName('head')[0];
-				text = (head && head.innerHTML || '') + text;
-				// Remove div
-				var div = this.frame.div;
-				div.remove();
+				var head = Browser.TRIDENT && this.options.html && doc.getElementsByTagName('head')[0];
+				text = head ? head.innerHTML + text : text;
+				// Clear src
+				this.frame.element.setProperty('src', '');
 				this.success(text);
-				if (Browser.GECKO) {
-					// Gecko needs the iframe to stay around for a little while,
-					// otherwise it appears to load endlessly. Insert it back in
-					// and use delay to remove it again. This even works if
-					// success above changes the whole html and would remove the
-					// iframe, as it can happen during editing. Since we remove
-					// it before already, it is untouched by this.
+				// We need the iframe to stay around for a little while,
+				// otherwise it appears to load endlessly. Insert it back in
+				// and use delay to remove it again. This even works if
+				// success above changes the whole html and would remove the
+				// iframe, as it can happen during editing. Since we remove
+				// it before already, it is untouched by this.
+				if (!this.options.link) {
+					var div = this.frame.div;
 					div.insertBottom(DomElement.get('body'));
-					div.remove.delay(1, div);
+					div.remove.delay(5000, div);
+					this.frame = null;
 				}
-				this.frame = null;
 			}
 		},
 
@@ -227,22 +229,27 @@ Request = Base.extend(Chain, Callback, new function() {
 			return null;
 		},
 
-		send: function(params) {
-			var opts = this.options;
-			switch (opts.link) {
-				case 'cancel':
-					this.cancel();
-					break;
-				case 'chain':
-					this.chain(this.send.bind(this, arguments));
-					return this;
+		send: function() {
+			var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function' });
+			var opts = params.options ? Hash.merge(params.options, this.options) : this.options;
+			if (params.handler)
+				this.addEvent('complete', function() {
+					params.handler.apply(this, arguments);
+					this.removeEvent('complete', arguments.callee);
+				});
+			if (this.running) {
+				switch (opts.link) {
+					case 'cancel':
+						this.cancel();
+						break;
+					case 'chain':
+						this.chain(this.send.bind(this, arguments));
+					default:
+						return this;
+				}
 			}
-			if (this.running)
-				return this;
-			if (!params) params = {};
-			var data = params.data || opts.data || '';
+			var data = opts.data || '';
 			var url = params.url || opts.url;
-			var method = params.method || opts.method;
 			switch (Base.type(data)) {
 				case 'element':
 					var el = DomNode.wrap(data);
@@ -257,16 +264,17 @@ Request = Base.extend(Chain, Callback, new function() {
 					data = data.toString();
 			}
 			this.running = true;
-			var query = typeof data == 'string';
+			var string = typeof data == 'string', method = opts.method;
 			if (opts.emulation && /^(put|delete)$/.test(method)) {
-				if (query) data += '&_method=' + method;
+				if (string) data += '&_method=' + method;
 				else data.setValue('_method', method); 
 				method = 'post';
 			}
-			if (query) { 
+			if (string && !this.options.iframe) { 
 				createRequest(this);
 				if (!this.transport) {
-					createFrame(this);
+					if (!this.frame)
+						createFrame(this);
 					// No support for POST when using iframes. We could fake
 					// it through a hidden form that's produced on the fly,
 					// parse data and url for query values, but that's going a bit
@@ -280,8 +288,8 @@ Request = Base.extend(Chain, Callback, new function() {
 					url += (url.contains('?') ? '&' : '?') + data;
 					data = null;
 				}
-			} else {
-		 		createFrame(this, DomNode.wrap(data));
+			} else if (!this.frame) {
+		 		createFrame(this, !string && DomNode.wrap(data));
 			}
 			// Check frame first, as this is never reused.
 			if (this.frame) {
