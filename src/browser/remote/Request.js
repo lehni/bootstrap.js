@@ -54,7 +54,6 @@ Request = Base.extend(Chain, Callback, new function() {
 				}
 			]
 		);
-
 		that.frame = {
 			id: id, div: div, form: form,
 			iframe: window.frames[id] || document.getElementById(id),
@@ -63,16 +62,6 @@ Request = Base.extend(Chain, Callback, new function() {
 		// Opera fix: force the iframe to be valid
 		div.offsetWidth;
 	}
-
-#ifdef BROWSER_LEGACY
-	function checkFrame() {
-		var frame = this.frame.iframe, loc = frame.location;
-		if (loc && (!loc.href || loc.href.indexOf(this.url) != -1) && frame.document.readyState == 'complete') {
-			this.timer.clear();
-			this.onFrameLoad();
-		}
-	}
-#endif // BROWSER_LEGACY
 
 	return {
 		options: {
@@ -92,7 +81,6 @@ Request = Base.extend(Chain, Callback, new function() {
 		initialize: function(/* url: 'string', options: 'object', handler: 'function' */) {
 			var params = Array.associate(arguments, { url: 'string', options: 'object', handler: 'function' });
 			this.setOptions(params.options);
-			this.url = params.url || this.options.url;
 			// If a handler is passed, it is used to recieve both success and
 			// failure events. Only the success event will recieve a result
 			// argument though.
@@ -130,15 +118,19 @@ Request = Base.extend(Chain, Callback, new function() {
 		},
 
 		onFrameLoad: function() {
-			var frame = this.frame && this.frame.iframe;
-			if (frame && frame.location != 'about:blank' && this.running) {
+			var frame = this.frame && this.frame.iframe, loc = frame && frame.location,
+				doc = frame && (frame.contentDocument || frame.contentWindow || frame).document;
+			if (this.running && frame && loc && (!loc.href || loc.href.indexOf(this.url) != -1)
+				&& /^(loaded|complete|undefined)$/.test(doc.readyState)) {
+#ifdef BROWSER_LEGACY
+				this.timer.clear();
+#endif // BROWSER_LEGACY
 				this.running = false;
 				// Try fetching value from the first tetarea in the document first,
 				// since that's the convention to send data with iframes now, just
 				// like in dojo.
 				// TODO: Handle xml, html, json separately?
-				var doc = (frame.contentDocument || frame.contentWindow || frame).document,
-					area = !this.options.html && doc.getElementsByTagName('textarea')[0];
+				var area = !this.options.html && doc.getElementsByTagName('textarea')[0];
 				var text = doc && (area && area.value || doc.body
 					&& (this.options.html && doc.body.innerHTML
 						|| doc.body.textContent || doc.body.innerText)) || '';
@@ -263,7 +255,6 @@ Request = Base.extend(Chain, Callback, new function() {
 				default:
 					data = data.toString();
 			}
-			this.running = true;
 			var string = typeof data == 'string', method = opts.method;
 			if (opts.emulation && /^(put|delete)$/.test(method)) {
 				if (string) data += '&_method=' + method;
@@ -284,18 +275,20 @@ Request = Base.extend(Chain, Callback, new function() {
 					if (!url.contains('?')) url += '?'; // for MACIE to load .js
 #endif // !BROWSER_LEGACY
 				}
-				if (data && method == 'get') {
-					url += (url.contains('?') ? '&' : '?') + data;
-					data = null;
-				}
 			} else if (!this.frame) {
 		 		createFrame(this, !string && DomNode.wrap(data));
 			}
+			if (string && data && method == 'get') {
+				url += (url.contains('?') ? '&' : '?') + data;
+				data = null;
+			}
+			this.running = true;
+			this.url = url;
 			// Check frame first, as this is never reused.
 			if (this.frame) {
 #ifdef BROWSER_LEGACY
 				if (Browser.TRIDENT5)
-					this.timer = checkFrame.periodic(50, this);
+					this.timer = this.onFrameLoad.periodic(50, this);
 #endif // !BROWSER_LEGACY
 				if (this.frame.form)
 					this.frame.form.set({
