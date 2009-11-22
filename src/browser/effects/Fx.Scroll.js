@@ -64,19 +64,19 @@ Fx.Scroll = Fx.extend({
 		return this.base([scroll.x, scroll.y], [values.x, values.y]);
 	},
 
-	toTop: function(){
+	toTop: function() {
 		return this.start(false, 0);
 	},
 
-	toLeft: function(){
+	toLeft: function() {
 		return this.start(0, false);
 	},
 
-	toRight: function(){
+	toRight: function() {
 		return this.start('right', false);
 	},
 
-	toBottom: function(){
+	toBottom: function() {
 		return this.start(false, 'bottom');
 	},
 
