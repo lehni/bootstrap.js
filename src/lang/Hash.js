@@ -40,7 +40,7 @@ Hash = Base.extend(Enumerable, {
 
 	/**
 	 * Deep merges with the given enumerable object and returns the modifed hash.
-	 * Recursively calls merge on value pairs if they are dictionaries.
+	 * Recursively calls merge or clone on value pairs if they are dictionaries.
 	 */
 	merge: function() {
 		// Allways use Base.each() as we don't know wether the passed object
@@ -48,7 +48,8 @@ Hash = Base.extend(Enumerable, {
 		return Base.each(arguments, function(obj) {
 			Base.each(obj, function(val, key) {
 				this[key] = Base.type(this[key]) == 'object'
-					? Hash.prototype.merge.call(this[key], val) : val;
+					? Hash.prototype.merge.call(this[key], val)
+					: Base.type(val) == 'object' ? Base.clone(val) : val;
 			}, this);
 		}, this);
 	},
