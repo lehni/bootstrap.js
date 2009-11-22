@@ -89,7 +89,7 @@ HtmlElement.inject(new function() {
 			var color = style && style.match(/rgb[a]?\([\d\s,]+\)/);
 			if (color) return style.replace(color[0], color[0].rgbToHex());
 #endif // !__lang_Color__
-			if (Browser.PRESTO || Browser.TRIDENT) {
+			if (Browser.PRESTO || Browser.TRIDENT && isNaN(parseInt(style))) {
 				// Fix IE / Opera style that falsly include border and padding:
 				if (/^(width|height)$/.test(name)) {
 					var size = 0;
