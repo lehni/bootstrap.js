@@ -78,11 +78,14 @@ Base.inject({
 #ifdef BROWSER
 			// Handle elements, as needed by DomNode.js
 			return (obj || obj === 0) && (
-				(obj._type || obj.nodeName && (
+				obj._type || obj.nodeName && (
 					obj.nodeType == 1 && 'element' ||
 					obj.nodeType == 3 && 'textnode' ||
-					obj.nodeType == 9 && 'document'
-				)) || typeof obj) || null;
+					obj.nodeType == 9 && 'document')
+					// TODO: Find better way to identify windows and use
+					// the same cod ein DomNode$getConstructor
+					|| obj.location && obj.frames && obj.history && 'window'
+					|| typeof obj) || null;
 #else // !BROWSER
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
 #endif // !BROWSER
