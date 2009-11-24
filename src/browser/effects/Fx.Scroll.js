@@ -96,7 +96,7 @@ Fx.SmoothScroll = Fx.Scroll.extend({
 		links.each(function(link) {
 			if (link.$.href.indexOf(loc) != 0) return;
 			var hash = link.$.href.substring(loc.length);
-			var anchor = hash && DomElement.get(hash, context);
+			var anchor = hash && DomElement.get('#' + hash, context);
 			if (anchor) {
 				link.addEvent('click', function(event) {
 					this.toElement(anchor);
