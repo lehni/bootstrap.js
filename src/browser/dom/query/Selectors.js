@@ -207,19 +207,23 @@ DomElement.inject(new function() {
 			// Note that '#' is not needed, a string that could be an id (a-zA-Z_-)
 			// is enough for trying getElementById first.
 			// So $() can also work like Mootools' $()
-			if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
-				el = this.getDocument().$.getElementById(match[1]);
-			// TODO!
-			else if (DomNode.isNode(type))
-				el = DomElement.unwrap(selector);
-			// If el was fetched by id above, but is not a child of this or is this,
-			// use the real selector.
-			if (el && el != this.$ && !DomElement.isAncestor(el, this.$))
-				el = null;
-			// TODO: Is there a way to only fetch the first in getElements,
-			// with an optional third parameter?
-			if (!el)
-				el = this.getElements(selector, true)[0];
+			if (type == 'window') {
+				el = selector;
+			} else {
+				if (type == 'string' && (match = selector.match(/^#?([\w-]+)$/)))
+					el = this.getDocument().$.getElementById(match[1]);
+				// TODO!
+				else if (DomNode.isNode(type))
+					el = DomElement.unwrap(selector);
+				// If el was fetched by id above, but is not a child of this or is this,
+				// use the real selector.
+				if (el && el != this.$ && !DomElement.isAncestor(el, this.$))
+					el = null;
+				// TODO: Is there a way to only fetch the first in getElements,
+				// with an optional third parameter?
+				if (!el)
+					el = this.getElements(selector, true)[0];
+			}
 			return DomNode.wrap(el);
 		},
 

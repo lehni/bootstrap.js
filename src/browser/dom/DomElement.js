@@ -67,7 +67,7 @@ DomElement = DomNode.extend({
 
 		isAncestor: function(el, parent) {
 			// Handle el.ownerDocumet == parent specially for efficiency and
-			// also since documents dont define neither contains nor
+			// also since documents don't define neither contains nor
 			// compareDocumentPosition
 			return !el ? false : el.ownerDocument == parent ? true
 				: Browser.WEBKIT && Browser.VERSION < 420
