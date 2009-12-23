@@ -319,7 +319,7 @@ Template.prototype = {
 				var template = this.renderTemplates[i];
 				// Trim at render-time, if required:
 				code.splice(1, 0, 'var ' + template.name + ' = template.renderSubTemplate(this, "' +
-					template.name + '", param)' + (template.trim ? '.trim()' : ''));
+					template.name + '", param)' + (template.trim ? '.trim();' : ';'));
 				// Shift tags as well, so line numbers are still right
 				this.tags.unshift(null);
 			}
