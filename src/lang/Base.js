@@ -87,7 +87,14 @@ Base.inject({
 					|| obj.location && obj.frames && obj.history && 'window'
 					|| typeof obj) || null;
 #else // !BROWSER
+#ifdef RHINO
+			// Return 'java' instead of 'object' for java objects, to easily
+			// distinguish vanilla objects from native java ones.
+			return (obj || obj === 0) && (obj._type
+				|| obj instanceof java.lang.Object ? 'java' : typeof obj) || null;
+#else // !BROWSER && !RHINO
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
+#endif // !BROWSER && !RHINO
 #endif // !BROWSER
 		},
 
