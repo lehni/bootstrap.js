@@ -478,7 +478,7 @@ Template.prototype = {
 				// Control and data macros are only allowed for first macro in chain (main)
 				if (isMain) {
 					// Is this a control macro?
-					macro.isControl = allowControls && /^(foreach|if|elseif|else|end)$/.test(next);
+					macro.isControl = allowControls && /^(foreach|begin|if|elseif|else|end)$/.test(next);
 					// Is this a data macro?
 					macro.isData = isEqualTag;
 					macro.isSetter = !isEqualTag && next[0] == '$'; 
@@ -615,12 +615,15 @@ Template.prototype = {
 		if (!macro)
 			throw 'Invalid tag';
 		var values = macro.values, result;
+		var postProcess = !!(values.prefix || values.suffix || values.filters);
 		var codeIndexBefore = code.length;
 		// Put it all into a conditional block if the 'if' param is defined:
 		var condition = values['if'];
-		if (condition)
+		// Handle conditions differently if we're in toString mode and dont need
+		// post processing (see bellow).
+		var conditionCode = condition && (!toString || postProcess);
+		if (conditionCode)
 			code.push(								'if (' + condition + ') {');
-		var postProcess = !!(values.prefix || values.suffix || values.filters);
 		if (macro.isData) { // param, response, request, session, or a <%= %> tag
 			result = this.parseLoopVariables(macro.opcode
 				? macro.command + ' ' + macro.opcode : macro.command, stack);
@@ -664,10 +667,29 @@ Template.prototype = {
 													'		var ' + variable + ' = ' + list + '[' + index + '];',
 						values.separator		?	'		out.push();' : null);
 					break;
+				case 'elseif':
+					close = true;
+					// More in 'if' (no break here)
+				case 'if':
+					if (!macro.opcode) throw 'Syntax error';
+					open = true;
+					code.push(						(close ? '} else if (' : 'if (') + this.parseLoopVariables(macro.opcode, stack) + ') {');
+					break;
+				case 'else':
+					if (macro.opcode) throw 'Syntax error';
+					close = true;
+					open = true;
+					code.push(						'} else {');
+					break;
+				case 'begin':
+					// Just open a block anyway, so that closing is easier.
+					code.push(						'{');
+					open = true;
+					break;
 				case 'end':
 					if (macro.opcode) throw 'Syntax error';
-					if (!prevControl || !/^else|^if$|^foreach$/.test(prevControl.macro.command))
-						throw "Syntax error: 'end' requiers 'if', 'else', 'elseif' or 'foreach'";
+					if (!prevControl || !prevControl.macro.isControl)
+						throw "Syntax error: 'end' requires 'if', 'else', 'elseif', 'begin' or 'foreach': " + prevControl;
 					close = true;
 					if (prevControl.macro.command == 'foreach') {
 						// Pop the current loop from the stack.
@@ -685,20 +707,6 @@ Template.prototype = {
 						code.push(					'	}');
 					}
 					code.push(						'}');
-					break;
-				case 'elseif':
-					close = true;
-					// More in 'if' (no break here)
-				case 'if':
-					if (!macro.opcode) throw 'Syntax error';
-					open = true;
-					code.push(						(close ? '} else if (' : 'if (') + this.parseLoopVariables(macro.opcode, stack) + ') {');
-					break;
-				case 'else':
-					if (macro.opcode) throw 'Syntax error';
-					close = true;
-					open = true;
-					code.push(						'} else {');
 					break;
 				}
 				if (close) {
@@ -766,29 +774,48 @@ Template.prototype = {
 															values.suffix + ', ' + values['default']  + ', out);');
 			else {
 				if (!toString) {
-					// Dereference to local variable if it's a call, a lookup, or a more complex construct (containg whitespaces)
-					// TODO: Detect strings and simple values and do not do if-check bellow if it is valid!
-					if (/[.()\s]/.test(result)) {
-						code.push(					'var val = ' + result + ';');
-						result = 'val';
+					// Detect strings and simple values and do not do if-check
+					// bellow if it is valid. The matching of strings is the same
+					// as in Boots' Markup.js
+					// String: ^["'](?:[^"'\\]*(?:\\["']|\\|(?=["']))+)*["']$
+					// Number: ^[-+]?\d+[.]?\d*(e[-+]?\d+)?$
+					if (/^["'](?:[^"'\\]*(?:\\["']|\\|(?=["']))+)*["']$|^[-+]?\d+[.]?\d*(e[-+]?\d+)?$\d/.test(result)) {
+						var value = eval(result);
+						if (value != null && value !== '')
+							code.push(					'out.write(' + result + ');');
+					} else {
+						// Dereference to local variable if it's a call, a lookup,
+						// or a more complex construct (containg whitespaces)
+						if (/[.()\s]/.test(result)) {
+							code.push(					'var val = ' + result + ';');
+							result = 'val';
+						}
+						code.push(						'if (' + result + ' != null && ' + result + ' !== "")',
+														'	out.write(' + result + ');');
+						if (values['default'])
+							code.push(					'else',
+														'	out.write(' + values['default'] + ');');
 					}
-					code.push(						'if (' + result + ' != null && ' + result + ' !== "")',
-													'	out.write(' + result + ');');
-					if (values['default'])
-						code.push(					'else',
-													'	out.write(' + values['default'] + ');');
 				}
 			}
 		}
-		if (toString && postProcess) {
-			// This is needed for nested macros. Insert out.push() before the 
-			// rendering code and return out.pop(). Due to the post processing
-			// we cannot simply return a variable...
-			code.splice(codeIndexBefore, 0,			'out.push();');
-			result = 'out.pop()';
+		if (toString) {
+			if (postProcess) {
+				// This is needed for nested macros. Insert out.push() before the 
+				// rendering code and return out.pop(). Due to the post processing
+				// we cannot simply return a variable...
+				code.splice(codeIndexBefore, 0,			'out.push();');
+				if (result)
+					code.push(							'out.write(' + result + ');');
+				result = 'out.pop()';
+			} else if (condition) {
+				// If we're not post processing in toString mode, the condition
+				// can be handled by a simple '? :' construct:
+				result = condition + ' ? ' + result + ' : null';
+			}
 		}
 		// Close the condition block now, if needed.
-		if (condition)
+		if (conditionCode)
 			code.push(								'}');
 		// toString is needed for nested macros.
 		// Otherwise, tell parse() wether to swallow the line break or not.
