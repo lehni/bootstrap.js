@@ -779,7 +779,7 @@ Template.prototype = {
 					// as in Boots' Markup.js
 					// String: ^["'](?:[^"'\\]*(?:\\["']|\\|(?=["']))+)*["']$
 					// Number: ^[-+]?\d+[.]?\d*(e[-+]?\d+)?$
-					if (/^["'](?:[^"'\\]*(?:\\["']|\\|(?=["']))+)*["']$|^[-+]?\d+[.]?\d*(e[-+]?\d+)?$\d/.test(result)) {
+					if (/^["'](?:[^"'\\]*(?:\\["']|\\|(?=["']))+)*["']$|^[-+]?\d+[.]?\d*(e[-+]?\d+)?$\d/i.test(result)) {
 						var value = eval(result);
 						if (value != null && value !== '')
 							code.push(					'out.write(' + result + ');');
