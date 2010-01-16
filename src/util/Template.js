@@ -1155,7 +1155,7 @@ Template.lineBreak = '\n';
 
 #ifdef HELMA
 
-HopObject.prototype.getTemplate = function(template) {
+getTemplate = HopObject.prototype.getTemplate = function(template) {
 	var name = template;
 	if (!(template instanceof Template)) {
 		// Handle sub templates:
@@ -1191,7 +1191,7 @@ HopObject.prototype.getTemplate = function(template) {
 /**
  * HopObject's renderTemplate function that is to be used from Helma.
  */
-HopObject.prototype.renderTemplate = function(template, param, out) {
+renderTemplate = HopObject.prototype.renderTemplate = function(template, param, out) {
 	template = this.getTemplate(template);
 	if (template)
 		return template.render(this, param, null, out);
