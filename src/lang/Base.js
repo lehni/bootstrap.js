@@ -89,9 +89,13 @@ Base.inject({
 #else // !BROWSER
 #ifdef RHINO
 			// Return 'java' instead of 'object' for java objects, to easily
-			// distinguish vanilla objects from native java ones.
+			// distinguish vanilla objects from native java ones. Filter out
+			// JavaAdapters that implement Scriptable though, since we want
+			// to be able to do some wrapping magic in Helma.
 			return (obj || obj === 0) && (obj._type
-				|| (obj instanceof java.lang.Object ? 'java' : typeof obj)) || null;
+				|| (obj instanceof java.lang.Object
+					&& !(obj instanceof org.mozilla.javascript.Scriptable) 
+					? 'java' : typeof obj)) || null;
 #else // !BROWSER && !RHINO
 			return (obj || obj === 0) && (obj._type || typeof obj) || null;
 #endif // !BROWSER && !RHINO
