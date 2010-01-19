@@ -805,8 +805,6 @@ Template.prototype = {
 				// rendering code and return out.pop(). Due to the post processing
 				// we cannot simply return a variable...
 				code.splice(codeIndexBefore, 0,			'out.push();');
-				if (result)
-					code.push(							'out.write(' + result + ');');
 				result = 'out.pop()';
 			} else if (condition) {
 				// If we're not post processing in toString mode, the condition
