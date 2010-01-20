@@ -8,7 +8,7 @@ Number.inject({
 	// tell Base.type that number objects are numbers too.
 	_type: 'number',
 
-	limit: function(min, max){
+	limit: function(min, max) {
 		return Math.min(max, Math.max(min, this));
 	},
 
