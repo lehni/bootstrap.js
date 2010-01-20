@@ -138,7 +138,7 @@ DomEvent = Base.extend(new function() {
 									arguments.callee.delay(50);
 								}
 							}).delay(0);
-						} else if (Browser.WEBKIT && Browser.VERSION < 525){
+						} else if (Browser.WEBKIT && Browser.VERSION < 525) {
 							(function() {
 								/^(loaded|complete)$/.test(doc.$.readyState)
 									? doc.onDomReady() : arguments.callee.delay(50);
