@@ -753,12 +753,12 @@ Template.prototype = {
 				// TODO: Compare with Helma, to see if that is really true. E.g. what happens when default is set
 				// and the macro returns no value, but does write to res?
 				code.push(		postProcess		?	'out.push();' : null,
-													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' +
-															macro.name + '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ', out);',
+													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' + macro.name
+														+ '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ',' + macro.param.length + ', out);',
 								// Trim if swallow is defined:						
 								macro.swallow	?	'if (val) val = val.toString().trim();' : null,
-								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', ' + values.prefix + ', ' +
-															values.suffix + ', null, out);' : null);
+								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', ' + values.prefix + ', '
+														+ values.suffix + ', null, out);' : null);
 				result = 'val';
 			}
 		}
@@ -903,7 +903,7 @@ Template.prototype = {
 	 * Renders the macro with the given name on object, passing it the arguments.
 	 * This is called at rendering time, not parsing time.
 	 */
-	renderMacro: function(command, object, name, param, args, out) {
+	renderMacro: function(command, object, name, param, args, paramLength, out) {
 		var unhandled = false, value, macro;
 		if (object) {
 			// Add a reference to this template and the param
@@ -925,11 +925,19 @@ Template.prototype = {
 			}
 			if (macro) {
 				try {
-					// If a macro sets param=, inherit values from it, just like in templates
+					// If a macro sets param=, inherit values from it, just like in templates.
+					// Handle the case where only param is passed specially (using paramLength),
+					// by then simply passing param to the macro. This allows the macro to
+					// also modify the param and therefore pass values back to the template.
 					var prm = args[0];
 					if (prm && prm.param) {
-						prm = args[0] = this.inherit(prm, prm.param);
-						delete prm.param;
+						if (paramLength == 1 && prm.param == param) {
+							prm = param;
+						} else {
+							prm = this.inherit(prm, prm.param);
+							delete prm.param;
+						}
+						args[0] = prm;
 					}
 					value = macro.apply(object, args);
 				} catch (e) {
