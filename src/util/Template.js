@@ -455,7 +455,10 @@ Template.prototype = {
 					// convert param and unnamed to a arguments array that can directly be used
 					// when calling the macro. param comes first, unnamed after.
 					var unnamed = macro.unnamed.join(', ');
-					macro.arguments = '[ { ' + macro.param.join(', ') + ' } ' + (unnamed ? ', ' + unnamed : '') + ' ]';
+					// Arguments is not directly the array to pass to the macro / filter. It contains
+					// both a length field to describe the amounts of fields in param, and the arguments
+					// array, consisting both of param object and unnamed arguments.
+					macro.arguments = '{ length: ' + macro.param.length + ', arguments: [ { ' + macro.param.join(', ') + ' } ' + (unnamed ? ', ' + unnamed : '') + ' ] }';
 					// Split object and property / macro name
 					var match = macro.command.match(/^(.*)\.(.*)$/);
 					if (match) {
@@ -754,10 +757,10 @@ Template.prototype = {
 				// and the macro returns no value, but does write to res?
 				code.push(		postProcess		?	'out.push();' : null,
 													'var val = template.renderMacro("' + macro.command + '", ' + object + ', "' + macro.name
-														+ '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ',' + macro.param.length + ', out);',
+														+ '", param, ' + this.parseLoopVariables(macro.arguments, stack) + ', out);',
 								// Trim if swallow is defined:						
 								macro.swallow	?	'if (val) val = val.toString().trim();' : null,
-								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', ' + values.prefix + ', '
+								postProcess		?	'template.write(out.pop()' + (macro.swallow ? '.trim()' : '') + ', ' + values.filters + ', param, ' + values.prefix + ', '
 														+ values.suffix + ', null, out);' : null);
 				result = 'val';
 			}
@@ -770,7 +773,7 @@ Template.prototype = {
 			// Optimizations: Only call template.write if post processing is necessary.
 			// Write out directly if it's all easy.
 			if (postProcess)
-				code.push(							'template.write(' + result + ', ' + values.filters + ', ' + values.prefix + ', ' +
+				code.push(							'template.write(' + result + ', ' + values.filters + ', param, ' + values.prefix + ', ' +
 															values.suffix + ', ' + values['default']  + ', out);');
 			else {
 				if (!toString) {
@@ -869,7 +872,7 @@ Template.prototype = {
 	 * Writes out the value and handles prefix, suffix, default, and filter chains.
 	 * This is called at rendering time, not parsing time.
 	 */
-	write: function(value, filters, prefix, suffix, deflt, out) {
+	write: function(value, filters, param, prefix, suffix, deflt, out) {
 		if (value != null && value !== '') {
 			// Walk through the filters and apply them, if defined.
 			if (filters) {
@@ -878,7 +881,7 @@ Template.prototype = {
 					var func = filter.object && filter.object[filter.name + '_filter'];
 					if (func) {
 						if (func.apply) // filter function
-							value = func.apply(filter.object, [value].concat(filter.arguments));
+							value = func.apply(filter.object, [value].concat(this.processArguments(filter.arguments, param)));
 						else if (func.exec) // filter regexp
 							value = func.exec(value)[0];
 					} else {
@@ -899,11 +902,29 @@ Template.prototype = {
 		}
 	},
 
+	processArguments: function(args, param) {
+		// If a macro sets param=, inherit values from it, just like in templates.
+		// Handle the case where only param is passed specially (using args.length),
+		// by then simply passing param to the macro. This allows the macro to
+		// also modify the param and therefore pass values back to the template.
+		var prm = args.arguments[0];
+		if (prm && prm.param) {
+			if (args.length == 1 && prm.param == param) {
+				prm = param;
+			} else {
+				prm = this.inherit(prm, prm.param);
+				delete prm.param;
+			}
+			args.arguments[0] = prm;
+		}
+		return args.arguments;
+	},
+
 	/**
 	 * Renders the macro with the given name on object, passing it the arguments.
 	 * This is called at rendering time, not parsing time.
 	 */
-	renderMacro: function(command, object, name, param, args, paramLength, out) {
+	renderMacro: function(command, object, name, param, args, out) {
 		var unhandled = false, value, macro;
 		if (object) {
 			// Add a reference to this template and the param
@@ -925,21 +946,7 @@ Template.prototype = {
 			}
 			if (macro) {
 				try {
-					// If a macro sets param=, inherit values from it, just like in templates.
-					// Handle the case where only param is passed specially (using paramLength),
-					// by then simply passing param to the macro. This allows the macro to
-					// also modify the param and therefore pass values back to the template.
-					var prm = args[0];
-					if (prm && prm.param) {
-						if (paramLength == 1 && prm.param == param) {
-							prm = param;
-						} else {
-							prm = this.inherit(prm, prm.param);
-							delete prm.param;
-						}
-						args[0] = prm;
-					}
-					value = macro.apply(object, args);
+					value = macro.apply(object, this.processArguments(args, param));
 				} catch (e) {
 					this.reportMacroError(e, command, out);
 				}
