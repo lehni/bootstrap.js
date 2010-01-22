@@ -16,19 +16,7 @@
  * added manually, or Template.js need to be changed.
  */
 
-#ifdef HELMA
-
-// Define global encodeHtml and encodeAll, used for encoding
-// TODO: Consider referencing these internally, and checking
-// global['encode' + encoder.capitalize()] as a fallback scenario
-if (!global.encodeHtml)
-	encodeHtml = format;
-if (!global.encodeAll)
-	encodeAll = encode;
-if (!global.encodeParagraphs)
-	encodeParagraphs = formatParagraphs;
-
-#else // !HELMA
+#ifndef HELMA
 
 // Retrieve a reference to the global scope.
 global = this;
@@ -589,6 +577,10 @@ Template.prototype = {
 		if (encoding) {
 			// Convert encoding to encoder function:
 			// TODO: capitalize() is defined in Bootstrap!
+			// TODO: Consider referencing the default ones with different names on
+			// Helma internally, and checking global['encode' + encoder.capitalize()]
+			// as a fallback scenario:
+			// html -> format, all -> encode, paragraphs -> formatParagraphs
 			values.encoder = 'encode' + encoding.substring(1, encoding.length - 1).capitalize();
 			// If default is, encode it now if it is a string literal, create the encoding call otherwise.
 			var def = values['default'];
