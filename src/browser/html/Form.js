@@ -22,7 +22,10 @@ HtmlElement.inject({
 
 	setValue: function(name, val) {
 		var el = this.getElement(name);
-		if (!el) el = this.injectBottom('input', { type: 'hidden', id: name, name: name });
+		// On Safari, using injectBottom here causes problems with transmission of
+		// some of the form values sometimes. Injecting at the top seems to solve
+		// this.
+		if (!el) el = this.injectTop('input', { type: 'hidden', id: name, name: name });
 		return el.setValue(val);
 	},
 
