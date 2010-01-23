@@ -104,20 +104,20 @@ function Template(object, name, parent) {
 }
 
 Template.prototype = {
-	render: function(object, param, parentParam, out) {
+	render: function(object, param, out) {
 		try {
-			// Inherit from parentParam if it is set:
-			if (parentParam)
-				param = this.inherit(param, parentParam);
 			// If out is null, render to a string and return it
 			var asString = !out;
 #ifdef HELMA
-			if (asString) (out = res).push();
+			if (asString)
+				(out = res).push();
 #else // !HELMA
-			if (asString) (out = new TemplateWriter()).push();
+			if (asString)
+				(out = new TemplateWriter()).push();
 #endif // !HELMA
 			this.__render__.call(object, param, this, out);
-			if (asString) return out.pop();
+			if (asString)
+				return out.pop();
 		} catch (e) {
 			// In case the exception happened in a finished template,
 			// output the error for the template
@@ -166,7 +166,10 @@ Template.prototype = {
 		var template = this.subTemplates[name];
 		if (!template)
 			throw 'Unknown sub template: ' + name;
-		return template.render(object, param, parentParam, out);
+		// Inherit from parentParam if it is set:
+		if (parentParam)
+			param = this.inherit(param, parentParam);
+		return template.render(object, param, out);
 	},
 
 	/**
@@ -929,7 +932,7 @@ Template.prototype = {
 						return (that.parent || that).renderSubTemplate(object, name, prm, param);
 					} else {
 						var template = object.getTemplate(name);
-						return template && template.render(object, prm, param);
+						return template && template.render(object, prm);
 					}
 				}
 			} else {
@@ -1199,7 +1202,7 @@ getTemplate = HopObject.prototype.getTemplate = function(template) {
 renderTemplate = HopObject.prototype.renderTemplate = function(template, param, out) {
 	template = this.getTemplate(template);
 	if (template)
-		return template.render(this, param, null, out);
+		return template.render(this, param, out);
 }
 
 /* TODO: reconsider this for rendering through HopObject constructors:
@@ -1257,7 +1260,7 @@ Template.methods = new function() {
 		renderTemplate: function(template, param, out) {
 			template = this.getTemplate(template);
 			if (template)
-				return template.render(this, param, null, out);
+				return template.render(this, param, out);
 		}
 	};
 };
