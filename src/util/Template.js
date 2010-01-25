@@ -904,11 +904,21 @@ Template.prototype = {
 		// also modify the param and therefore pass values back to the template.
 		var prm = args.arguments[0];
 		if (prm && prm.param) {
-			if (args.length == 1 && prm.param == param) {
-				prm = param;
+			if (args.length == 1) {
+				prm = prm.param;
 			} else {
-				prm = this.inherit(prm, prm.param);
-				delete prm.param;
+				// Do not inherit for macros and templates that explicitely
+				// demand to pass on a object as param and extend it by providing
+				// other parameters, as we often use the param objet to also
+				// store meta data, e.g. resourceLookup, and using args.length
+				// to determine wether the object is directly referenced or 
+				// inherited from is making it unclear to the user whether he
+				// receives a copy or the original.
+				var src = prm;
+				prm = prm.param;
+				delete src.param;
+				for (var i in src)
+					prm[i] = src[i];
 			}
 			args.arguments[0] = prm;
 		}
