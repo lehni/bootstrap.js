@@ -905,20 +905,12 @@ Template.prototype = {
 		var prm = args.arguments[0];
 		if (prm && prm.param) {
 			if (args.length == 1) {
+				// TODO: If we want to protect param against modification, we
+				// could simply inherit it without adding any new fields here.
 				prm = prm.param;
 			} else {
-				// Do not inherit for macros and templates that explicitely
-				// demand to pass on a object as param and extend it by providing
-				// other parameters, as we often use the param objet to also
-				// store meta data, e.g. resourceLookup, and using args.length
-				// to determine wether the object is directly referenced or 
-				// inherited from is making it unclear to the user whether he
-				// receives a copy or the original.
-				var src = prm;
-				prm = prm.param;
-				delete src.param;
-				for (var i in src)
-					prm[i] = src[i];
+				prm = this.inherit(prm, prm.param);
+				delete prm.param;
 			}
 			args.arguments[0] = prm;
 		}
