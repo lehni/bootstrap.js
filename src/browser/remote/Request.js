@@ -271,9 +271,6 @@ Request = Base.extend(Chain, Callback, new function() {
 					// parse data and url for query values, but that's going a bit
 					// far for legacy support.
 					method = 'get';
-#ifdef BROWSER_LEGACY
-					if (!url.contains('?')) url += '?'; // for MACIE to load .js
-#endif // !BROWSER_LEGACY
 				}
 			} else if (!this.frame) {
 		 		createFrame(this, !string && DomNode.wrap(data));
