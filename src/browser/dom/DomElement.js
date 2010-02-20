@@ -96,13 +96,10 @@ DomElement.inject(new function() {
 
 	return {
 		_BEANS
+		_properties: ['id'],
 
 		getTag: function() {
 			return (this.$.tagName || '').toLowerCase();
-		},
-
-		getId: function() {
-			return this.$.id;
 		},
 
 		getPrevious: function(match) {

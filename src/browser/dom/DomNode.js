@@ -151,14 +151,10 @@ DomNode = Base.extend(new function() {
 		(src._properties || []).each(function(name) {
 			var part = name.capitalize();
 			src['get' + part] = function() {
-				return this.$[name];
+				return this.getProperty(name);
 			}
 			src['set' + part] = function(value) {
-				// Fix IE bug where string values set to null appear as 'null' instead of ''
-				if (value == null && typeof this.$[name] == 'string')
-					value = '';
-				this.$[name] = value;
-				return this;
+				return this.setProperty(name, value);
 			}
 		});
 		delete src._methods;
@@ -460,6 +456,7 @@ DomNode.inject(new function() {
 
 	var fields = {
 		_BEANS
+		_properties: ['text'],
 
 		set: function(name, value) {
 			switch (Base.type(name)) {
@@ -640,14 +637,6 @@ DomNode.inject(new function() {
 
 		removeProperties: function() {
 			return Base.each(arguments, this.removeProperty, this);
-		},
-
-		getText: function() {
-			return this.getProperty('text');
-		},
-
-		setText: function(text) {
-			return this.setProperty('text', text);
 		}
 	};
 
