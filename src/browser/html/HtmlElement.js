@@ -28,6 +28,7 @@ HtmlElement = DomElement.extend({
 // and HtmlElements.
 HtmlElement.inject({
 	_BEANS
+	_properties: ['html'],
 
 	getClass: function() {
 		return this.$.className;
@@ -58,14 +59,6 @@ HtmlElement.inject({
 
 	hasClass: function(name) {
 		return this.$.className.contains(name, ' ');
-	},
-
-	getHtml: function() {
-		return this.getProperty('html');
-	},
-
-	setHtml: function(html) {
-		return this.setProperty('html', html);
 	}
 });
 
