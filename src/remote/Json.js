@@ -39,11 +39,11 @@ Json = function() { // Do not open scope as new function() so this == global == 
 					}) + '}';
 				// Filter out functions, they are not part of JSON
 				case 'function':
-					return null;
+					return undefined;
 				default:
 					return obj + '';
 			}
-			return null;
+			return undefined;
 		},
 
 		decode: function(str, secure) {
