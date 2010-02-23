@@ -4,35 +4,40 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Json
 
-Json = new function() {
+Json = function() { // Do not open scope as new function() so this == global == window
+	// Support the native Json object if it is there:
+	var JSON = this.JSON;
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
 	return {
-		encode: function(obj, singles) {
-#ifdef HIDDEN // TODO: On Rhino, uneval seems to cause problems with empty fields in arrays in Rhino (resulting in [,,,])
-			var str = uneval(obj);
-			return str[0] == '(' ? str.substring(1, str.length - 1) : str;
-#endif // HIDDEN
+		encode: function(obj, properties) {
+			if (JSON)
+				return JSON.stringify(obj, properties);
+			if (Base.type(properties) == 'array') {
+				// Convert properties to a lookup table:
+				properties = properties.each(function(val) {
+					this[val] = true;
+				}, {});
+			}
 			switch (Base.type(obj)) {
 				case 'string':
-#ifdef RHINO
-					// Call toString() to Make sure it's a raw string, not an object
-					if (!singles)
-						return uneval(obj.toString());
-#endif
-					var quote = singles ? "'" : '"';
-					return quote + obj.replace(new RegExp('[\\x00-\\x1f\\\\' + quote + ']', 'g'), function(chr) {
+					return '"' + obj.replace(/[\x00-\x1f\\"]/g, function(chr) {
 						return special[chr] || '\\u' + chr.charCodeAt(0).toPaddedString(4, 16);
-					}) + quote;
+					}) + '"';
 				case 'array':
 					return '[' + obj.collect(function(val) {
-						return Json.encode(val, singles);
+						return Json.encode(val, properties);
 					}) + ']';
 				case 'object':
+				// Treat hash just like object
 				case 'hash':
 					return '{' + Hash.collect(obj, function(val, key) {
-						val = Json.encode(val, singles);
-						if (val) return Json.encode(key, singles) + ':' + val;
+						if (!properties || properties[key]) {
+							val = Json.encode(val, properties);
+							if (val !== undefined)
+								return Json.encode(key) + ':' + val;
+						}
 					}) + '}';
+				// Filter out functions, they are not part of JSON
 				case 'function':
 					return null;
 				default:
@@ -43,15 +48,25 @@ Json = new function() {
 
 		decode: function(str, secure) {
 			try {
-				return (Base.type(str) != 'string' || !str.length) ||
-					(secure && !/^[,:{}\[\]0-9.\-+Eaeflnr-u \n\r\t]*$/.test(
-						str.replace(/\\./g, '@').replace(/"[^"\\\n\r]*"/g, '')))
-							? null : eval('(' + str + ')');
+				// Make sure the incoming data is actual JSON
+				// Logic borrowed from http://json.org/json2.js
+#ifdef BROWSER
+				// Make sure leading/trailing whitespace is removed (IE can't handle it)
+				return Base.type(str) == 'string' && (str = str.trim()) &&
+#else // !BROWSER
+				return Base.type(str) == 'string' && str &&
+#endif // !BROWSER
+					// No need for security checks when using native JSON (?)
+					(!secure || JSON || /^[\],:{}\s]*$/.test(
+						str.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
+							.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
+							.replace(/(?:^|:|,)(?:\s*\[)+/g, "")))
+								? JSON ? JSON.parse(str) : (new Function('return ' + str))() : null;
 			} catch (e) {
 				return null;
 			}
 		}
 	};
-};
+}();
 
 #endif // __lang_Json__
