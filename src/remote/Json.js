@@ -10,7 +10,13 @@ Json = function() { // Do not open scope as new function() so this == global == 
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
 	return {
 		encode: function(obj, properties) {
+#ifdef RHINO
+			// Do not send native Java objects through JSON.stringify
+			if (JSON && Base.type(obj) != 'java')
+#else // !RHINO
 			if (JSON)
+#endif // !RHINO
+				return JSON.stringify(obj, properties);
 				return JSON.stringify(obj, properties);
 			if (Base.type(properties) == 'array') {
 				// Convert properties to a lookup table:
