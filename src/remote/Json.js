@@ -17,7 +17,6 @@ Json = function() { // Do not open scope as new function() so this == global == 
 			if (JSON)
 #endif // !RHINO
 				return JSON.stringify(obj, properties);
-				return JSON.stringify(obj, properties);
 			if (Base.type(properties) == 'array') {
 				// Convert properties to a lookup table:
 				properties = properties.each(function(val) {
