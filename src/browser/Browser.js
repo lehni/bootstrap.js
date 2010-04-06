@@ -15,9 +15,15 @@ Browser = new function() {
 	// Add platform name directly in uppercase too
 	fields[name.toUpperCase()] = true;
 
+
+	function getVersion(prefix, min, max) {
+		var ver = (new RegExp(prefix + '([\\d.]+)', 'i').exec(navigator.userAgent) || [0, '0'])[1].split('.');
+		return (ver.slice(0, min).join('') + '.' + ver.slice(min, max || ver.length).join('')).toFloat();
+	}
+
 	var engines = {
 		presto: function() {
-			return !window.opera ? false : arguments.callee.caller ? 960 : document.getElementsByClassName ? 950 : 925;
+			return !window.opera ? false : getVersion('Presto/', 2);
 		},
 
 		trident: function() {
@@ -26,13 +32,14 @@ Browser = new function() {
 		},
 
 		webkit: function() {
-			return navigator.taintEnabled ? false : fields.XPATH ? fields.QUERY ? 525 : 420 : 419;
+			return navigator.taintEnabled ? false : getVersion('WebKit/', 1, 2);
 		},
 
 		gecko: function() {
-			return !document.getBoxObjectFor && window.mozInnerScreenX == null ? false : document.getElementsByClassName ? 19 : 18;
+			return !document.getBoxObjectFor && window.mozInnerScreenX == null ? false : getVersion('rv:', 2);
 		}
 	};
+
 	for (var engine in engines) {
 		var version = engines[engine]();
 		if (version) {
