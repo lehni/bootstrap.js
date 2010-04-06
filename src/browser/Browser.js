@@ -12,6 +12,9 @@ Browser = new function() {
 		XPATH: !!document.evaluate,
 		QUERY: !!document.querySelector
 	};
+	// Add platform name directly in uppercase too
+	fields[name.toUpperCase()] = true;
+
 	var engines = {
 		presto: function() {
 			return !window.opera ? false : arguments.callee.caller ? 960 : document.getElementsByClassName ? 950 : 925;
@@ -27,7 +30,7 @@ Browser = new function() {
 		},
 
 		gecko: function() {
-			return !document.getBoxObjectFor ? false : document.getElementsByClassName ? 19 : 18;
+			return !document.getBoxObjectFor && window.mozInnerScreenX == null ? false : document.getElementsByClassName ? 19 : 18;
 		}
 	};
 	for (var engine in engines) {
@@ -41,8 +44,6 @@ Browser = new function() {
 			break;
 		}
 	}
-	// Add platform name directly in uppercase too
-	fields[name.toUpperCase()] = true;
 
 	// Add console loggin on most browsers as good as we can.
 	fields.log = function() {
