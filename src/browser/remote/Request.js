@@ -41,7 +41,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				|| Browser.TRIDENT && new ActiveXObject('Microsoft.XMLHTTP');
 	}
 
-	function createFrame(that, form) {
+	function createFrame(that) {
 		var id = 'request_' + unique++, load = that.onFrameLoad.bind(that);
 		// IE Fix: Setting load event on iframes does not work, use onreadystatechange
 		var div = DomElement.get('body').injectBottom('div', {
@@ -55,7 +55,7 @@ Request = Base.extend(Chain, Callback, new function() {
 			]
 		);
 		that.frame = {
-			id: id, div: div, form: form,
+			id: id, div: div,
 			iframe: window.frames[id] || document.getElementById(id),
 			element: DomElement.get(id)
 		};
@@ -244,10 +244,10 @@ Request = Base.extend(Chain, Callback, new function() {
 			var url = params.url || opts.url;
 			switch (Base.type(data)) {
 				case 'element':
-					var el = DomNode.wrap(data);
+				 	data = DomNode.wrap(data);
 					// No need to post using forms if there are no files
-					if (el.getTag() != 'form' || !el.hasElement('input[type=file]'))
-						data = el.toQueryString();
+					if (data.getTag() != 'form' || !data.hasElement('input[type=file]'))
+						data = data.toQueryString();
 					break;
 				case 'object':
 					data = Base.toQueryString(data);
@@ -273,7 +273,7 @@ Request = Base.extend(Chain, Callback, new function() {
 					method = 'get';
 				}
 			} else if (!this.frame) {
-		 		createFrame(this, !string && DomNode.wrap(data));
+ 				createFrame(this);
 			}
 			if (string && data && method == 'get') {
 				url += (url.contains('?') ? '&' : '?') + data;
@@ -287,16 +287,20 @@ Request = Base.extend(Chain, Callback, new function() {
 				if (Browser.TRIDENT5)
 					this.timer = this.onFrameLoad.periodic(50, this);
 #endif // !BROWSER_LEGACY
-				if (this.frame.form)
-					this.frame.form.set({
+				// Are we sending the request by submitting a form or simply
+				// setting the src?
+				var form = !string && data;
+				if (form) {
+					form.set({
 						target: this.frame.id, action: url, method: method,
 						enctype: /* TODO: opts.urlEncoded || */ method == 'get'
 							? 'application/x-www-form-urlencoded'
 							: 'multipart/form-data',
 						'accept-charset': opts.encoding || ''
 					}).submit();
-				else
+				} else {
 					this.frame.element.setProperty('src', url);
+				}
 			} else if (this.transport) {
 				try {
 					this.transport.open(method.toUpperCase(), url, opts.async);
