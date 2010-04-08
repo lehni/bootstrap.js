@@ -149,12 +149,13 @@ DomNode = Base.extend(new function() {
 		});
 		// Define getter / setters
 		(src._properties || []).each(function(name) {
-			var part = name.capitalize();
+			// get/setProperty() expects lowercase property name.
+			var part = name.capitalize(), prop = name.toLowerCase();
 			src['get' + part] = function() {
-				return this.getProperty(name);
+				return this.getProperty(prop);
 			}
 			src['set' + part] = function(value) {
-				return this.setProperty(name, value);
+				return this.setProperty(prop, value);
 			}
 		});
 		delete src._methods;
@@ -396,7 +397,7 @@ DomNode.inject(new function() {
 	}, [ // camels and other values that need to be accessed directly, not through getAttribute
 		'value', 'accessKey', 'cellPadding', 'cellSpacing', 'colSpan',
 		'frameBorder', 'maxLength', 'readOnly', 'rowSpan', 'tabIndex',
-		'useMap', 'width', 'height'
+		'selectedIndex', 'useMap', 'width', 'height'
 	].associate(function(name) {
 		return name.toLowerCase();
 	}), bools);
