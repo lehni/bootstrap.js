@@ -16,7 +16,15 @@ Json = function() { // Do not open scope as new function() so this == global == 
 #else // !RHINO
 			if (JSON)
 #endif // !RHINO
+				// Unfortunately IE does not natively support __proto__, so 
+				// we need to filter it out from Json
+#ifdef BROWSER
+				return JSON.stringify(obj, properties || Browser.TRIDENT && function(key, value) {
+					return key == '__proto__' ? undefined : value;
+				});
+#else // !BROWSER
 				return JSON.stringify(obj, properties);
+#endif // !BROWSER
 			if (Base.type(properties) == 'array') {
 				// Convert properties to a lookup table:
 				properties = properties.each(function(val) {
