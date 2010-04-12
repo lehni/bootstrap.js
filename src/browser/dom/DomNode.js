@@ -110,7 +110,7 @@ DomNode = Base.extend(new function() {
 	var nodes = [];
 	// LUTs for tags and class based constructors. Bootstrap can automatically
 	// use sub-prototype of DomNode for any given wrapped node based on
-	// its className Attribute. the sub-prototype only needs to define _class
+	// its className Attribute. The sub-prototype only needs to define _class
 	var tags = {}, classes = {}, classCheck, unique = 0;
 
 	// Garbage collection - uncache nodes/purge listeners on orphaned nodes
@@ -173,7 +173,7 @@ DomNode = Base.extend(new function() {
 		// checks className for the occurence of any of the prototype mapped 
 		// classes, and returns the first occurence, which is then used to
 		// decide for constructor. This allows using e.g. "window hidden" for
-		// node that should map to a window prototype.
+		// an element that should map to a window prototype.
 		var match;
 		// Check classCheck first, since it can override the _tag setting
 		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
