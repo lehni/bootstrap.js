@@ -31,8 +31,9 @@ HtmlElement.inject({
 
 	getValues: function() {
 		return this.getFormElements().each(function(el) {
-			var name = el.getName();
-			if (name && !el.getDisabled()) this[name] = el.getValue(); 
+			var name = el.getName(), value = el.getValue();
+			if (name && value !== undefined && !el.getDisabled())
+				this[name] = value; 
 		}, new Hash());
 	},
 
