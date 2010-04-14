@@ -929,42 +929,38 @@ Template.prototype = {
 	 * This is called at rendering time, not parsing time.
 	 */
 	renderMacro: function(command, object, name, param, args, out) {
-		var unhandled = false, value, macro;
 		if (object) {
-			// Add a reference to this template and the param
-			// object of the template as the parent to inherit from.
-			// Handle template macro calls directly so we have the reference to the template
-			if (name == 'template') {
-				var that = this;
-				macro = function(prm, name) {
-					if (name[0] == '#') {
-						return (that.parent || that).renderSubTemplate(object, name, prm, param);
+			try {
+				args = this.processArguments(args, param);
+				// Handle template macro calls directly so we have the reference
+				// to the template
+				if (name == 'template') {
+					var prm = args[0], nm = args[1];
+					if (nm[0] == '#') {
+						return (this.parent || this).renderSubTemplate(
+								object, nm, prm, param);
 					} else {
-						var template = object.getTemplate(name);
-						return template && template.render(object, prm);
+						var template = object.getTemplate(nm);
+						if (template)
+							return template.render(object, prm);
 					}
-				}
-			} else {
-				// See if there's a macro with that name, and if not, assume a property
-				macro = object[name + '_macro'];
+				} else {
+					// See if there's a macro with that name, and if not,
+					// assume a property
+					var macro = object[name + '_macro'];
+					if (macro) {
+						return macro.apply(object, args);
+					} else {
+						value = object[name];
+						if (value !== undefined)
+							return value;
+					}
+				} 
+			} catch (e) {
+				this.reportMacroError(e, command, out);
 			}
-			if (macro) {
-				try {
-					value = macro.apply(object, this.processArguments(args, param));
-				} catch (e) {
-					this.reportMacroError(e, command, out);
-				}
-			} else {
-				value = object[name];
-				if (value === undefined)
-					unhandled = true;
-			}
-		} else {
-			unhandled = true;
 		}
-		if (unhandled)
-			out.write('[Macro unhandled: "' + command + '"]');
-		return value;
+		out.write('[Macro unhandled: "' + command + '"]');
 	},
 
 	reportMacroError: function(error, command, out) {
