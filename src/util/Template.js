@@ -140,6 +140,8 @@ Template.prototype = {
 			parent = obj;
 		}
 #endif // RHINO
+#ifdef BROWSER
+		// As IE does not natively support __proto__, copy things over here
 		// Create an object inheriting fields from parent
 		function inherit() {};
 		inherit.prototype = parent;
@@ -148,6 +150,11 @@ Template.prototype = {
 		for (var i in object)
 			obj[i] = object[i];
 		return obj;
+#else // !BROWSER
+		// We can rely on __proto__ for simple and very fast inheritance.
+		object.__proto__ = parent;
+		return object;
+#endif // !BROWSER
 	},
 
 	/**
