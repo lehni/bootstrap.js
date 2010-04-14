@@ -1049,14 +1049,8 @@ Template.prototype = {
 			// This sets this.__render__ to the generated function
 			// don't use eval() but Rhino's evaluateString instead, because this
 			// throws propper traceable exceptions if something goes wrong.
-			// switch optimization level for the compilation of this routine,
-			// as java bytecode methods have a maximum size that is too small
-			// for templates.
 			var cx = Packages.org.mozilla.javascript.Context.getCurrentContext();
-			var level = cx.getOptimizationLevel();
-			cx.setOptimizationLevel(-1);
 			cx.evaluateString(this, code, this.pathName, 0, null);
-			cx.setOptimizationLevel(level);
 #else // !RHINO
 			eval(code);
 #endif // !RHINO
