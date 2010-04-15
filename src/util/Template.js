@@ -152,6 +152,15 @@ Template.prototype = {
 		return obj;
 #else // !BROWSER
 		// We can rely on __proto__ for simple and very fast inheritance.
+		// But if object already inherits from something else, we need to
+		// clone it first. This happens pretty rarely, so this is all in 
+		// all much faster than the above.
+		if (object.__proto__ !== Object.prototype) {
+			var obj = {};
+			for (var i in object)
+				obj[i] = object[i];
+			object = obj;
+		}
 		object.__proto__ = parent;
 		return object;
 #endif // !BROWSER
