@@ -11,56 +11,36 @@
  * .length) and dictionaries (if it's not an array, enumerating with for-in).
  */
 Enumerable = new function() {
-	/**
-	 * Converts the passed function to an iterate-function.
-	 * This is part of an optimization that is based on the observation that
-	 * calling the iterator through bind.__iterate is faster than using iter.apply()
-	 * each time.
-	 * So iterate wraps the passed function in a closure that sets the __iterate
-	 * function (defined by name) on the bind object and then calls the original
-	 * function, restoring the original state after it returns.
-	 * This is used in many places in Enumerable, each place defining its own 
-	 * name for the iterate function, so there are no clashes if calls are nested.
-	 */
-	Base.iterate = function(fn) {
-		return function(iter, bind) {
-			// Convert the argument to an iterator function. If none is specified,
-			// the identity function is returned. 
-			// This supports regular expressions, normal functions, which are
-			// returned unmodified, and values to compare to.
-			// Wherever this private function is used in the Enumerable functions
-			// bellow, a RegExp object, a Function or null may be passed.
-			var func = !iter
-				? function(val) { return val }
-				: typeof iter != 'function'
-					? function(val) { return val == iter }
-					: iter;
-			/*
-			// For RegExp support, used this:
-			else switch (Base.type(iter)) {
-				case 'function': break;
-				case 'regexp': func = function(val) { return iter.test(val) }; break;
-				default: func = function(val) { return val == iter };
-			}
-			*/
-			if (!bind) bind = this;
-			// Interesting benchmark observation: The loops seem execute 
-			// faster when called on the object (this), so outsource to
-			// the above functions each_Array / each_Object here.
-			// pass this twice, so it can be recieved as 'that' in the iterating
-			// functions, to be passed to the iterator (and being able to use 
-			// 'this' in .each differently)
-			return fn.call(this, func, bind, this);
-		};
-	};
+
+	function iterator(iter) {
+		// Convert the argument to an iterator function. If none is specified,
+		// the identity function is returned. 
+		// This supports regular expressions, normal functions, which are
+		// returned unmodified, and values to compare to.
+		// Wherever this private function is used in the Enumerable functions
+		// bellow, a value, a Function or null may be passed.
+		return !iter
+			? function(val) { return val }
+			: typeof iter != 'function'
+				? function(val) { return val == iter }
+				: iter;
+		/*
+		// For RegExp support, used this:
+		else switch (Base.type(iter)) {
+			case 'function': return iter;
+			case 'regexp': return function(val) { return iter.test(val) };
+			default: return function(val) { return val == iter };
+		}
+		*/
+	}
 
 	/**
 	 * A special constant, to be thrown by closures passed to each()
 	 *
-	 * $continue / Base.next is not implemented, as the same functionality can achieved
-	 * by using return in the closure. In prototype, the implementation of $continue
-	 * also leads to a huge speed decrease, as the closure is wrapped in another
-	 * closure that does nothing else than handling $continue.
+	 * $continue / Base.next is not implemented, as the same functionality can
+	 * achieved by using return in the closure. In prototype, the implementation
+	 * of $continue also leads to a huge speed decrease, as the closure is
+	 * wrapped in another closure that does nothing else than handling $continue.
 	 */
 	Base.stop = {};
 
@@ -123,112 +103,121 @@ Enumerable = new function() {
 		/**
 		 * The core of all Enumerable functions. TODO: document
 		 */
-		each: Base.iterate(function(iter, bind) {
+		each: function(iter, bind) {
+			if (!bind) bind = this;
+			iter = iterator(iter);
 			try { (typeof this.length == 'number' ? each_Array : each_Object).call(this, iter, bind); }
 			catch (e) { if (e !== Base.stop) throw e; }
 			return bind;
-		}),
+		},
 
 		/**
 		 * Searches the list for the first element where the passed iterator
 		 * does not return null and returns an object containing key, value and
 		 * iterator result for the given entry. This is used in find and remove.
+		 * If no iterator is passed, the value is used directly.
 		 */
-		findEntry: Base.iterate(function(iter, bind, that) {
-			return Base.each(this, function(val, key) {
-				this.result = iter.call(bind, val, key, that);
-				if (this.result) {
-					this.key = key;
-					this.value = val;
+		findEntry: function(iter, bind) {
+			var that = this, iter = iterator(iter), ret = null;
+			Base.each(this, function(val, key) {
+				var res = iter.call(bind, val, key, that);
+				if (res) {
+					ret = { key: key, value: val, result: res };
 					throw Base.stop;
 				}
-			}, {});
-		}),
+			});
+			return ret;
+		},
 
 		/**
 		 * Calls the passed iterator for each element and returns the first
 		 * result of the iterator calls that is not null.
+		 * If no iterator is passed, the value is used directly.
 		 */
 		find: function(iter, bind) {
-			return this.findEntry(iter, bind).result;
+			var entry = this.findEntry(iter, bind);
+			return entry && entry.result;
+		},
+
+		contains: function(obj) {
+			return !!this.findEntry(obj);
 		},
 
 		remove: function(iter, bind) {
 			var entry = this.findEntry(iter, bind);
-			delete this[entry.key];
-			return entry.value;
+			if (entry) {
+				delete this[entry.key];
+				return entry.value;
+			}
 		},
 
 		/**
 		 * Collects all elements for which the condition of the passed iterator
 		 * or regular expression is true.
-		 * This is compatible with JS 1.5's .filter, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
-		 * TODO: consider collect: similar to filter, but collects the returned
-		 * elements if they are != null.
-		 * TOOD: See if collect and filter could be joined somehow
+		 * This is compatible with JS 1.5's Array#filter
 		 */
-		filter: Base.iterate(function(iter, bind, that) {
+		filter: function(iter, bind) {
+			var that = this;
 			return Base.each(this, function(val, i) {
 				if (iter.call(bind, val, i, that))
 					this[this.length] = val;
 			}, []);
-		}),
-
-		/**
-		 * Collects the result of the given iterator applied to each of the
-		 * elements to an array and returns it.
-		 * The difference to map is that it does not add null / undefined values. 
-		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .map, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
-		 */
-		collect: Base.iterate(function(iter, bind, that) {
-			return Base.each(this, function(val, i) {
-			 	val = iter.call(bind, val, i, that);
-				if (val != null)
-					this[this.length] = val;
-			}, []);
-		}),
+		},
 
 		/**
 		 * Maps the result of the given iterator applied to each of the
 		 * elements to an array and returns it.
 		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .map, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
+		 * This is compatible with JS 1.5's Array#map
 		 */
-		map: Base.iterate(function(iter, bind, that) {
+		map: function(iter, bind) {
+			var that = this;
 			return Base.each(this, function(val, i) {
 				this[this.length] = iter.call(bind, val, i, that);
 			}, []);
-		}),
+		},
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
 		 * for	all elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .every, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
+		 * This is compatible with JS 1.5's Array#every
 		 */
-		every: Base.iterate(function(iter, bind, that) {
+		every: function(iter, bind) {
+			var that = this;
 			return this.find(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
 				return !iter.call(this, val, i, that);
-			}, bind) == null;
-		}),
+			}, bind || null) == null;
+			// See #some for explanation of || null
+		},
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
 		 * for one or more of the elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .some, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
+		 * This is compatible with JS 1.5's Array#some
 		 */
 		some: function(iter, bind) {
-			return this.find(iter, bind) != null;
+			// Passing null instead of undefined causes bind not to be set to
+			// this, as we want the same behavior here as the native Array#some.
+			return this.find(iter, bind || null) != null;
+		},
+
+		/**
+		 * Collects the result of the given iterator applied to each of the
+		 * elements to an array and returns it.
+		 * The difference to map is that it does not add null / undefined values. 
+		 */
+		collect: function(iter, bind) {
+			var that = this, iter = iterator(iter);
+			return Base.each(this, function(val, i) {
+			 	val = iter.call(bind, val, i, that);
+				if (val != null)
+					this[this.length] = val;
+			}, []);
 		},
 
 		/**
@@ -236,24 +225,26 @@ Enumerable = new function() {
 		 * applied to each element.
 		 * If no iterator is passed, the value is used directly.
 		 */
-		max: Base.iterate(function(iter, bind, that) {
+		max: function(iter, bind) {
+			var that = this;
 			return Base.each(this, function(val, i) {
 				val = iter.call(bind, val, i, that);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
-		}),
+		},
 
 		/**
 		 * Returns the minimum value of the result of the passed iterator
 		 * applied to each element. 
 		 * If no iterator is passed, the value is used directly.
 		 */
-		min: Base.iterate(function(iter, bind, that) {
+		min: function(iter, bind) {
+			var that = this;
 			return Base.each(this, function(val, i) {
 				val = iter.call(bind, val, i, that);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
-		}),
+		},
 
 		/**
 		 * Collects the values of the given property of each of the elements
@@ -270,14 +261,16 @@ Enumerable = new function() {
 		 * and returns the sorted list in an array.
 		 * Inspired by Prototype.js
 		 */
-		sortBy: Base.iterate(function(iter, bind, that) {
+		sortBy: function(iter, bind) {
+			var that = this;
+			// TODO: Does not work as generics
 			return this.map(function(val, i) {
 				return { value: val, compare: iter.call(bind, val, i, that) };
 			}, bind).sort(function(left, right) {
 				var a = left.compare, b = right.compare;
 				return a < b ? -1 : a > b ? 1 : 0;
 			}).pluck('value');
-		}),
+		},
 
 		/**
 		 * Converts the Enumerable to a normal array.

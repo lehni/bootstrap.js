@@ -65,11 +65,6 @@ Base.inject({
 		},
 
 #endif // !EXTEND_OBJECT
-/*		// Make a faster generic for this since it's used often:
-		each: function(iter, bind) {
-			return Enumerable.each.call(this, iter, bind);
-		},
-*/
 		check: function(obj) {
 			return !!(obj || obj === 0);
 		},

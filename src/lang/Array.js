@@ -154,55 +154,54 @@ Array.inject(new function() {
 		 * Faster, array-optimized versions of filter, map, collect, every, and some,
 		 * relying on the native definitions if available.
 		 */
-		filter: Base.iterate(proto.filter || function(iter, bind, that) {
+		filter: proto.filter || function(iter, bind) {
 			var res = [];
 			for (var i = 0, l = this.length; i < l; ++i) {
 				var val = this[i];
-				if (iter.call(bind, val, i, that))
+				if (iter.call(bind, val, i, this))
 					res[res.length] = val;
 			}
 			return res;
-		}),
+		},
 
-		collect: Base.iterate(function(iter, bind, that) {
+		map: proto.map || function(iter, bind) {
+			var res = new Array(this.length);
+			for (var i = 0, l = this.length; i < l; ++i)
+				res[i] = iter.call(bind, this[i], i, this);
+			return res;
+		},
+
+		every: proto.every || function(iter, bind) {
+			for (var i = 0, l = this.length; i < l; ++i)
+				if (!iter.call(bind, this[i], i, this))
+					return false;
+			return true;
+		},
+
+		some: proto.some || function(iter, bind) {
+			for (var i = 0, l = this.length; i < l; ++i)
+				if (iter.call(bind, this[i], i, this))
+					return true;
+			return false;
+		},
+
+		collect: function(iter, bind) {
 			var res = [];
 			for (var i = 0, l = this.length; i < l; ++i) {
-			 	var val = iter.call(bind, this[i], i, that);
+			 	var val = iter.call(bind, this[i], i, this);
 				if (val != null)
 					res[res.length] = val;
 			}
 			return res;
-		}),
-
-		map: Base.iterate(proto.map || function(iter, bind, that) {
-			var res = new Array(this.length);
-			for (var i = 0, l = this.length; i < l; ++i)
-				res[i] = iter.call(bind, this[i], i, that);
-			return res;
-		}),
-
-		every: Base.iterate(proto.every || function(iter, bind, that) {
-			for (var i = 0, l = this.length; i < l; ++i)
-				if (!iter.call(bind, this[i], i, that))
-					return false;
-			return true;
-		}),
-
-		some: Base.iterate(proto.some || function(iter, bind, that) {
-			for (var i = 0, l = this.length; i < l; ++i)
-				if (iter.call(bind, this[i], i, that))
-					return true;
-			return false;
-		}),
+		},
 
 		findEntry: function(iter, bind) {
 			// Use the faster indexOf in case we're not using iterator functions.
-			if (iter && !/^(function|regexp)$/.test(Base.type(iter))) {
+			if (typeof iter != 'function') {
 				var i = this.indexOf(iter);
-				// Pretend we were using a iterator function returning true when 
-				// the value matches iter, false otherwise.
-				// See Enumerable#findEntry for more explanations.
-				return { key: i != -1 ? i : null, value: this[i], result: i != -1 };
+				// Return the same result as if Enumerable.findEntry was used
+				// and the iter object was converter to an iterator.
+				return i == -1 ? null : { key: i, value: iter, result: iter };
 			}
 			// Do not use this.base, as we might call this on non-arrays
 			return Enumerable.findEntry.call(this, iter, bind);
@@ -217,6 +216,14 @@ Array.inject(new function() {
 
 		contains: function(obj) {
 			return this.indexOf(obj) != -1;
+		},
+
+		remove: function(iter, bind) {
+			var entry = this.findEntry(iter, bind);
+			if (entry) {
+				this.splice(entry.key, 1);
+				return entry.value;
+			}
 		},
 
 		/**
@@ -455,6 +462,7 @@ Array.inject(new function() {
 #ifdef BROWSER
 		// Safari breaks native concat on sub classes of arrays. Simulate it here.
 		concat: function(list) {
+			// TODO: Test if newer versions are find with this.
 			return Browser.WEBKIT
 				? new Array(this.length + list.length).append(this).append(list)
 				: Array.concat(this, list);
