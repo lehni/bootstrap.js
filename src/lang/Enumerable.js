@@ -195,15 +195,49 @@ Enumerable = new function() {
 		},
 
 		/**
-		 * Returns true if the condition defined by the passed iterator is true
-		 * for one or more of the elements, false otherwise.
+		 * Collects all elements for which the condition of the passed iterator
+		 * or regular expression is true.
+		 * This is compatible with JS 1.5's .filter, but adds more flexibility
+		 * regarding iterators (as defined in iterate())
+		 * TODO: consider collect: similar to filter, but collects the returned
+		 * elements if they are != null.
+		 * TOOD: See if collect and filter could be joined somehow
+		 */
+		filter: ITERATE(function(iter, bind, that) {
+			return Base.each(this, function(val, i) {
+				if (ITERATOR(iter, bind, val, i, that, __filter))
+					this[this.length] = val;
+			}, []);
+		}, '__filter'),
+
+		/**
+		 * Collects the result of the given iterator applied to each of the
+		 * elements to an array and returns it.
+		 * The difference to map is that it does not add null / undefined values. 
 		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .some, but adds more flexibility
+		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		some: function(iter, bind) {
-			return this.find(iter, bind) != null;
-		},
+		collect: ITERATE(function(iter, bind, that) {
+			return Base.each(this, function(val, i) {
+			 	val = ITERATOR(iter, bind, val, i, that, __collect);
+				if (val != null)
+					this[this.length] = val;
+			}, []);
+		}, '__collect'),
+
+		/**
+		 * Maps the result of the given iterator applied to each of the
+		 * elements to an array and returns it.
+		 * If no iterator is passed, the value is used directly.
+		 * This is compatible with JS 1.5's .map, but adds more flexibility
+		 * regarding iterators (as defined in iterate())
+		 */
+		map: ITERATE(function(iter, bind, that) {
+			return Base.each(this, function(val, i) {
+				this[this.length] = ITERATOR(iter, bind, val, i, that, __map);
+			}, []);
+		}, '__map'),
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -222,49 +256,15 @@ Enumerable = new function() {
 		}, '__every'),
 
 		/**
-		 * Maps the result of the given iterator applied to each of the
-		 * elements to an array and returns it.
+		 * Returns true if the condition defined by the passed iterator is true
+		 * for one or more of the elements, false otherwise.
 		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .map, but adds more flexibility
+		 * This is compatible with JS 1.5's .some, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		map: ITERATE(function(iter, bind, that) {
-			return Base.each(this, function(val, i) {
-				this[this.length] = ITERATOR(iter, bind, val, i, that, __map);
-			}, []);
-		}, '__map'),
-
-		/**
-		 * Collects the result of the given iterator applied to each of the
-		 * elements to an array and returns it.
-		 * The difference to map is that it does not add null / undefined values. 
-		 * If no iterator is passed, the value is used directly.
-		 * This is compatible with JS 1.5's .map, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
-		 */
-		collect: ITERATE(function(iter, bind, that) {
-			return Base.each(this, function(val, i) {
-			 	val = ITERATOR(iter, bind, val, i, that, __map);
-				if (val != null)
-					this[this.length] = val;
-			}, []);
-		}, '__collect'),
-
-		/**
-		 * Collects all elements for which the condition of the passed iterator
-		 * or regular expression is true.
-		 * This is compatible with JS 1.5's .filter, but adds more flexibility
-		 * regarding iterators (as defined in iterate())
-		 * TODO: consider collect: similar to filter, but collects the returned
-		 * elements if they are != null.
-		 * TOOD: See if collect and filter could be joined somehow
-		 */
-		filter: ITERATE(function(iter, bind, that) {
-			return Base.each(this, function(val, i) {
-				if (ITERATOR(iter, bind, val, i, that, __filter))
-					this[this.length] = val;
-			}, []);
-		}, '__filter'),
+		some: function(iter, bind) {
+			return this.find(iter, bind) != null;
+		},
 
 		/**
 		 * Returns the maximum value of the result of the passed iterator

@@ -142,17 +142,37 @@ Array.inject(new function() {
 			return -1;
 		},
 
+		reduce: proto.reduce || function(fn, value) {
+			var i = 0;
+			if (arguments.length < 2 && this.length) value = this[i++];
+			for (var l = this.length; i < l; i++)
+				value = fn.call(null, value, this[i], i, this);
+			return value;
+		},
+
 		/*
-		 * Faster, array-optimized versions of filter, map, every, and some,
+		 * Faster, array-optimized versions of filter, map, collect, every, and some,
 		 * relying on the native definitions if available.
 		 */
 		filter: ITERATE(proto.filter || function(iter, bind, that) {
 			var res = [];
-			for (var i = 0, l = this.length; i < l; ++i)
-				if (ITERATOR(iter, bind, this[i], i, that, __filter))
-					res[res.length] = this[i];
+			for (var i = 0, l = this.length; i < l; ++i) {
+				var val = this[i];
+				if (ITERATOR(iter, bind, val, i, that, __filter))
+					res[res.length] = val;
+			}
 			return res;
 		}, '__filter'),
+
+		collect: ITERATE(function(iter, bind, that) {
+			var res = [];
+			for (var i = 0, l = this.length; i < l; ++i) {
+			 	var val = ITERATOR(iter, bind, this[i], i, that, __collect);
+				if (val != null)
+					res[res.length] = val;
+			}
+			return res;
+		}, '__collect'),
 
 		map: ITERATE(proto.map || function(iter, bind, that) {
 			var res = new Array(this.length);
@@ -174,14 +194,6 @@ Array.inject(new function() {
 					return true;
 			return false;
 		}, '__some'),
-
-		reduce: proto.reduce || function(fn, value) {
-			var i = 0;
-			if (arguments.length < 2 && this.length) value = this[i++];
-			for (var l = this.length; i < l; i++)
-				value = fn.call(null, value, this[i], i, this);
-			return value;
-		},
 
 		findEntry: function(iter, bind) {
 			// Use the faster indexOf in case we're not using iterator functions.
