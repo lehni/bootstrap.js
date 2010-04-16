@@ -1,22 +1,6 @@
 #ifndef __lang_Enumerable__
 #define __lang_Enumerable__
 
-#comment Use macros to produce different version of the code bellow,
-#comment depending on wether SET_ITERATOR is set or not.
-#ifdef SET_ITERATOR
-#comment The field 'name' on the 'bind' object is set to the iterator before
-#comment iteration. We can call it directly instead using #call.
-#comment This leads to better performance (2x on Firefox), and even more  on
-#comment legacy browsers where we can avoid the emulated Function.call.
-#define ITERATOR(ITER, BIND, VALUE, KEY, SELF, NAME) BIND.NAME(VALUE, KEY, SELF)
-#define ITERATE(ITER, NAME) Base.iterate(ITER, NAME)
-#else // !SET_ITERATOR
-#comment Call the iterator funciton on the bind object through Function.call.
-#comment This is cleanear but slower than the SET_ITERATOR hack.
-#define ITERATOR(ITER, BIND, VALUE, KEY, SELF, NAME) ITER.call(BIND, VALUE, KEY, SELF)
-#define ITERATE(ITER, NAME) Base.iterate(ITER)
-#endif // !SET_ITERATOR
-
 ////////////////////////////////////////////////////////////////////////////////
 // Enumerable
 
@@ -38,11 +22,7 @@ Enumerable = new function() {
 	 * This is used in many places in Enumerable, each place defining its own 
 	 * name for the iterate function, so there are no clashes if calls are nested.
 	 */
-#ifdef SET_ITERATOR
-	Base.iterate = function(fn, name) {
-#else // !SET_ITERATOR
 	Base.iterate = function(fn) {
-#endif // !SET_ITERATOR
 		return function(iter, bind) {
 			// Convert the argument to an iterator function. If none is specified,
 			// the identity function is returned. 
@@ -64,28 +44,13 @@ Enumerable = new function() {
 			}
 			*/
 			if (!bind) bind = this;
-#ifdef SET_ITERATOR
-			// Backup previous value of the field, and set iterator.
-			var prev = bind[name];
-			bind[name] = func;
-#ifdef DONT_ENUM
-			// On Rhino+dontEnum, we can only dontEnum once the property is defined.
-			bind.dontEnum(name);
-#endif // DONT_ENUM
-#endif// !SET_ITERATOR
 			// Interesting benchmark observation: The loops seem execute 
 			// faster when called on the object (this), so outsource to
 			// the above functions each_Array / each_Object here.
 			// pass this twice, so it can be recieved as 'that' in the iterating
 			// functions, to be passed to the iterator (and being able to use 
 			// 'this' in .each differently)
-#ifdef SET_ITERATOR
-			// Allways restore previous value in the end.
-			try { return fn.call(this, func, bind, this); }
-			finally { prev ? bind[name] = prev : delete bind[name] }
-#else // !SET_ITERATOR
 			return fn.call(this, func, bind, this);
-#endif// !SET_ITERATOR
 		};
 	};
 
@@ -101,7 +66,7 @@ Enumerable = new function() {
 
 	var each_Array = Array.prototype.forEach || function(iter, bind) {
 		for (var i = 0, l = this.length; i < l; ++i)
-			ITERATOR(iter, bind, this[i], i, this, __each);
+			iter.call(bind, this[i], i, this);
 	};
 
 	var each_Object = function(iter, bind) {
@@ -109,7 +74,7 @@ Enumerable = new function() {
 		// No need to check when not extending Object and when on Rhino+dontEnum,
 		// as dontEnum is always used to hide fields there.
 		for (var i in this)
-			ITERATOR(iter, bind, this[i], i, this, __each);
+			iter.call(bind, this[i], i, this);
 #else // !DONT_ENUM
 		// We use for-in here, but need to filter out what should not be iterated.
 		// The loop here uses an inline version of Object#has (See Core.js).
@@ -122,14 +87,14 @@ Enumerable = new function() {
 #else // !FIX_PROTO
 			if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
 #endif // !FIX_PROTO
-				ITERATOR(iter, bind, this[i], i, this, __each);
+				iter.call(bind, this[i], i, this);
 #else // !EXTEND_OBJECT
 		// Object.prototype is untouched, so we cannot assume __proto__ to always
 		// be defined on legacy browsers. Use two versions of the loops for 
 		// better performance here:
 		if (this.__proto__ == null) {
 			for (var i in this)
-				IF_PROPERTY_IS_VISIBLE(i, ITERATOR(iter, bind, this[i], i, this, __each);)
+				IF_PROPERTY_IS_VISIBLE(i, iter.call(bind, this[i], i, this);)
 		} else {
 			for (var i in this)
 #ifdef FIX_PROTO
@@ -139,7 +104,7 @@ Enumerable = new function() {
 #else // !FIX_PROTO
 				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
 #endif // !FIX_PROTO
-					ITERATOR(iter, bind, this[i], i, this, __each);
+					iter.call(bind, this[i], i, this);
 		}
 #endif // !EXTEND_OBJECT
 #endif // !DONT_ENUM
@@ -158,27 +123,27 @@ Enumerable = new function() {
 		/**
 		 * The core of all Enumerable functions. TODO: document
 		 */
-		each: ITERATE(function(iter, bind) {
+		each: Base.iterate(function(iter, bind) {
 			try { (typeof this.length == 'number' ? each_Array : each_Object).call(this, iter, bind); }
 			catch (e) { if (e !== Base.stop) throw e; }
 			return bind;
-		}, '__each'),
+		}),
 
 		/**
 		 * Searches the list for the first element where the passed iterator
 		 * does not return null and returns an object containing key, value and
 		 * iterator result for the given entry. This is used in find and remove.
 		 */
-		findEntry: ITERATE(function(iter, bind, that) {
+		findEntry: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, key) {
-				this.result = ITERATOR(iter, bind, val, key, that, __findEntry);
+				this.result = iter.call(bind, val, key, that);
 				if (this.result) {
 					this.key = key;
 					this.value = val;
 					throw Base.stop;
 				}
 			}, {});
-		}, '__findEntry'),
+		}),
 
 		/**
 		 * Calls the passed iterator for each element and returns the first
@@ -203,12 +168,12 @@ Enumerable = new function() {
 		 * elements if they are != null.
 		 * TOOD: See if collect and filter could be joined somehow
 		 */
-		filter: ITERATE(function(iter, bind, that) {
+		filter: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
-				if (ITERATOR(iter, bind, val, i, that, __filter))
+				if (iter.call(bind, val, i, that))
 					this[this.length] = val;
 			}, []);
-		}, '__filter'),
+		}),
 
 		/**
 		 * Collects the result of the given iterator applied to each of the
@@ -218,13 +183,13 @@ Enumerable = new function() {
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		collect: ITERATE(function(iter, bind, that) {
+		collect: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
-			 	val = ITERATOR(iter, bind, val, i, that, __collect);
+			 	val = iter.call(bind, val, i, that);
 				if (val != null)
 					this[this.length] = val;
 			}, []);
-		}, '__collect'),
+		}),
 
 		/**
 		 * Maps the result of the given iterator applied to each of the
@@ -233,11 +198,11 @@ Enumerable = new function() {
 		 * This is compatible with JS 1.5's .map, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		map: ITERATE(function(iter, bind, that) {
+		map: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
-				this[this.length] = ITERATOR(iter, bind, val, i, that, __map);
+				this[this.length] = iter.call(bind, val, i, that);
 			}, []);
-		}, '__map'),
+		}),
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -246,14 +211,14 @@ Enumerable = new function() {
 		 * This is compatible with JS 1.5's .every, but adds more flexibility
 		 * regarding iterators (as defined in iterate())
 		 */
-		every: ITERATE(function(iter, bind, that) {
+		every: Base.iterate(function(iter, bind, that) {
 			return this.find(function(val, i) {
 				// as "this" is not used for anything else, use it for bind,
 				// so that lookups on the object are faster (according to 
 				// benchmarking)
-				return !ITERATOR(iter, this, val, i, that, __every);
+				return !iter.call(this, val, i, that);
 			}, bind) == null;
-		}, '__every'),
+		}),
 
 		/**
 		 * Returns true if the condition defined by the passed iterator is true
@@ -271,24 +236,24 @@ Enumerable = new function() {
 		 * applied to each element.
 		 * If no iterator is passed, the value is used directly.
 		 */
-		max: ITERATE(function(iter, bind, that) {
+		max: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
-				val = ITERATOR(iter, bind, val, i, that, __max);
+				val = iter.call(bind, val, i, that);
 				if (val >= (this.max || val)) this.max = val;
 			}, {}).max;
-		}, '__max'),
+		}),
 
 		/**
 		 * Returns the minimum value of the result of the passed iterator
 		 * applied to each element. 
 		 * If no iterator is passed, the value is used directly.
 		 */
-		min: ITERATE(function(iter, bind, that) {
+		min: Base.iterate(function(iter, bind, that) {
 			return Base.each(this, function(val, i) {
-				val = ITERATOR(iter, bind, val, i, that, __min);
+				val = iter.call(bind, val, i, that);
 				if (val <= (this.min || val)) this.min = val;
 			}, {}).min;
-		}, '__min'),
+		}),
 
 		/**
 		 * Collects the values of the given property of each of the elements
@@ -305,14 +270,14 @@ Enumerable = new function() {
 		 * and returns the sorted list in an array.
 		 * Inspired by Prototype.js
 		 */
-		sortBy: ITERATE(function(iter, bind, that) {
+		sortBy: Base.iterate(function(iter, bind, that) {
 			return this.map(function(val, i) {
-				return { value: val, compare: ITERATOR(iter, bind, val, i, that, __sortBy) };
+				return { value: val, compare: iter.call(bind, val, i, that) };
 			}, bind).sort(function(left, right) {
 				var a = left.compare, b = right.compare;
 				return a < b ? -1 : a > b ? 1 : 0;
 			}).pluck('value');
-		}, '__sortBy'),
+		}),
 
 		/**
 		 * Converts the Enumerable to a normal array.

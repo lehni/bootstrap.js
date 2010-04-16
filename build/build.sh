@@ -34,15 +34,10 @@ if [ ! -d ../out/ ]
 then
 	mkdir ../out/
 fi
-#./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
-#./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-
-#./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-#./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DDONT_ENUM -DEXTEND_OBJECT -DSET_ITERATOR -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DDONT_ENUM -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
@@ -51,8 +46,8 @@ fi
 
 if [ -d ../src/tests/ ]
 then
-./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DBROWSER_LEGACY -DSET_ITERATOR -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
 fi
 
 #Template:

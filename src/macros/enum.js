@@ -8,13 +8,11 @@
 #comment Allways filter out __ fields on legacy browsers, as they are used both
 #comment for emulating Function#apply/#call and for faking __proto__
 #define CHECK_PROPERTY(name) name.indexOf('__') != 0 && name != 'constructor'
-#elif defined(SET_ITERATOR)
-#define CHECK_PROPERTY(name) name.indexOf('__') != 0
-#else // !SET_ITERATOR && !BROWSER_LEGACY
+#else // !BROWSER_LEGACY
 #comment CHECK_PROPERTY is not needed, since we are not adding anything to the
 #comment objects themselves, only to their prototypes, and thats filtered out
 #comment already.
-#endif // !SET_ITERATOR && !BROWSER_LEGACY
+#endif // !BROWSER_LEGACY
 
 #ifdef GETTER_SETTER
 #define PROPERTY_CONDITION(obj, name, condition) !obj.__lookupGetter__(name) && condition
@@ -26,7 +24,7 @@
 #define PROPERTY_IS_VISIBLE(obj, name, condition) PROPERTY_CONDITION(obj, name, condition) && CHECK_PROPERTY(name)
 #define IF_PROPERTY_IS_VISIBLE(name, command) if (CHECK_PROPERTY(name)) command
 #else // !CHECK_PROPERTY
-#comment CHECK_PROPERTY is not defined -> !SET_ITERATOR && !BROWSER_LEGACY
+#comment CHECK_PROPERTY is not defined -> !BROWSER_LEGACY
 #comment No need to even check the name, since nothing will be set on objects
 #comment and the policy to compare with the value from __proto__ is enough to
 #comment filter out fields that are not supposed to iterate.

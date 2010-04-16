@@ -154,46 +154,46 @@ Array.inject(new function() {
 		 * Faster, array-optimized versions of filter, map, collect, every, and some,
 		 * relying on the native definitions if available.
 		 */
-		filter: ITERATE(proto.filter || function(iter, bind, that) {
+		filter: Base.iterate(proto.filter || function(iter, bind, that) {
 			var res = [];
 			for (var i = 0, l = this.length; i < l; ++i) {
 				var val = this[i];
-				if (ITERATOR(iter, bind, val, i, that, __filter))
+				if (iter.call(bind, val, i, that))
 					res[res.length] = val;
 			}
 			return res;
-		}, '__filter'),
+		}),
 
-		collect: ITERATE(function(iter, bind, that) {
+		collect: Base.iterate(function(iter, bind, that) {
 			var res = [];
 			for (var i = 0, l = this.length; i < l; ++i) {
-			 	var val = ITERATOR(iter, bind, this[i], i, that, __collect);
+			 	var val = iter.call(bind, this[i], i, that);
 				if (val != null)
 					res[res.length] = val;
 			}
 			return res;
-		}, '__collect'),
+		}),
 
-		map: ITERATE(proto.map || function(iter, bind, that) {
+		map: Base.iterate(proto.map || function(iter, bind, that) {
 			var res = new Array(this.length);
 			for (var i = 0, l = this.length; i < l; ++i)
-				res[i] = ITERATOR(iter, bind, this[i], i, that, __map);
+				res[i] = iter.call(bind, this[i], i, that);
 			return res;
-		}, '__map'),
+		}),
 
-		every: ITERATE(proto.every || function(iter, bind, that) {
+		every: Base.iterate(proto.every || function(iter, bind, that) {
 			for (var i = 0, l = this.length; i < l; ++i)
-				if (!ITERATOR(iter, bind, this[i], i, that, __every))
+				if (!iter.call(bind, this[i], i, that))
 					return false;
 			return true;
-		}, '__every'),
+		}),
 
-		some: ITERATE(proto.some || function(iter, bind, that) {
+		some: Base.iterate(proto.some || function(iter, bind, that) {
 			for (var i = 0, l = this.length; i < l; ++i)
-				if (ITERATOR(iter, bind, this[i], i, that, __some))
+				if (iter.call(bind, this[i], i, that))
 					return true;
 			return false;
-		}, '__some'),
+		}),
 
 		findEntry: function(iter, bind) {
 			// Use the faster indexOf in case we're not using iterator functions.
