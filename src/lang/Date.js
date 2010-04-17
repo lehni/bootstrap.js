@@ -5,7 +5,6 @@
 // Date
 
 Date.inject({
-#ifndef RHINO // TODO: Consider BROWSER_LEGACY at a later point
 	statics: {
 		SECOND: 1000,
 		MINUTE: 60000,
@@ -15,11 +14,12 @@ Date.inject({
 		MONTH: 2592000000, // 30 * DAY
 		YEAR: 31536000000, // 365 * DAY
 
+#ifndef RHINO // TODO: Consider BROWSER_LEGACY at a later point
 		now: Date.now || function() {
 			return +new Date();
 		}
-	}
 #endif // !RHINO
+	}
 });
 
 #endif // __lang_Date__
