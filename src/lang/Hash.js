@@ -10,12 +10,12 @@
  * As Object only defines each and two other basic functions to avoid name
  * clashes in all other prototypes, define a second prototype called Hash,
  * which basically does the same but fully implements Enumberable.
- * Also note the difference to Prototype.js, where Hash does not iterate 
+ * Also note the difference to Prototype.js, where Hash does not iterate
  * in the same way. Instead of creating a new key / value pair object for
  * each element and passing the numerical index of it in the iteration as a
  * second argument, use the key as the index, and the value as the first
  * element. This is much simpler and faster, and I have not yet found out the
- * advantage of how Prototype handles it. 
+ * advantage of how Prototype handles it.
  */
 Hash = Base.extend(Enumerable, {
 	_HIDE
@@ -54,7 +54,7 @@ Hash = Base.extend(Enumerable, {
 #ifdef EXTEND_OBJECT
 			for (var i in this)
 #ifdef FIX_PROTO
-				// Since __proto__ is faked, it is be iterated and therefore 
+				// Since __proto__ is faked, it is be iterated and therefore
 				// we need to check for that one too:
 				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
 #else // !FIX_PROTO
@@ -63,7 +63,7 @@ Hash = Base.extend(Enumerable, {
 					iter.call(bind, this[i], i, this);
 #else // !EXTEND_OBJECT
 			// Object.prototype is untouched, so we cannot assume __proto__ to always
-			// be defined on legacy browsers. Use two versions of the loops for 
+			// be defined on legacy browsers. Use two versions of the loops for
 			// better performance here:
 			if (this.__proto__ == null) {
 				for (var i in this)
@@ -71,7 +71,7 @@ Hash = Base.extend(Enumerable, {
 			} else {
 				for (var i in this)
 #ifdef FIX_PROTO
-					// Since __proto__ is faked, it is be iterated and therefore 
+					// Since __proto__ is faked, it is be iterated and therefore
 					// we need to check for that one too:
 					if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
 #else // !FIX_PROTO
@@ -88,7 +88,7 @@ Hash = Base.extend(Enumerable, {
 	},
 
 	/**
-	 * append is faster and more low level than merge, completely based on 
+	 * append is faster and more low level than merge, completely based on
 	 * for-in and Base.has, and not relying on any .each function, so can
 	 * be used early in the bootstrapping process.
 	 */
@@ -144,7 +144,7 @@ Hash = Base.extend(Enumerable, {
 
 	statics: {
 		/**
-		 * Converts the passed object to a hash. 
+		 * Converts the passed object to a hash.
 		 * Warning: Does not create a new instance if it is a hash already!
 		 */
 		create: function(obj) {

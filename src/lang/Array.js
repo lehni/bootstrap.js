@@ -71,8 +71,8 @@ if (!Array.prototype.push) {
 				// Adjust length first for speed up on native arrays,
 				// by forcing reallocation to the righ sice.
 				this.length = len - del;
-				// Move the entries down by the emount of new entries - the 
-				// amount of entries to remove. 
+				// Move the entries down by the emount of new entries - the
+				// amount of entries to remove.
 				for (i = len - 1; i >= start; i--)
 					this[i - del] = this[i];
 			}
@@ -308,7 +308,7 @@ Array.inject({
 	 * - If obj is a hash object, mootools behavior is assumed.
 	 * - If obj is not defined, it is set to the array itself, resulting in
 	 *   a hash with key and value set to the same (the initial array entry).
-	 * - If obj is a function, it's passed to this.map(), and the resulting 
+	 * - If obj is a function, it's passed to this.map(), and the resulting
 	 *   array is used for the key values.
 	 */
 	associate: function(obj) {
@@ -324,7 +324,7 @@ Array.inject({
 					throw Base.stop;
 			}, {});
 		} else {
-			// Produce a new bare object since we're deleting from it. 
+			// Produce a new bare object since we're deleting from it.
 			obj = Hash.append({}, obj);
 			// Use Base.each since this is also used for generics
 			return Array.each(this, function(val) {
@@ -458,7 +458,7 @@ Array.inject(new function() {
 	return {
 		statics: {
 			/**
-			 * Converts the list to an array. Various types are supported. 
+			 * Converts the list to an array. Various types are supported.
 			 */
 			create: function(list) {
 				if (!Base.check(list)) return [];

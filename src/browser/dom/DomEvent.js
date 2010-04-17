@@ -53,7 +53,7 @@ DomEvent = Base.extend(new function() {
 			this.meta = event.metaKey;
 			if (/^(mousewheel|DOMMouseScroll)$/.test(this.type)) {
 				this.wheel = event.wheelDelta ?
-					event.wheelDelta / (window.opera ? -120 : 120) : 
+					event.wheelDelta / (window.opera ? -120 : 120) :
 					- (event.detail || 0) / 3;
 			} else if (/^key/.test(this.type)) {
 				this.code = event.which || event.keyCode;
@@ -196,7 +196,7 @@ DomElement.inject(new function() {
 					// be remove in removeEvent. It's ok for this to be empty.
 					name = pseudo && pseudo.type;
 				}
-				// Wrap the event handler in another function that checks if an event 
+				// Wrap the event handler in another function that checks if an event
 				// object was passed or globally set. The DomEvent contstructor
 				// handles window.event as well.
 				var that = this, bound = function(event) {

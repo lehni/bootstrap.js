@@ -24,7 +24,7 @@
 // Core (inject / extend)
 
 #ifdef FIX_PROTO
-// Fix __proto__ for browsers where it is not implemented. Do this before 
+// Fix __proto__ for browsers where it is not implemented. Do this before
 // anything else, for "var i in" to work.
 if (!this.__proto__) {
 #ifdef EXTEND_OBJECT
@@ -57,7 +57,7 @@ new function() { // bootstrap
 #endif // !HELMA
 #ifdef BROWSER_LEGACY
 		// For some very weird reason, ""; fixes a bug on MACIE where .replace
-		// sometimes would not be present when this meaningless emtpy string 
+		// sometimes would not be present when this meaningless emtpy string
 		// literal diappears... A theory is that defining an unassigned string
 		// here pulls the extend String prototype into the scope...
 		'';
@@ -95,14 +95,14 @@ new function() { // bootstrap
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
-						// If the base function has already the _version field set, 
-						// it is a function previously defined through inject. 
+						// If the base function has already the _version field set,
+						// it is a function previously defined through inject.
 						// In this case, the value of _version decides what to do:
 						// If we're in the same compilation cicle, Aspect behavior
 						// is used, by continuously referencing the previously defined
 						// functions in the same cicle.
 						// Otherwise, the real previous function is fetched from _previous,
-						// making sure we do not end up in aspect-like changes of the 
+						// making sure we do not end up in aspect-like changes of the
 						// multiple instances of the same function, compiled in different
 						// cicles.
 						// Since Helma always recompiles code from all repositories for a
@@ -117,7 +117,7 @@ new function() { // bootstrap
 						res = (function() {
 							var tmp = this.base;
 							// Look up the base function each time if we can,
-							// to reflect changes to the base class after 
+							// to reflect changes to the base class after
 							// inheritance.
 							this.base = fromBase ? base[name] : prev;
 #if defined(DONT_ENUM) && !defined(HELMA)
@@ -307,7 +307,7 @@ new function() { // bootstrap
 							if (update)
 								update.call(this, name);
 						};
-						// Flag it so we know it the next time 
+						// Flag it so we know it the next time
 						res._wrapped = true;
 						proto.onCodeUpdate = res;
 					}
@@ -429,7 +429,7 @@ new function() { // bootstrap
 		 */
 		extend: function(/* src, ... */) {
 			// Notice the "new" here: the private extend returns a constructor
-			// as it's used for Function.prototype.extend as well. But when 
+			// as it's used for Function.prototype.extend as well. But when
 			// extending objects, we want to return a new object that inherits
 			// from "this". In that case, the constructor is never used again,
 			// its just created to create a new object with the proper inheritance
@@ -483,7 +483,7 @@ new function() { // bootstrap
 				// to be able to do some wrapping magic in Helma.
 				return (obj || obj === 0) && (obj._type
 					|| (obj instanceof java.lang.Object
-						&& !(obj instanceof org.mozilla.javascript.Scriptable) 
+						&& !(obj instanceof org.mozilla.javascript.Scriptable)
 						? 'java' : typeof obj)) || null;
 #else // !BROWSER && !RHINO
 				return (obj || obj === 0) && (obj._type || typeof obj) || null;
@@ -509,7 +509,7 @@ new function() { // bootstrap
 
 			/**
 			 * Converts the argument to an iterator function. If none is specified,
-			 * the identity function is returned. 
+			 * the identity function is returned.
 			 * This supports normal functions, which are returned unmodified, and
 			 * values to compare to. Wherever this function is used in the
 			 * Enumerable functions, a value, a Function or null may be passed.
@@ -567,7 +567,7 @@ new function() { // bootstrap
 
 	/**
 	 * For HopObjects, we need to set _base instead of base internally,
-	 * in order to make the object not want to persist a change. 
+	 * in order to make the object not want to persist a change.
 	 */
 	HopObject.inject({
 		base: {
@@ -576,7 +576,7 @@ new function() { // bootstrap
 			},
 
 			_set: function(base) {
-				// In order to speed things up and not call dontEnum here, 
+				// In order to speed things up and not call dontEnum here,
 				// we use the same code as in dontEnum that marks _base as
 				// dontEnum inlined by default.
 				SETUP_DONT_ENUM();

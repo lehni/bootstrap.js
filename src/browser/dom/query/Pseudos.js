@@ -76,7 +76,7 @@ DomElement.pseudos = new function() {
 		}
 	];
 
-	// Producer for both case-sensitive and caseless versions of the contains 
+	// Producer for both case-sensitive and caseless versions of the contains
 	// pseudo operator.
 	function contains(caseless) {
 		// abc for lowercase translation.

@@ -7,5 +7,5 @@ Revisions:
 0.8  Modularized files, added automatic compiling through GCC preprocessing
      for different targets: RHINO, HELMA, BROWSER, BROWSER_LEGACY
 0.9  Added support for onCodeUpdate on the server side (Helma), so the
-     same mixture of AspectJ and inheritance works on the client and 
+     same mixture of AspectJ and inheritance works on the client and
      the server, even with partial code updates on the server.

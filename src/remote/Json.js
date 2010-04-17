@@ -16,7 +16,7 @@ Json = function() { // Do not open scope as new function() so this == global == 
 #else // !RHINO
 			if (JSON)
 #endif // !RHINO
-				// Unfortunately IE does not natively support __proto__, so 
+				// Unfortunately IE does not natively support __proto__, so
 				// we need to filter it out from Json
 #ifdef BROWSER
 				return JSON.stringify(obj, properties || Browser.TRIDENT && function(key, value) {

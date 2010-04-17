@@ -72,7 +72,7 @@ DomElement = DomNode.extend({
 			return !el ? false : el.ownerDocument == parent ? true
 				: Browser.WEBKIT && Browser.VERSION < 420
 					? Array.contains(parent.getElementsByTagName(el.tagName), el)
-					: parent.contains 
+					: parent.contains
 						? parent != el && parent.contains(el)
 						: !!(parent.compareDocumentPosition(el) & 16)
 		}

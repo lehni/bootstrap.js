@@ -93,7 +93,7 @@ DomNodes = Array.extend(new function() {
 							return values || this;
 						}
 					}
-					this[key] = val; 
+					this[key] = val;
 				}, {}));
 				for (var i = 1, l = arguments.length; i < l; i++)
 					this.inject(arguments[i]);
@@ -170,7 +170,7 @@ DomNode = Base.extend(new function() {
 		// speed.
 		// classCheck only exists if HtmlElement was extended with prototypes
 		// defining _class. In this case, classCheck is a regular expression that
-		// checks className for the occurence of any of the prototype mapped 
+		// checks className for the occurence of any of the prototype mapped
 		// classes, and returns the first occurence, which is then used to
 		// decide for constructor. This allows using e.g. "window hidden" for
 		// an element that should map to a window prototype.
@@ -208,7 +208,7 @@ DomNode = Base.extend(new function() {
 		initialize: function(el, props, doc) {
 			if (!el) return null;
 			// Support node creating constructors on subclasses of DomNode
-			// that define prototype._tag and can take one argument, which 
+			// that define prototype._tag and can take one argument, which
 			// defines the properties to be set:
 			if (this._tag && Base.type(el) == 'object') {
 				props = el;
@@ -235,7 +235,7 @@ DomNode = Base.extend(new function() {
 			}
 			// Store a reference to the native node.
 			this.$ = el;
-			// Store a reference in the native node to the wrapper. 
+			// Store a reference in the native node to the wrapper.
 			// Needs to be cleaned up by garbage collection. See above
 			// Not all nodes allow setting of values. E.g. on IE, textnodes don't
 			// Now text nodes should not even be wrapped here, but they are needed
@@ -309,7 +309,7 @@ DomNode = Base.extend(new function() {
 				// during static inheritance again.
 				if (ret.prototype._collection == this.prototype._collection)
 					ret.inject = inject;
-				// When extending DomNode with a tag name field specified, this 
+				// When extending DomNode with a tag name field specified, this
 				// prototype will be used when wrapping nodes of that type.
 				// If this is a prototype for a certain tag name, store it in the LUT.
 				if (src) {
@@ -341,7 +341,7 @@ DomNode = Base.extend(new function() {
 			},
 
 			/**
-			 * Wraps the passed node in a DomNode wrapper. 
+			 * Wraps the passed node in a DomNode wrapper.
 			 * It returns existing wrappers through el._wrapper, if defined.
 			 */
 			wrap: function(el) {
@@ -515,7 +515,7 @@ DomNode.inject(new function() {
 
 		appendChild: function(el) {
 			if (el = DomNode.wrap(el)) {
-				// Fix a bug on Mac IE when inserting Option elements to Select 
+				// Fix a bug on Mac IE when inserting Option elements to Select
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
 				// This is still needed on IE7, so do not mark it BROWSER_LEGACY
@@ -649,7 +649,7 @@ DomNode.inject(new function() {
 		 */
 		before: function(source, dest) {
 			if (source && dest && dest.$.parentNode) {
-				// Fix a bug on Mac IE when inserting Option elements to Select 
+				// Fix a bug on Mac IE when inserting Option elements to Select
 				// elements, where the text on these objects is lost after insertion.
 				// -> DomNode#appendChild does the same.
 				var text = Browser.TRIDENT && dest.$.text;
@@ -696,7 +696,7 @@ DomNode.inject(new function() {
 	inserters.inside = inserters.bottom;
 
 	// Now add the inserters
-	// Important: The inseters return this if the object passed is already an 
+	// Important: The inseters return this if the object passed is already an
 	// element. But if it is a string or an array that is converted to an element,
 	// the newly created element is returned instead.
 

@@ -6,7 +6,7 @@ Notes:
 
 - The code cannot depend on instanceof, as this would break Mac IE, for which
   support is currently still needed for Lineto.com. This will change in a
-  a year or two. At that point, some parts of the code may be written 
+  a year or two. At that point, some parts of the code may be written
   differently (wherever typeof is used now)
 
 - The convention for functions used as scopes is to wrap them in brackets,
@@ -33,7 +33,7 @@ Notes:
 - Astonishingly enough, arguments.callee works on Mac IE.
 
 - Testing for a string to be in a range of certain values:
-  instead of doing 
+  instead of doing
 
       ['one', 'two', 'three'].indexOf('two') != -1
 

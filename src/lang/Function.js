@@ -120,7 +120,7 @@ if (!Function.prototype.apply) {
 			// This allows passing an unmodified arguments list as array.
 			var count = args ? args.length : 0, index = start * 64 + count;
 			// Use cached caller functions for the exact amount of parameters
-			// like this, we prevent creation of argument lists each time. 
+			// like this, we prevent creation of argument lists each time.
 			// Only the first call is slower, as the caller function is created.
 			// Everything that follows wit the same amount of parameters should
 			// execute at rather decent speed.

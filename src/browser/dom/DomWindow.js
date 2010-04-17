@@ -32,7 +32,7 @@ Window = DomWindow = DomElement.extend({
 	 *
 	 * If param is a string, the standard window.open is executed.
 	 * If param is an object, additional parameters maybe be defined, such as
-	 * param.confirm, param.focus, etc. Also, if param.width & height are 
+	 * param.confirm, param.focus, etc. Also, if param.width & height are
 	 * defined, The window is centered on screen.
 	 */
 	initialize: function(param) {

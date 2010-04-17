@@ -258,10 +258,10 @@ Request = Base.extend(Chain, Callback, new function() {
 			var string = typeof data == 'string', method = opts.method;
 			if (opts.emulation && /^(put|delete)$/.test(method)) {
 				if (string) data += '&_method=' + method;
-				else data.setValue('_method', method); 
+				else data.setValue('_method', method);
 				method = 'post';
 			}
-			if (string && !this.options.iframe) { 
+			if (string && !this.options.iframe) {
 				createRequest(this);
 				if (!this.transport) {
 					if (!this.frame)

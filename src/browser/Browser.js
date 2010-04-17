@@ -57,9 +57,9 @@ Browser = new function() {
 		// IE does not seem to join with ' ' and has problems with apply
 		if (!Browser.TRIDENT && window.console && console.log)
 			console.log.apply(console, arguments);
-		else 
+		else
 			(window.console && console.log
-				|| window.opera && opera.postError 
+				|| window.opera && opera.postError
 				|| alert)(Array.join(arguments, ' '));
 	}
 

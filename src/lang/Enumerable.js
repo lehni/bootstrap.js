@@ -96,7 +96,7 @@ Enumerable = {
 		var that = this;
 		return this.find(function(val, i) {
 			// as "this" is not used for anything else, use it for bind,
-			// so that lookups on the object are faster (according to 
+			// so that lookups on the object are faster (according to
 			// benchmarking)
 			return !iter.call(this, val, i, that);
 		}, bind || null) == null;
@@ -118,7 +118,7 @@ Enumerable = {
 	/**
 	 * Collects the result of the given iterator applied to each of the
 	 * elements to an array and returns it.
-	 * The difference to map is that it does not add null / undefined values. 
+	 * The difference to map is that it does not add null / undefined values.
 	 */
 	collect: function(iter, bind) {
 		var that = this, iter = Base.iterator(iter);
@@ -144,7 +144,7 @@ Enumerable = {
 
 	/**
 	 * Returns the minimum value of the result of the passed iterator
-	 * applied to each element. 
+	 * applied to each element.
 	 * If no iterator is passed, the value is used directly.
 	 */
 	min: function(iter, bind) {

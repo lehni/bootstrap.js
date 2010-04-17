@@ -33,7 +33,7 @@ HtmlElement.inject({
 		return this.getFormElements().each(function(el) {
 			var name = el.getName(), value = el.getValue();
 			if (name && value !== undefined && !el.getDisabled())
-				this[name] = value; 
+				this[name] = value;
 		}, new Hash());
 	},
 

@@ -40,7 +40,7 @@ HtmlElement.inject({
 
 	modifyClass: function(name, add) {
 		if (!this.hasClass(name) ^ !add) // xor
-			this.$.className = (add ? this.$.className + ' ' + name : 
+			this.$.className = (add ? this.$.className + ' ' + name :
 				this.$.className.replace(name, '')).clean();
 		return this;
 	},
@@ -77,7 +77,7 @@ Array.inject({
 			var value = this[i++], element = null, type = Base.type(value);
 			if (type == 'string') {
 				// If the string is html, convert it through String#toNode.
-				// Otherwise assume it's a tag name, and look see the following 
+				// Otherwise assume it's a tag name, and look see the following
 				// value is a properties hash. Use these to create the element:
 				var props = /^(object|hash)$/.test(Base.type(this[i])) && this[i++];
 				element = value.isHtml()

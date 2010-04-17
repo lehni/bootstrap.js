@@ -10,7 +10,7 @@
 # and sed to preprocess JavaScript files containing C-style preprocess macros
 # (#include, #ifdef, etc.). Three options offer control over wether comments
 # are preserved or stripped and whitespaces are compressed.
-# 
+#
 # Usage:
 # preprocess.sh SOURCE DESTINATION ARGUMENTS MODE
 #
