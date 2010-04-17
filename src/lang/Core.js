@@ -182,7 +182,7 @@ new function() { // bootstrap
 		if (src) {
 			for (var name in src)
 #ifndef DONT_ENUM
-				if (visible(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
+				if (has(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
 #else // DONT_ENUM
 				if (!/^(HIDDEN_FIELDS)$/.test(name))
 #endif // DONT_ENUM
@@ -229,7 +229,7 @@ new function() { // bootstrap
 	 * Object.prototype.has, as the local version then seems to be overriden
 	 * by that. Giving it a idfferent name fixes it.
 	 */
-	function visible(obj, name) {
+	function has(obj, name) {
 #ifdef DONT_ENUM
 		return name in obj;
 #else // !DONT_ENUM
@@ -404,7 +404,7 @@ new function() { // bootstrap
 		 * filtered.
 		 */
 		has: function(name) {
-			return visible(this, name);
+			return has(this, name);
 		},
 
 		each: function(iter, bind) {
@@ -439,7 +439,7 @@ new function() { // bootstrap
 		},
 
 		statics: {
-			has: visible,
+			has:  has,
 
 			each: each,
 
