@@ -12,9 +12,11 @@ Date.inject({
 		DAY: 86400000,
 		WEEK: 604800000, // 7 * DAY
 		MONTH: 2592000000, // 30 * DAY
+#ifdef RHINO
+		YEAR: 31536000000 // 365 * DAY
+#else // !RHINO // TODO: Consider BROWSER_LEGACY at a later point
 		YEAR: 31536000000, // 365 * DAY
 
-#ifndef RHINO // TODO: Consider BROWSER_LEGACY at a later point
 		now: Date.now || function() {
 			return +new Date();
 		}
