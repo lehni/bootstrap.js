@@ -13,7 +13,7 @@ Number.inject({
 	},
 
 	times: function(func, bind) {
-		for (var i = 0; i < this; ++i)
+		for (var i = 0; i < this; i++)
 			func.call(bind, i);
 		return bind || this;
 	},

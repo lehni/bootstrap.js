@@ -17,7 +17,7 @@
 if (!Array.prototype.push) {
 	Array.inject({
 		push: function() {
-			for (var i = 0, l = arguments.length; i < l; ++i)
+			for (var i = 0, l = arguments.length; i < l; i++)
 				this[this.length++] = arguments[i];
 			return this.length;
 		},
@@ -32,7 +32,7 @@ if (!Array.prototype.push) {
 
 		shift: function() {
 			var old = this[0];
-			for (var i = 0, l = this.length - 1; i < l; ++i)
+			for (var i = 0, l = this.length - 1; i < l; i++)
 				this[i] = this[i + 1];
 			delete this[this.length - 1];
 			this.length--;
@@ -44,7 +44,7 @@ if (!Array.prototype.push) {
 			this.length += num;
 			for (var i = len - 1; i >= 0; i--)
 				this[i + num] = this[i];
-			for (i = 0; i < num; ++i)
+			for (i = 0; i < num; i++)
 				this[i] = arguments[i];
 			return this.length;
 		},
@@ -52,7 +52,7 @@ if (!Array.prototype.push) {
 		splice: function(start, del) {
 			var res = new Array(del), len = this.length;
 			// Collect all the removed elements.
-			for (var i = 0; i < del; ++i)
+			for (var i = 0; i < del; i++)
 				res[i] = this[i + start];
 			var num = arguments.length - 2;
 			if (num > 0) del -= num;
@@ -62,7 +62,7 @@ if (!Array.prototype.push) {
 					this[i] = this[i + del];
 				// Delete the entries that are not used any more.
 				// This is needed for pseudo arrays.
-				for (i = len - del; i < len; ++i)
+				for (i = len - del; i < len; i++)
 					delete this[i];
 				this.length = len - del;
 			} else {
@@ -78,7 +78,7 @@ if (!Array.prototype.push) {
 			}
 			// Add the new entries
 			if (num > 0)
-				for (i = 0; i < num; ++i)
+				for (i = 0; i < num; i++)
 					this[i + start] = arguments[i + 2];
 			return res;
 		},
@@ -91,7 +91,7 @@ if (!Array.prototype.push) {
 			if (end < 0) end += this.length;
 			else if (end == null) end = this.length;
 			var res = new Array(end - start);
-			for (var i = start; i < end; ++i)
+			for (var i = start; i < end; i++)
 				res[i - start] = this[i];
 			return res;
 		}
@@ -111,7 +111,7 @@ Array.inject({
 	_type: 'array',
 
 	forEach: function(iter, bind) {
-		for (var i = 0, l = this.length; i < l; ++i)
+		for (var i = 0, l = this.length; i < l; i++)
 			iter.call(bind, this[i], i, this);
 	},
 
@@ -119,7 +119,7 @@ Array.inject({
 	indexOf: function(obj, i) {
 		i = i || 0;
 		if (i < 0) i = Math.max(0, this.length + i);
-		for (var l = this.length; i < l; ++i)
+		for (var l = this.length; i < l; i++)
 			if (this[i] == obj) return i;
 		return -1;
 	},
@@ -135,7 +135,7 @@ Array.inject({
 
 	filter: function(iter, bind) {
 		var res = [];
-		for (var i = 0, l = this.length; i < l; ++i) {
+		for (var i = 0, l = this.length; i < l; i++) {
 			var val = this[i];
 			if (iter.call(bind, val, i, this))
 				res[res.length] = val;
@@ -145,20 +145,20 @@ Array.inject({
 
 	map: function(iter, bind) {
 		var res = new Array(this.length);
-		for (var i = 0, l = this.length; i < l; ++i)
+		for (var i = 0, l = this.length; i < l; i++)
 			res[i] = iter.call(bind, this[i], i, this);
 		return res;
 	},
 
 	every: function(iter, bind) {
-		for (var i = 0, l = this.length; i < l; ++i)
+		for (var i = 0, l = this.length; i < l; i++)
 			if (!iter.call(bind, this[i], i, this))
 				return false;
 		return true;
 	},
 
 	some: function(iter, bind) {
-		for (var i = 0, l = this.length; i < l; ++i)
+		for (var i = 0, l = this.length; i < l; i++)
 			if (iter.call(bind, this[i], i, this))
 				return true;
 		return false;
@@ -187,7 +187,7 @@ Array.inject({
 
 	collect: function(iter, bind) {
 		var res = [];
-		for (var i = 0, l = this.length; i < l; ++i) {
+		for (var i = 0, l = this.length; i < l; i++) {
 		 	var val = iter.call(bind, this[i], i, this);
 			if (val != null)
 				res[res.length] = val;
@@ -274,7 +274,7 @@ Array.inject({
 		// this.push.apply(this, items);
 		// this.length is explicitely altered, so non-array sub-prototypes
 		// can use it too.
-		for (var i = 0, l = items.length; i < l; ++i)
+		for (var i = 0, l = items.length; i < l; i++)
 			this[this.length++] = items[i];
 		return this;
 	},
@@ -283,7 +283,7 @@ Array.inject({
 	 * Removes all objects contained in items.
 	 */
 	subtract: function(items) {
-		for (var i = 0, l = items.length; i < l; ++i)
+		for (var i = 0, l = items.length; i < l; i++)
 			// TODO: Conflict between Array#remove and DomElement(s)#remove. Resolve!
 			Array.remove(this, items[i]);
 		return this;
@@ -467,7 +467,7 @@ Array.inject(new function() {
 					return list.toArray();
 				if (list.length != null) {
 					var res = [];
-					for (var i = 0, l = list.length; i < l; ++i)
+					for (var i = 0, l = list.length; i < l; i++)
 						res[i] = list[i];
 				} else {
 					res = [list];

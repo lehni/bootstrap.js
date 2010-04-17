@@ -45,7 +45,7 @@ DomElement.inject(new function() {
 			}
 			var res = (context.ownerDocument || context).evaluate('.//' + items.join(''), context,
 				resolver, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);
-			for (var i = 0, l = res.snapshotLength; i < l; ++i)
+			for (var i = 0, l = res.snapshotLength; i < l; i++)
 				elements.push(res.snapshotItem(i));
 		}
 	}, { // FILTER
@@ -174,7 +174,7 @@ DomElement.inject(new function() {
 			separators.push(match.charAt(0));
 			return ':)' + match.charAt(1);
 		}).split(':)');
-		for (var i = 0, l = selector.length; i < l; ++i) {
+		for (var i = 0, l = selector.length; i < l; i++) {
 			var params = parse(selector[i]);
 			if (!params) return elements; // TODO: correct?
 			var next = method.getParam(items, separators[i - 1], context, params, data);
@@ -193,7 +193,7 @@ DomElement.inject(new function() {
 			selectors = !selectors ? ['*'] : typeof selectors == 'string'
 				? selectors.split(',')
 				: selectors.length != null ? selectors : [selectors];
-			for (var i = 0, l = selectors.length; i < l; ++i) {
+			for (var i = 0, l = selectors.length; i < l; i++) {
 				var selector = selectors[i];
 				if (Base.type(selector) == 'element') elements.push(selector);
 				else filter([], selector, this.$, elements, {});

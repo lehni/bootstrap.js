@@ -38,7 +38,7 @@ DomNodes = Array.extend(new function() {
 		},
 
 		append: function(items) {
-			for (var i = 0, l = items.length; i < l; ++i) {
+			for (var i = 0, l = items.length; i < l; i++) {
 				var el = items[i];
 				// Try _wrapper first, for faster performance
 				if ((el = el && (el._wrapper || DomNode.wrap(el))) && el._unique != this._unique) {
