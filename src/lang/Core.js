@@ -3,7 +3,7 @@
 
 /**
  * Bootstrap JavaScript Library
- * (c) 2006 - 2008 Juerg Lehni, http://scratchdisk.com/
+ * (c) 2006 - 2010 Juerg Lehni, http://scratchdisk.com/
  *
  * Bootstrap is released under the MIT license
  * http://bootstrap-js.net/
@@ -507,13 +507,14 @@ new function() { // bootstrap
 				return null;
 			},
 
+			/**
+			 * Converts the argument to an iterator function. If none is specified,
+			 * the identity function is returned. 
+			 * This supports normal functions, which are returned unmodified, and
+			 * values to compare to. Wherever this function is used in the
+			 * Enumerable functions, a value, a Function or null may be passed.
+			 */
 			iterator: function(iter) {
-				// Convert the argument to an iterator function. If none is specified,
-				// the identity function is returned. 
-				// This supports regular expressions, normal functions, which are
-				// returned unmodified, and values to compare to.
-				// Wherever this private function is used in the Enumerable functions
-				// bellow, a value, a Function or null may be passed.
 				return !iter
 					? function(val) { return val }
 					: typeof iter != 'function'
