@@ -542,15 +542,6 @@ new function() { // bootstrap
 		}
 	});
 
-#ifdef DEFINE_GLOBALS
-
-	$each = Base.each;
-	$stop = $break = Base.stop;
-	$check = Base.check;
-	$type = Base.type;
-
-#endif // DEFINE_GLOBALS
-
 #ifdef HELMA
 
 #define SETUP_DONT_ENUM() \
@@ -595,5 +586,15 @@ new function() { // bootstrap
 	});
 #endif // HELMA
 }
+
+#ifdef DEFINE_GLOBALS
+
+$each = Base.each;
+$type = Base.type;
+$check = Base.check;
+$pick = Base.pick;
+$stop = $break = Base.stop;
+
+#endif // DEFINE_GLOBALS
 
 #endif // __lang_Core__
