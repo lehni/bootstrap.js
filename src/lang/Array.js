@@ -173,6 +173,7 @@ Array.inject({
 	}
 }, Enumerable, {
 	_HIDE
+	_BEANS
 	_generics: true,
 
 	each: function(iter, bind) {
