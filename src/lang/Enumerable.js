@@ -10,12 +10,12 @@
  * This adds the function .each() that can handle both arrays (detected through
  * .length) and dictionaries (if it's not an array, enumerating with for-in).
  */
+
 // TODO: Base.each is used mostly so functions can be generalized.
 // But that's not enough, since find and others are still called
 // on this.
 Enumerable = {
 	_HIDE
-	_BEANS
 	_generics: true,
 	// Make sure it's not overriding native functions when injecting into Array
 	_preserve: true,
