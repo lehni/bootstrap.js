@@ -1,0 +1,29 @@
+- Remove dependency on dontEnum and start moving to Object.defineProperty, also for getters / setters, where possible.
+
+- Add support for hasOwnProperty wherever has is used (available in all modern browsers it seems).
+
+- Use Object.keys in Object_each if available, as it only returns the keys in the object itself, not the parents. (only available in Chrome and Rhino right now)
+
+- Remove SET_ITERATOR
+
+- Rename BROWSER_LEGACY to BROWSER_OLD_LEGACY, and use BROWSER_LEGACY for newer legacy things, but not on Rhino! (use Rhino as a measure for what's legacy for now, and get rid of RHINO?)
+
+- Remove Base.iterate:
+  - Only support function iterators
+  - Default for thisObject is global scope for all default JavaScript methods, except for each, which explicitely behaves differently than forEach
+  - No need to override map / filter / any / some with slightly different functionlity
+  - Define collect in a way similar to these standard ones
+  - Explicitly define Array#forEach if missing, and Array#each with added bind functionality as a link to it
+  - Explicitely define Hash#each (and #forEach in the same was as Array?)
+  - Define Base.each to use Array.each or Hash.each generics (or just (? Array : Hash).prototype.each for speed)
+
+- Rename Hash#getKeys to #keys (and use Object.keys if available)
+- Rename Hash#getValues to #values
+- Rename Hash#getSize to #size
+
+?
+
+- Remove support for _beans and use explicit getter / setters instead? Ask Jonathan Puckey
+- Rename Function#getBody to #body, etc.
+
+- Rename Array#getFirst() ? hmmm! tricky
