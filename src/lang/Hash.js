@@ -32,9 +32,73 @@ Hash = Base.extend(Enumerable, {
 			for (var i = 0, l = arguments.length; i < l; i += 2)
 				this[arguments[i]] = arguments[i + 1];
 		} else {
-			this.merge.apply(this, arguments);
+			// Use the faster append if there's only one parameter.
+			this[arguments.length == 1 ? 'append' : 'merge'].apply(this, arguments);
 		}
 		// Explicitly return object as it is used in Hash.create's return statement
+		return this;
+	},
+
+	each: function(iter, bind) {
+		if (!bind) bind = this;
+		iter = Base.iterator(iter);
+		try {
+#ifdef DONT_ENUM
+			// No need to check when not extending Object and when on Rhino+dontEnum,
+			// as dontEnum is always used to hide fields there.
+			for (var i in this)
+				iter.call(bind, this[i], i, this);
+#else // !DONT_ENUM
+			// We use for-in here, but need to filter out what should not be iterated.
+			// The loop here uses an inline version of Object#has (See Core.js).
+#ifdef EXTEND_OBJECT
+			for (var i in this)
+#ifdef FIX_PROTO
+				// Since __proto__ is faked, it is be iterated and therefore 
+				// we need to check for that one too:
+				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
+#else // !FIX_PROTO
+				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
+#endif // !FIX_PROTO
+					iter.call(bind, this[i], i, this);
+#else // !EXTEND_OBJECT
+			// Object.prototype is untouched, so we cannot assume __proto__ to always
+			// be defined on legacy browsers. Use two versions of the loops for 
+			// better performance here:
+			if (this.__proto__ == null) {
+				for (var i in this)
+					IF_PROPERTY_IS_VISIBLE(i, iter.call(bind, this[i], i, this);)
+			} else {
+				for (var i in this)
+#ifdef FIX_PROTO
+					// Since __proto__ is faked, it is be iterated and therefore 
+					// we need to check for that one too:
+					if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
+#else // !FIX_PROTO
+					if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
+#endif // !FIX_PROTO
+						iter.call(bind, this[i], i, this);
+			}
+#endif // !EXTEND_OBJECT
+#endif // !DONT_ENUM
+		} catch (e) {
+			if (e !== Base.stop) throw e;
+		}
+		return bind;
+	},
+
+	/**
+	 * append is faster and more low level than merge, completely based on 
+	 * for-in and Base.has, and not relying on any .each function, so can
+	 * be used early in the bootstrapping process.
+	 */
+	append: function() {
+		for (var i = 0, l = arguments.length; i < l; i++) {
+			var obj = arguments[i];
+			for (var key in obj)
+				if (Base.has(obj, key))
+					this[key] = obj[key];
+		}
 		return this;
 	},
 
@@ -45,7 +109,10 @@ Hash = Base.extend(Enumerable, {
 	merge: function() {
 		// Allways use Base.each() as we don't know wether the passed object
 		// really inherits from Base.
-		return Base.each(arguments, function(obj) {
+		// Do not rely on .each / .forEach, so merge can be used in low level
+		// operations such as insertion of such functions as well. Just use
+		// the Base.has generic to filter out parent values.
+		return Array.each(arguments, function(obj) {
 			Base.each(obj, function(val, key) {
 				this[key] = Base.type(this[key]) == 'object'
 					? Hash.prototype.merge.call(this[key], val)
@@ -57,6 +124,7 @@ Hash = Base.extend(Enumerable, {
 	/**
 	 * Collects the keys of each element and returns them in an array.
 	 */
+	// TODO: Consider naming keys(), to go with Object.keys(), same for getValues / getSize
 	getKeys: function() {
 		return this.map(function(val, key) {
 			return key;

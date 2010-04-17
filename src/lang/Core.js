@@ -72,16 +72,16 @@ new function() { // bootstrap
 				var get = src.__lookupGetter__(name);
 				val = get ? { _get: get, _set: src.__lookupSetter__(name) } : src[name];
 			}
-			var type = typeof val, func = type == 'function', res = val, prevBEANS_VARIABLE;
+			var type = typeof val, func = type == 'function', res = val, prev = dest[name]BEANS_VARIABLE;
 #else // !GETTER_SETTER
 		function field(name, generics) {
-			var val = src[name], func = typeof val == 'function', res = val, prevBEANS_VARIABLE;
+			var val = src[name], func = typeof val == 'function', res = val, prev = dest[name]BEANS_VARIABLE;
 #endif // !GETTER_SETTER
 			// Make generics first, as we might jump out bellow in the
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
 			// to produce generics of them.
-			if (generics && func) generics[name] = function(bind) {
+			if (generics && func && (!src._preserve || !generics[name])) generics[name] = function(bind) {
 				// Do not call Array.slice generic here, as on Safari,
 				// this seems to confuse scopes (calling another
 				// generic from generic-producing code).
@@ -91,9 +91,9 @@ new function() { // bootstrap
 			// Use __proto__ if available, fallback to Object.prototype otherwise,
 			// since it must be a plain object on browser not natively supporting
 			// __proto__:
-			if (val !== (src.__proto__ || Object.prototype)[name]) {
+			if ((!src._preserve || !prev) && val !== (src.__proto__ || Object.prototype)[name]) {
 				if (func) {
-					if ((prev = dest[name]) && /\bthis\.base\b/.test(val)) {
+					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
 						// If the base function has already the _version field set, 
 						// it is a function previously defined through inject. 
@@ -251,75 +251,82 @@ new function() { // bootstrap
 #endif // !DONT_ENUM
 	}
 
+	function each(obj, iter, bind) {
+		return obj ? (typeof obj.length == 'number'
+			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
+	}
+
 	// Now we can use the private inject to add methods to the Function.prototype
 	inject(Function.prototype, {
 		inject: function(src/*, ... */) {
-			var proto = this.prototype, base = proto.__proto__ && proto.__proto__.constructor;
-			// When called from extend, a third argument is passed, pointing
-			// to the base class (the constructor).
-			// this variable is needed for inheriting static fields and proper
-			// lookups of base on each call (see bellow)
+			if (src) {
+				var proto = this.prototype, base = proto.__proto__ && proto.__proto__.constructor;
+				// When called from extend, a third argument is passed, pointing
+				// to the base class (the constructor).
+				// this variable is needed for inheriting static fields and proper
+				// lookups of base on each call (see bellow)
 #ifdef HELMA
-			// On the server side, we need some kind of version handling for
-			// HopObjects because every time a prototype gets updated, the js
-			// file is evaluated in the same scope again. Using Prototype.inject
-			// in combination with base calls would result in a growing chain of
-			// calls to previous versions if no version handling would be
-			// involved.
-			// The versions are used further up to determine wether the
-			// previously defined function in the same prototype should be used
-			// (AOP-like), or the same function in the real super prototype.
-			// _version is only added to constructors that are or inherit from HopObject,
-			// and is automatically increased in onCodeUpdate, as defined bellow.
-			var version = (this == HopObject || proto instanceof HopObject)
-					&& (proto.constructor._version || (proto.constructor._version = 1));
+				// On the server side, we need some kind of version handling for
+				// HopObjects because every time a prototype gets updated, the js
+				// file is evaluated in the same scope again. Using Prototype.inject
+				// in combination with base calls would result in a growing chain of
+				// calls to previous versions if no version handling would be
+				// involved.
+				// The versions are used further up to determine wether the
+				// previously defined function in the same prototype should be used
+				// (AOP-like), or the same function in the real super prototype.
+				// _version is only added to constructors that are or inherit from HopObject,
+				// and is automatically increased in onCodeUpdate, as defined bellow.
+				var version = (this == HopObject || proto instanceof HopObject)
+						&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
-			inject(proto, src, base && base.prototype, src && src._generics && this);
+				inject(proto, src, base && base.prototype, src._generics && this);
 #else // HELMA
-			// Pass version
-			inject(proto, src, base && base.prototype, src && src._generics && this, version);
+				// Pass version
+				inject(proto, src, base && base.prototype, src._generics && this, version);
 #endif // HELMA
-			// Define new static fields, and inherit from base.
+				// Define new static fields, and inherit from base.
 #ifndef HELMA // !HELMA
-			inject(this, src && src.statics, base);
+				inject(this, src.statics, base);
 #else // HELMA
-			inject(this, src && src.statics, base, null, version);
-			// For versioning, define onCodeUpdate to update _version each time:
-			if (version) {
-				// See if it is already defined, and override in a way that
-				// allows outside definitions of onCodeUpdate to coexist with
-				// Bootstrap.js. Use _wrapped to flag the function that
-				// increases _version. Only override if it's another function or
-				// if it is not defined yet.
-				var update = proto.onCodeUpdate;
-				if (!update || !update._wrapped) {
-					var res = function(name) {
-						// "this" points to the prototype here. Update its constructor's _version
-						this.constructor._version = (this.constructor._version || 0) + 1;
-						// Call the previously defined funciton, if any
-						if (update)
-							update.call(this, name);
-					};
-					// Flag it so we know it the next time 
-					res._wrapped = true;
-					proto.onCodeUpdate = res;
-				}
-				// Support for initialize in HopObject, in a way similar to
-				// how native inheritance is handled: Produce an unnamed closure
-				// as the constructor that checks for initialize and calls it.
-				// Passing ctor.dont to it prevents that from happening.
-				// Boots is relying on this to work.
-				if (proto.initialize) {
-					var ctor = proto.constructor;
-					ctor.dont = {};
-					proto.constructor = function(dont) {
-						if (proto.initialize && dont !== ctor.dont)
-							return proto.initialize.apply(this, arguments);
+				inject(this, src.statics, base, null, version);
+				// For versioning, define onCodeUpdate to update _version each time:
+				if (version) {
+					// See if it is already defined, and override in a way that
+					// allows outside definitions of onCodeUpdate to coexist with
+					// Bootstrap.js. Use _wrapped to flag the function that
+					// increases _version. Only override if it's another function or
+					// if it is not defined yet.
+					var update = proto.onCodeUpdate;
+					if (!update || !update._wrapped) {
+						var res = function(name) {
+							// "this" points to the prototype here. Update its constructor's _version
+							this.constructor._version = (this.constructor._version || 0) + 1;
+							// Call the previously defined funciton, if any
+							if (update)
+								update.call(this, name);
+						};
+						// Flag it so we know it the next time 
+						res._wrapped = true;
+						proto.onCodeUpdate = res;
+					}
+					// Support for initialize in HopObject, in a way similar to
+					// how native inheritance is handled: Produce an unnamed closure
+					// as the constructor that checks for initialize and calls it.
+					// Passing ctor.dont to it prevents that from happening.
+					// Boots is relying on this to work.
+					if (src.initialize) {
+						var ctor = proto.constructor;
+						ctor.dont = {};
+						proto.constructor = function(dont) {
+							if (proto.initialize && dont !== ctor.dont)
+								return proto.initialize.apply(this, arguments);
+						}
 					}
 				}
-			}
 #endif // HELMA
+			}
 			// If there are more than one argument, loop through them and call
 			// inject again. Do not simple inline the above code in one loop,
 			// since each of the passed objects might override this.inject.
@@ -352,6 +359,7 @@ new function() { // bootstrap
 			// overriden.
 			// Needed when overriding static inject as in HtmlElements.js.
 #ifdef BROWSER_LEGACY
+			// TODO: Remove
 			// Do not rely on this.inject.apply, as this might not yet be defined
 			// on legacy browsers yet. Pass on up to 6 src arguments.
 			// This should be more than enough when extending using different
@@ -360,7 +368,8 @@ new function() { // bootstrap
 			var a = arguments;
 			return ctor.inject(a[0], a[1], a[2], a[3], a[4], a[5]);
 #else // !BROWSER_LEGACY
-			return this.inject.apply(ctor, arguments);
+			// Only inject if there's something to actually inject.
+			return arguments.length ? this.inject.apply(ctor, arguments) : ctor;
 #endif // !BROWSER_LEGACY
 		},
 
@@ -384,7 +393,7 @@ new function() { // bootstrap
 	// functionality!
 	Base = Object.inject({
 #else // !EXTEND_OBJECT
-	// Let's stay compatible with other libraries and not touch Object.prototype
+	// Let's not touch Object.prototype
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
 		_HIDE
@@ -396,6 +405,10 @@ new function() { // bootstrap
 		 */
 		has: function(name) {
 			return visible(this, name);
+		},
+
+		each: function(iter, bind) {
+			return each(this, iter, bind);
 		},
 
 		/**
@@ -426,9 +439,116 @@ new function() { // bootstrap
 		},
 
 		statics: {
-			has: visible
+			has: visible,
+
+			each: each,
+
+#ifndef EXTEND_OBJECT
+			inject: function() {
+				// Inject anything added to Base into Array as well.
+				// Do not inject into Function, as this would override its
+				// inject / extend functions!
+				Array.inject.apply(Array, arguments);
+				return this.base.apply(this, arguments);
+			},
+
+			extend: function() {
+				var ret = this.base();
+				// Set proper versions of inject and extend on constructors
+				// extending Base, not the overriden ones in Base...
+				ret.extend = Function.extend;
+				ret.inject = Function.inject;
+				// Only inject if there's something to actually inject.
+				return arguments.length ? ret.inject.apply(ret, arguments) : ret;
+			},
+
+#endif // !EXTEND_OBJECT
+			type: function(obj) {
+#ifdef BROWSER
+				// Handle elements, as needed by DomNode.js
+				return (obj || obj === 0) && (
+					obj._type || obj.nodeName && (
+						obj.nodeType == 1 && 'element' ||
+						obj.nodeType == 3 && 'textnode' ||
+						obj.nodeType == 9 && 'document')
+						// TODO: Find better way to identify windows and use
+						// the same cod ein DomNode$getConstructor
+						|| obj.location && obj.frames && obj.history && 'window'
+						|| typeof obj) || null;
+#else // !BROWSER
+#ifdef RHINO
+				// Return 'java' instead of 'object' for java objects, to easily
+				// distinguish vanilla objects from native java ones. Filter out
+				// JavaAdapters that implement Scriptable though, since we want
+				// to be able to do some wrapping magic in Helma.
+				return (obj || obj === 0) && (obj._type
+					|| (obj instanceof java.lang.Object
+						&& !(obj instanceof org.mozilla.javascript.Scriptable) 
+						? 'java' : typeof obj)) || null;
+#else // !BROWSER && !RHINO
+				return (obj || obj === 0) && (obj._type || typeof obj) || null;
+#endif // !BROWSER && !RHINO
+#endif // !BROWSER
+			},
+
+			check: function(obj) {
+				return !!(obj || obj === 0);
+			},
+
+			/**
+			 * Returns the first argument that is defined.
+			 * Null is counted as defined too, since !== undefined is used for
+			 * comparisons. In this it differs from Mootools!
+			 */
+			pick: function() {
+				for (var i = 0, l = arguments.length; i < l; i++)
+					if (arguments[i] !== undefined)
+						return arguments[i];
+				return null;
+			},
+
+			iterator: function(iter) {
+				// Convert the argument to an iterator function. If none is specified,
+				// the identity function is returned. 
+				// This supports regular expressions, normal functions, which are
+				// returned unmodified, and values to compare to.
+				// Wherever this private function is used in the Enumerable functions
+				// bellow, a value, a Function or null may be passed.
+				return !iter
+					? function(val) { return val }
+					: typeof iter != 'function'
+						? function(val) { return val == iter }
+						: iter;
+				/*
+				// For RegExp support, used this:
+				else switch (Base.type(iter)) {
+					case 'function': return iter;
+					case 'regexp': return function(val) { return iter.test(val) };
+					default: return function(val) { return val == iter };
+				}
+				*/
+			},
+
+			/**
+			 * A special constant, to be thrown by closures passed to each()
+			 *
+			 * $continue / Base.next is not implemented, as the same functionality can
+			 * achieved by using return in the closure. In prototype, the implementation
+			 * of $continue also leads to a huge speed decrease, as the closure is
+			 * wrapped in another closure that does nothing else than handling $continue.
+			 */
+			stop: {}
 		}
 	});
+
+#ifdef DEFINE_GLOBALS
+
+	$each = Base.each;
+	$stop = $break = Base.stop;
+	$check = Base.check;
+	$type = Base.type;
+
+#endif // DEFINE_GLOBALS
 
 #ifdef HELMA
 

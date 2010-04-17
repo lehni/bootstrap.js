@@ -10,15 +10,23 @@ Base.inject({
 	_HIDE
 	_generics: true,
 
-	/**
-	 * Copied over from Enumerable.
-	 */
-	each: Enumerable.each,
-
 #ifdef DEBUG
 	debug: function() {
 		return /^(string|number|function|regexp)$/.test(Base.type(this)) ? this
 			: Base.each(this, function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
+		/*
+		switch (Base.type(this)) {
+		case 'string': case 'number': case 'regexp':
+			return this;
+		case 'function':
+			return 'function ' + (this.name || '');
+		}
+		var buf = [];
+		for (var key in this)
+			if (Base.has(this, key))
+				buf.push(key + ': ' + Base.debug(this[key]));
+		return buf.join(', ');
+		*/
 	},
 #endif !DEBUG
 
@@ -40,90 +48,7 @@ Base.inject({
 			this.push(key + '=' + escape(val));
 #endif // !BROWSER
 		}, []).join('&');
-	},
-
-	statics: {
-#ifndef EXTEND_OBJECT
-		inject: function() {
-			// Inject anything added to Base into the standard types as well.
-			// Do not inject into Function, as this would override inject / extend there!
-			var args = arguments;
-			Base.each([Array, Number, RegExp, String], function(ctor) {
-				ctor.inject.apply(ctor, args);
-			});
-			return this.base.apply(this, args);
-		},
-
-		extend: function() {
-			var ret = this.base();
-			// Set proper versions of inject and extend on constructors
-			// extending Base, not the overriden ones in Base...
-			ret.extend = Function.extend;
-			ret.inject = Function.inject;
-			ret.inject.apply(ret, arguments);
-			return ret;
-		},
-
-#endif // !EXTEND_OBJECT
-		check: function(obj) {
-			return !!(obj || obj === 0);
-		},
-
-		type: function(obj) {
-#ifdef BROWSER
-			// Handle elements, as needed by DomNode.js
-			return (obj || obj === 0) && (
-				obj._type || obj.nodeName && (
-					obj.nodeType == 1 && 'element' ||
-					obj.nodeType == 3 && 'textnode' ||
-					obj.nodeType == 9 && 'document')
-					// TODO: Find better way to identify windows and use
-					// the same cod ein DomNode$getConstructor
-					|| obj.location && obj.frames && obj.history && 'window'
-					|| typeof obj) || null;
-#else // !BROWSER
-#ifdef RHINO
-			// Return 'java' instead of 'object' for java objects, to easily
-			// distinguish vanilla objects from native java ones. Filter out
-			// JavaAdapters that implement Scriptable though, since we want
-			// to be able to do some wrapping magic in Helma.
-			return (obj || obj === 0) && (obj._type
-				|| (obj instanceof java.lang.Object
-					&& !(obj instanceof org.mozilla.javascript.Scriptable) 
-					? 'java' : typeof obj)) || null;
-#else // !BROWSER && !RHINO
-			return (obj || obj === 0) && (obj._type || typeof obj) || null;
-#endif // !BROWSER && !RHINO
-#endif // !BROWSER
-		},
-
-		/**
-		 * Returns the first argument that is defined.
-		 * Null is counted as defined too, since !== undefined is used for
-		 * comparisons. In this it differs from Mootools!
-		 */
-		pick: function() {
-			for (var i = 0, l = arguments.length; i < l; i++)
-				if (arguments[i] !== undefined)
-					return arguments[i];
-			return null;
-		}
 	}
-#ifdef EXTEND_OBJECT
 });
-#else // !EXTEND_OBJECT
-// Reinject things from Base.prototype now, so they are added to the other types
-// as well.
-}, Base.prototype);
-#endif // !EXTEND_OBJECT
-
-#ifdef DEFINE_GLOBALS
-
-$each = Base.each;
-$stop = $break = Base.stop;
-$check = Base.check;
-$type = Base.type;
-
-#endif // DEFINE_GLOBALS
 
 #endif // __lang_Base__

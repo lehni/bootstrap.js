@@ -1,6 +1,6 @@
 #comment Compose hidden fields
 
-#define HIDDEN_FIELDS_1 prototype|constructor|toString|valueOf|statics|_generics
+#define HIDDEN_FIELDS_1 prototype|constructor|toString|valueOf|statics|_generics|_preserve
 #define HIDDEN_FIELDS_2 HIDDEN_FIELDS_1
 #define HIDDEN_FIELDS_3 HIDDEN_FIELDS_2
 

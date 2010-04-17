@@ -157,7 +157,7 @@ HtmlElement.inject(new function() {
 		},
 
 		getStyles: function() {
-			return arguments.length ? Base.each(arguments, function(name) {
+			return arguments.length ? Array.each(arguments, function(name) {
 				this[name] = that.getStyle(name);
 			}, {}) : this.$.style.cssText;
 		},

@@ -387,7 +387,7 @@ DomNode.inject(new function() {
 	var bools = ['compact', 'nowrap', 'ismap', 'declare', 'noshade', 'checked',
 		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
 	].associate();
-	var properties = Hash.merge({ // props
+	var properties = Hash.append({ // props
 		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420
 			? function(node) {
 				return node.$.innerText !== undefined ? 'innerText' : 'nodeValue'
@@ -637,7 +637,7 @@ DomNode.inject(new function() {
 		},
 
 		removeProperties: function() {
-			return Base.each(arguments, this.removeProperty, this);
+			return Array.each(arguments, this.removeProperty, this);
 		}
 	};
 

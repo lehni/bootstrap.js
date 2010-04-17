@@ -152,7 +152,7 @@ DomEvent = Base.extend(new function() {
 			}),
 
 			add: function(events) {
-				this.events.merge(events);
+				this.events.append(events);
 			}
 		}
 	};

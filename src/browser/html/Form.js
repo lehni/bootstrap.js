@@ -128,7 +128,7 @@ Select = FormElement.extend({
 	setSelected: function(values) {
 		this.$.selectedIndex = -1;
 		if (values) {
-			Base.each(values.length != null ? values : [values], function(val) {
+			Array.each(values.length != null ? values : [values], function(val) {
 				val = DomElement.unwrap(val);
 				if (val != null)
 					this.getElements('option[value="' + (val.value || val) + '"]').setProperty('selected', true);
