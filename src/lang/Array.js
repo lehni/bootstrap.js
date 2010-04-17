@@ -410,9 +410,20 @@ Array.inject({
 Array.inject(new function() {
 	var proto = Array.prototype;
 
-	// Now produce the extend object, which contains the fields to be injected into
-	// sub-prototypes from Array. See Array.extend for more explanation.
-	var fields = Hash.append({}, proto, {
+	// Fields that are hidden in Array.prototype are explicitely copied over,
+	// so that they can be inherited in extend() below, and generics are created
+	// for them too.
+	var fields = ['push','pop','shift','unshift','sort','reverse','join','slice','splice','forEach',
+		'indexOf','lastIndexOf','filter','map','every','some','reduce','concat'].each(function(name) {
+		this[name] = proto[name];
+	}, { _generics: true, _preserve: true });
+
+	// Make sure there are generics for all of them
+	Array.inject(fields);
+
+	// Now add the fields to be injected into sub-prototypes from Array.
+	// See Array.extend for more explanation.
+	Hash.append(fields, proto, {
 		/**
 		 * Clears the array.
 		 * For non-array sub-prototypes, setting this.length = 0 does not clear
@@ -442,14 +453,6 @@ Array.inject(new function() {
 		// (any length modifying operation on them like #push will then
 		// define / modify the length field in the insance).
 		length: 0
-	});
-
-	// Fields that are hidden in Array.prototype are explicitely copied over,
-	// so that they can be inherited in extend() above, and generics are created
-	// for them too.
-	['push','pop','shift','unshift','sort','reverse','join','slice','splice','forEach',
-		'indexOf','lastIndexOf','filter','map','every','some','reduce','concat'].forEach(function(name) {
-		fields[name] = proto[name];
 	});
 
 	return {
