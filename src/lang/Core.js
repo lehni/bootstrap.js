@@ -126,18 +126,6 @@ new function() { // bootstrap
 		}
 	}
 #endif // BROWSER
-#else // !GETTER_SETTER
-/*
-	// Deactivate for now
-
-	function define(obj, name, desc) {
-		obj[name] = desc.value;
-	}
-
-	function describe(obj, name) {
-		return { enumerable: true, configurable: true, writable: true, value: obj[name] };
-	}
-*/
 #endif // !GETTER_SETTER
 
 	/**
