@@ -44,6 +44,89 @@ undefined = this.undefined;
 
 new function() { // bootstrap
 	/**
+	 * Private function that checks if an object contains a given property.
+	 * Naming it 'has' causes problems on Opera when defining
+	 * Object.prototype.has, as the local version then seems to be overriden
+	 * by that. Giving it a idfferent name fixes it.
+	 */
+	function has(obj, name) {
+#ifdef RHINO
+		return obj.hasOwnProperty(name);
+#else // !RHINO
+		// TODO: Move to Browser legacy? as hasOwnProperty is supported except
+		// for Safari 2. Sync flags with Hash#each!
+		// We need to filter out what does not belong to the object itself.
+		// This is done by comparing the value with the value of the same
+		// name in the prototype. If the value is equal it's defined in one
+		// of the prototypes, not the object itself.
+		return obj.hasOwnProperty && obj.hasOwnProperty(name)
+#ifdef EXTEND_OBJECT
+		// We're extending Object, so we can assume __proto__ to always be there,
+		// even when it's simulated on browsers not supporting it.
+			|| obj[name] !== obj.__proto__[name];
+#else // !EXTEND_OBJECT
+		// Object.prototype is untouched, so we cannot assume __proto__ to always
+		// be defined on legacy browsers.
+			|| obj[name] !== (obj.__proto__ || Object.prototype)[name];
+#endif // !EXTEND_OBJECT
+#endif // !RHINO
+	}
+
+	function each(obj, iter, bind) {
+		return obj ? (typeof obj.length == 'number'
+			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
+	}
+
+// TODO: Better name?
+#ifdef GETTER_SETTER
+	var define = Object.defineProperty, describe = Object.getOwnPropertyDescriptor;
+#ifdef BROWSER
+	try {
+		// As these methods exist on IE8 but can only work on DOM nodes
+		// we have to test and see if it works.
+		// Thanks MS for the short-sigthedness to implement it in this way!
+		define({}, 'ms', {});
+	} catch (e) {
+		// Fallback for all browsers that do not support the standard way (yet)
+		define = function(obj, name, desc) {
+			if ((desc.get || desc.set) && obj.__defineGetter__) {
+				if (desc._get) obj.__defineGetter__(obj, desc._get);
+				if (desc._set) obj.__defineSetter__(obj, desc._set);
+			} else {
+				obj[name] = desc.value;
+			}
+		}
+
+		describe = function(obj, name) {
+			var get = obj.__lookupGetter && obj.__lookupGetter__(name);
+			return get
+				? { enumerable: true, configurable: true, get: get, set: obj.__lookupSetter__(name) }
+				: { enumerable: true, configurable: true, writable: true, value: obj[name] };
+/* 
+				// This would be more correct but slower.
+				// TODO: Measure and see how bad it is:
+				: has(obj, name)
+					? { enumerable: true, configurable: true, writable: true, value: obj[name] }
+					: null;
+*/
+		}
+	}
+#endif // BROWSER
+#else // !GETTER_SETTER
+/*
+	// Deactivate for now
+
+	function define(obj, name, desc) {
+		obj[name] = desc.value;
+	}
+
+	function describe(obj, name) {
+		return { enumerable: true, configurable: true, writable: true, value: obj[name] };
+	}
+*/
+#endif // !GETTER_SETTER
+
+	/**
 	 * Private function that injects functions from src into dest, overriding
 	 * (and inherinting from) base. if allowProto is set, the name "prototype"
 	 * is inherited too. This is false for static fields, as prototype there
@@ -51,32 +134,31 @@ new function() { // bootstrap
 	 */
 #ifdef HELMA
 	// Real base is used for the versioning mechanism as desribed above.
-	function inject(dest, src, base, generics, version) {
+	function inject(dest, src, enumerable, base, generics, version) {
 #else // !HELMA
-	function inject(dest, src, base, generics) {
+	function inject(dest, src, enumerable, base, generics) {
 #endif // !HELMA
-#ifdef BROWSER_LEGACY
-		// For some very weird reason, ""; fixes a bug on MACIE where .replace
-		// sometimes would not be present when this meaningless emtpy string
-		// literal diappears... A theory is that defining an unassigned string
-		// here pulls the extend String prototype into the scope...
-		'';
-#endif // BROWSER_LEGACY
 		/**
 		 * Private function that injects one field with given name
 		 */
+#ifdef BEANS
+		function field(name, val, generics, dontCheck) {
+			// This does even work for prop: 0, as it will just be looked up again
+			// through describe...
+			if (!val)
+				val = (val = describe(src, name)) && (val.get ? val : val.value);
+			var type = typeof val, func = type == 'function', res = val,
+				prev = dest[name], bean;
+#else // !BEANS
+		function field(name, generics, dontCheck) {
 #ifdef GETTER_SETTER
-		function field(name, val, generics) {
-			if (!val) {
-				// If there's a getter, reproduce the property description from it.
-				var get = src.__lookupGetter__(name);
-				val = get ? { _get: get, _set: src.__lookupSetter__(name) } : src[name];
-			}
-			var type = typeof val, func = type == 'function', res = val, prev = dest[name]BEANS_VARIABLE;
-#else // !GETTER_SETTER
-		function field(name, generics) {
-			var val = src[name], func = typeof val == 'function', res = val, prev = dest[name]BEANS_VARIABLE;
+			var val = (val = describe(src, name)) && (val.get ? val : val.value),
+				func = typeof val == 'function', res = val, prev = dest[name];
+#else // !BEANS && !GETTER_SETTER
+			var val = src[name], func = typeof val == 'function', res = val,
+				prev = dest[name];
 #endif // !GETTER_SETTER
+#endif // !BEANS
 			// Make generics first, as we might jump out bellow in the
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
@@ -88,10 +170,9 @@ new function() { // bootstrap
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-			// Use __proto__ if available, fallback to Object.prototype otherwise,
-			// since it must be a plain object on browser not natively supporting
-			// __proto__:
-			if ((!src._preserve || !prev) && val !== (src.__proto__ || Object.prototype)[name]) {
+			// TODO: on proper JS implementation, dontCheck is never set and never passed.
+			// Add this with a compile switch here!
+			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src._preserve)) {
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
@@ -119,12 +200,11 @@ new function() { // bootstrap
 							// Look up the base function each time if we can,
 							// to reflect changes to the base class after
 							// inheritance.
+#ifdef GETTER_SETTER
+							define(this, 'base', { value: fromBase ? base[name] : prev, configurable: true });
+#else // !GETTER_SETTER
 							this.base = fromBase ? base[name] : prev;
-#if defined(DONT_ENUM) && !defined(HELMA)
-							// Helma does define base as a getter / setter,
-							// and does not need dontEnum('base') here.
-							this.dontEnum('base');
-#endif // DONT_ENUM && !HELMA
+#endif // !GETTER_SETTER
 							try { return val.apply(this, arguments); }
 							finally { this.base = tmp; }
 						}).pretend(val);
@@ -148,28 +228,30 @@ new function() { // bootstrap
 					// makes sense and also avoids double-injection for beans with both
 					// getters and setters.
 					if (src._beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
-						field(bean[3].toLowerCase() + bean[4], {
-							_get: src['get' + bean[2]] || src['is' + bean[2]],
-							_set: src['set' + bean[2]]
-						});
+						try {
+							field(bean[3].toLowerCase() + bean[4], {
+								get: src['get' + bean[2]] || src['is' + bean[2]],
+								set: src['set' + bean[2]]
+							});
+						} catch (e) {}
 #endif // BEANS
 				}
 #ifdef GETTER_SETTER
-				if (val && type == 'object' && (val._get || val._set)) {
-					if (val._get)
-						dest.__defineGetter__(name, val._get);
-					if (val._set)
-						dest.__defineSetter__(name, val._set);
-				} else {
-					dest[name] = res;
+				// No need to look up getter if this is a function already.
+				// This also prevents _collection from becoming a getter, as
+				// DomElements is a constructor function and has both get / set
+				// generics for DomElement#get / #set.
+				if (!res || func || !res.get && !res.set)
+					res = { value: res, writable: true };
+				// Only set/change configurable and enumerable if this field is configurable
+				if ((describe(dest, name) || { configurable: true }).configurable) {
+					res.configurable = true;
+					res.enumerable = enumerable;
 				}
+				define(dest, name, res);
 #else // !GETTER_SETTER
 				dest[name] = res;
 #endif // !GETTER_SETTER
-#ifdef DONT_ENUM
-				if (src._hide && dest.dontEnum)
-					dest.dontEnum(name);
-#endif // DONT_ENUM
 			}
 		}
 		// Iterate through all definitions in src with an iteator function
@@ -180,20 +262,22 @@ new function() { // bootstrap
 		// for base to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
+			// TODO: Optimise for new situation: Object.keys / Object_each?
 			for (var name in src)
-#ifndef DONT_ENUM
 				if (has(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
-#else // DONT_ENUM
-				if (!/^(HIDDEN_FIELDS)$/.test(name))
-#endif // DONT_ENUM
-#ifdef GETTER_SETTER
-					field(name, null, generics);
-#else // !GETTER_SETTER
-					field(name, generics);
-#endif // !GETTER_SETTER
-			// Do not create generics for these:
+#ifdef BEANS
+					field(name, null, generics, true);
+#else // !BEANS
+					field(name, generics, true);
+#endif // !BEANS
+#ifdef BROWSER // BROWSER
+			// IE (and some other browsers?) never enumerate these, even 
+			// if they are simply set on an object. Force their creation.
+			// Do not create generics for these, and check them for not
+			// being defined (by passing undefined for dontCheck).
 			field('toString');
 			field('valueOf');
+#endif // BROWSER
 		}
 	}
 
@@ -223,39 +307,6 @@ new function() { // bootstrap
 		return ctor;
 	}
 
-	/**
-	 * Private function that checks if an object contains a given property.
-	 * Naming it 'has' causes problems on Opera when defining
-	 * Object.prototype.has, as the local version then seems to be overriden
-	 * by that. Giving it a idfferent name fixes it.
-	 */
-	function has(obj, name) {
-#ifdef DONT_ENUM
-		return name in obj;
-#else // !DONT_ENUM
-		// We need to filter out what does not belong to the object itself.
-		// This is done by comparing the value with the value of the same
-		// name in the prototype. If the value is equal it's defined in one
-		// of the prototypes, not the object itself.
-		// Also, key starting with __ are filtered out, as they are
-		// iterators or legacy browser's function objects.
-#ifdef EXTEND_OBJECT
-		// We're extending Object, so we can assume __proto__ to always be there,
-		// even when it's simulated on legacy browsers.
-		return PROPERTY_IS_VISIBLE(obj, name, obj[name] !== obj.__proto__[name]);
-#else // !EXTEND_OBJECT
-		// Object.prototype is untouched, so we cannot assume __proto__ to always
-		// be defined on legacy browsers.
-		return PROPERTY_IS_VISIBLE(obj, name, (!obj.__proto__ || obj[name] !== obj.__proto__[name]));
-#endif // !EXTEND_OBJECT
-#endif // !DONT_ENUM
-	}
-
-	function each(obj, iter, bind) {
-		return obj ? (typeof obj.length == 'number'
-			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
-	}
-
 	// Now we can use the private inject to add methods to the Function.prototype
 	inject(Function.prototype, {
 		inject: function(src/*, ... */) {
@@ -281,16 +332,18 @@ new function() { // bootstrap
 						&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
-				inject(proto, src, base && base.prototype, src._generics && this);
+				inject(proto, src, false, base && base.prototype, src._generics && this);
 #else // HELMA
 				// Pass version
-				inject(proto, src, base && base.prototype, src._generics && this, version);
+				inject(proto, src, false, base && base.prototype, src._generics && this, version);
 #endif // HELMA
-				// Define new static fields, and inherit from base.
+				// Define new static fields as enumerable, and inherit from base.
+				// enumerable is necessary so they can be copied over from base,
+				// and it does not disturb to be enumerable in the constructor.
 #ifndef HELMA // !HELMA
-				inject(this, src.statics, base);
+				inject(this, src.statics, true, base);
 #else // HELMA
-				inject(this, src.statics, base, null, version);
+				inject(this, src.statics, true, base, null, version);
 				// For versioning, define onCodeUpdate to update _version each time:
 				if (version) {
 					// See if it is already defined, and override in a way that
@@ -338,11 +391,12 @@ new function() { // bootstrap
 		extend: function(src/* , ... */) {
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
+#ifdef GETTER_SETTER
+			var proto = new this(this.dont), ctor = extend(proto);
+			define(proto, 'constructor', { value: ctor, writable: true, configurable: true });
+#else // !GETTER_SETTER
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
-#ifdef DONT_ENUM
-			// On Rhino+dontEnum, we can only dontEnum fields after they are set.
-			proto.dontEnum('constructor');
-#endif // DONT_ENUM
+#endif // !GETTER_SETTER
 			// An object to be passed as the first parameter in constructors
 			// when initialize should not be called. This needs to be a property
 			// of the created constructor, so that if .extend is called on native
@@ -351,9 +405,10 @@ new function() { // bootstrap
 			// constructor that would not know what to do with it.
 			ctor.dont = {};
 			// Copy over static fields, as prototype-like inheritance
-			// is not possible for static fields.
+			// is not possible for static fields. Mark them as enumerable
+			// so they can be copied over again.
 			// TODO: This needs fixing for versioning on the server!
-			inject(ctor, this);
+			inject(ctor, this, true);
 			// Inject all the definitions in src
 			// Use the new inject instead of the one in ctor, in case it was
 			// overriden.
@@ -396,7 +451,6 @@ new function() { // bootstrap
 	// Let's not touch Object.prototype
 	Base = Object.extend({
 #endif // !EXTEND_OBJECT
-		_HIDE
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
@@ -439,30 +493,14 @@ new function() { // bootstrap
 		},
 
 		statics: {
-			has:  has,
-
+			// Expose some local privates as Base generics.
+			has: has,
 			each: each,
+#ifdef GETTER_SETTER
+			define: define,
+			describe: describe,
+#endif
 
-#ifndef EXTEND_OBJECT
-			inject: function() {
-				// Inject anything added to Base into Array as well.
-				// Do not inject into Function, as this would override its
-				// inject / extend functions!
-				Array.inject.apply(Array, arguments);
-				return this.base.apply(this, arguments);
-			},
-
-			extend: function() {
-				var ret = this.base();
-				// Set proper versions of inject and extend on constructors
-				// extending Base, not the overriden ones in Base...
-				ret.extend = Function.extend;
-				ret.inject = Function.inject;
-				// Only inject if there's something to actually inject.
-				return arguments.length ? ret.inject.apply(ret, arguments) : ret;
-			},
-
-#endif // !EXTEND_OBJECT
 			type: function(obj) {
 #ifdef BROWSER
 				// Handle elements, as needed by DomNode.js
@@ -541,50 +579,6 @@ new function() { // bootstrap
 			stop: {}
 		}
 	});
-
-#ifdef HELMA
-
-#define SETUP_DONT_ENUM() \
-	if (!this._dontEnum) this._dontEnum = { _dontEnum: true, _base: true }
-
-	// Fix dontEnum for Helma's HopObject
-	// This does not need to be in this scope, but for tydiness it is.
-	HopObject.prototype.dontEnum = function() {
-		SETUP_DONT_ENUM();
-		for (var i = 0, l = arguments.length; i < l; i++)
-			this._dontEnum[arguments[i]] = true;
-	}
-
-	HopObject.prototype.__iterator__ = function() {
-		var en = toJava(this).properties();
-		while (en.hasMoreElements()) {
-			var key = en.nextElement();
-			if (!this._dontEnum || !this._dontEnum[key])
-				yield key;
-		}
-		throw StopIteration;
-	}
-
-	/**
-	 * For HopObjects, we need to set _base instead of base internally,
-	 * in order to make the object not want to persist a change.
-	 */
-	HopObject.inject({
-		base: {
-			_get: function() {
-				return this._base;
-			},
-
-			_set: function(base) {
-				// In order to speed things up and not call dontEnum here,
-				// we use the same code as in dontEnum that marks _base as
-				// dontEnum inlined by default.
-				SETUP_DONT_ENUM();
-				this._base = base;
-			}
-		}
-	});
-#endif // HELMA
 }
 
 #ifdef DEFINE_GLOBALS

@@ -18,7 +18,6 @@
  * advantage of how Prototype handles it.
  */
 Hash = Base.extend(Enumerable, {
-	_HIDE
 	_generics: true,
 
 	/**
@@ -43,44 +42,31 @@ Hash = Base.extend(Enumerable, {
 		if (!bind) bind = this;
 		iter = Base.iterator(iter);
 		try {
-#ifdef DONT_ENUM
-			// No need to check when not extending Object and when on Rhino+dontEnum,
-			// as dontEnum is always used to hide fields there.
-			for (var i in this)
-				iter.call(bind, this[i], i, this);
-#else // !DONT_ENUM
-			// We use for-in here, but need to filter out what should not be iterated.
-			// The loop here uses an inline version of Object#has (See Core.js).
-#ifdef EXTEND_OBJECT
-			for (var i in this)
-#ifdef FIX_PROTO
-				// Since __proto__ is faked, it is be iterated and therefore
-				// we need to check for that one too:
-				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
-#else // !FIX_PROTO
-				if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
-#endif // !FIX_PROTO
-					iter.call(bind, this[i], i, this);
-#else // !EXTEND_OBJECT
-			// Object.prototype is untouched, so we cannot assume __proto__ to always
-			// be defined on legacy browsers. Use two versions of the loops for
-			// better performance here:
-			if (this.__proto__ == null) {
+			// TODO: Update compile macro flag names / standardise. RHINO -> ES3.1?
+#ifdef RHINO
+			for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
+				iter.call(bind, this[key = keys[i]], key, this);
+#else // !RHINO
+			if (Object.keys) {
+				for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
+					iter.call(bind, this[key = keys[i]], key, this);
+#ifdef BROWSER_LEGACY
+			} else if (this.hasOwnProperty) {
+#else // !BROWSER_LEGACY
+			} else {
+#endif // !BROWSER_LEGACY
 				for (var i in this)
-					IF_PROPERTY_IS_VISIBLE(i, iter.call(bind, this[i], i, this);)
+					if (this.hasOwnProperty(i))
+						iter.call(bind, this[i], i, this);
+#ifdef BROWSER_LEGACY
 			} else {
 				for (var i in this)
-#ifdef FIX_PROTO
-					// Since __proto__ is faked, it is be iterated and therefore
-					// we need to check for that one too:
-					if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__ && this[i] !== this.__proto__[i]))
-#else // !FIX_PROTO
-					if (PROPERTY_IS_VISIBLE(this, i, this[i] !== this.__proto__[i]))
-#endif // !FIX_PROTO
+					// See Core.js has() for explanations
+				 	(this[i] !== (this.__proto__ || Object.prototype)[i])
 						iter.call(bind, this[i], i, this);
+#endif // BROWSER_LEGACY
 			}
-#endif // !EXTEND_OBJECT
-#endif // !DONT_ENUM
+#endif // !RHINO
 		} catch (e) {
 			if (e !== Base.stop) throw e;
 		}

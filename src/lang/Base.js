@@ -7,7 +7,6 @@
 // Base
 
 Base.inject({
-	_HIDE
 	_generics: true,
 
 #ifdef DEBUG

@@ -15,7 +15,6 @@
 // But that's not enough, since find and others are still called
 // on this.
 Enumerable = {
-	_HIDE
 	_generics: true,
 	// Make sure it's not overriding native functions when injecting into Array
 	_preserve: true,

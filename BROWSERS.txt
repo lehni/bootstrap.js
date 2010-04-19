@@ -1,0 +1,34 @@
+JavaScript Features:
+
+                                 SF2 SF3 SF4 WKN FF  GC  OP  IE8 IE7 IE6
+
+Object#hasOwnProperty            -   x   x   x   x   x   x   x   x   x
+Object.defineProperty            -   -   -   x   -   x   -   1   -   - 
+Object.defineProperties          -   -   -   x   -   x   -   -   -   -
+Object.getOwnPropertyDescriptor  -   -   -   x   -   x   -   1   -   -
+Object.keys                      -   -   -   x   -   x   -   -   -   -          
+__defineGetter__	         -   x   x   x   x   x   x   -   -   -
+
+1) Only on DOM Nodes
+
+User Agents
+
+Safari:
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-us) AppleWebKit/531.22.7 (KHTML, like Gecko) Version/4.0.5 Safari/531.22.7
+
+Google Chrome:
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-US) AppleWebKit/533.2 (KHTML, like Gecko) Chrome/5.0.342.7 Safari/533.2
+
+Firefox:
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en-GB; rv:1.9.2) Gecko/20100115 Firefox/3.6
+
+Camino:
+
+Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.6; en; rv:1.9.0.18) Gecko/2010021619 Camino/2.0.2 (like Firefox/3.0.18)
+
+Opera:
+
+Opera/9.80 (Macintosh; Intel Mac OS X; U; en) Presto/2.2.15 Version/10.01

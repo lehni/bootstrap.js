@@ -104,7 +104,6 @@ if (!Array.prototype.push) {
 // Array
 
 Array.inject({
-	_HIDE
 	_generics: true,
 	_preserve: true,
 	// tell Base.type what to return for arrays.
@@ -172,7 +171,6 @@ Array.inject({
 		return value;
 	}
 }, Enumerable, {
-	_HIDE
 	_BEANS
 	_generics: true,
 
