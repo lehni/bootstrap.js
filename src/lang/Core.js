@@ -49,35 +49,49 @@ new function() { // bootstrap
 	 * Object.prototype.has, as the local version then seems to be overriden
 	 * by that. Giving it a idfferent name fixes it.
 	 */
-	function has(obj, name) {
+// TODO: Flags
 #ifdef RHINO
+	function has(obj, name) {
 		return obj.hasOwnProperty(name);
+	}
 #else // !RHINO
-		// TODO: Move to Browser legacy? as hasOwnProperty is supported except
-		// for Safari 2. Sync flags with Hash#each!
-		// We need to filter out what does not belong to the object itself.
-		// This is done by comparing the value with the value of the same
-		// name in the prototype. If the value is equal it's defined in one
-		// of the prototypes, not the object itself.
-		return obj.hasOwnProperty && obj.hasOwnProperty(name)
+	// TODO: Move to Browser legacy? as hasOwnProperty is supported except
+	// for Safari 2. Sync flags with Hash#each!
+	var has = {}.hasOwnProperty
+		? function(obj, name) {
+			return obj.hasOwnProperty(name);
+		}
+		: function(obj, name) {
+			// We need to filter out what does not belong to the object itself.
+			// This is done by comparing the value with the value of the same
+			// name in the prototype. If the value is equal it's defined in one
+			// of the prototypes, not the object itself.
 #ifdef EXTEND_OBJECT
-		// We're extending Object, so we can assume __proto__ to always be there,
-		// even when it's simulated on browsers not supporting it.
-			|| obj[name] !== obj.__proto__[name];
+			// We're extending Object, so we can assume __proto__ to always be there,
+			// even when it's simulated on browsers not supporting it.
+			return obj[name] !== obj.__proto__[name];
 #else // !EXTEND_OBJECT
-		// Object.prototype is untouched, so we cannot assume __proto__ to always
-		// be defined on legacy browsers.
-			|| obj[name] !== (obj.__proto__ || Object.prototype)[name];
+			// Object.prototype is untouched, so we cannot assume __proto__ to always
+			// be defined on legacy browsers.
+			return obj[name] !== (obj.__proto__ || Object.prototype)[name];
 #endif // !EXTEND_OBJECT
+		}
 #endif // !RHINO
-	}
 
-	function each(obj, iter, bind) {
-		return obj ? (typeof obj.length == 'number'
-			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
-	}
+// TODO: Flags
+#ifdef RHINO
+	var keys = Object.keys;
+#else // !RHINO
+	var keys = Object.keys || function(obj) {
+		var ids = [];
+		for (var i in obj)
+			if (has(obj, i))
+				ids.push(i);
+		return ids;
+	};
+#endif // !RHINO
 
-// TODO: Better name?
+// TODO: Flags, Better name?
 #ifdef GETTER_SETTER
 	var define = Object.defineProperty, describe = Object.getOwnPropertyDescriptor;
 #ifdef BROWSER
@@ -262,9 +276,8 @@ new function() { // bootstrap
 		// for base to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
-			// TODO: Optimise for new situation: Object.keys / Object_each?
-			for (var name in src)
-				if (has(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
+			for (var names = keys(src), name, i = 0, l = names.length; i < l; i++)
+				if (!/^(HIDDEN_FIELDS)$/.test(name = names[i]))
 #ifdef BEANS
 					field(name, null, generics, true);
 #else // !BEANS
@@ -441,6 +454,11 @@ new function() { // bootstrap
 		}
 	});
 
+	function each(obj, iter, bind) {
+		return obj ? (typeof obj.length == 'number'
+			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
+	}
+
 #ifdef EXTEND_OBJECT
 	// From now on Function inject can be used to enhance any prototype,
 	// for example Object.
@@ -495,6 +513,7 @@ new function() { // bootstrap
 		statics: {
 			// Expose some local privates as Base generics.
 			has: has,
+			keys: keys,
 			each: each,
 #ifdef GETTER_SETTER
 			define: define,
