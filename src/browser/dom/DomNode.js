@@ -64,8 +64,7 @@ DomNodes = Array.extend(new function() {
 				this.base(Base.each(src || {}, function(val, key) {
 					if (typeof val == 'function') {
 						var func = val, prev = proto[key];
-						var count = func.getParameters().length,
-							prevCount = prev && prev.getParameters().length;
+						var count = func.length, prevCount = prev && prev.length;
 						val = function() {
 							var args = arguments, values;
 							// If there was a previous implementation under this name
