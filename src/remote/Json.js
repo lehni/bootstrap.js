@@ -26,7 +26,10 @@ Json = {
 #else // !RHINO && !BROWSER
 	encode: JSON.stringify,
 #endif // !RHINO && !BROWSER
-	decode: JSON.parse
+	decode: function(str, secure) {
+		// No need for security checks when using native JSON.
+		return JSON.parse(str);
+	}
 };
 
 #else // !ECMASCRIPT_5
@@ -88,7 +91,10 @@ Json = function(JSON) {
 			},
 
 		decode: JSON
-			? JSON.parse
+			? function(str, secure) {
+				// No need for security checks when using native JSON.
+				return JSON.parse(str);
+			}
 			: function(str, secure) {
 				try {
 					// Make sure the incoming data is actual JSON
@@ -99,7 +105,6 @@ Json = function(JSON) {
 #else // !BROWSER
 					return Base.type(str) == 'string' && str &&
 #endif // !BROWSER
-						// No need for security checks when using native JSON (?)
 						(!secure || /^[\],:{}\s]*$/.test(
 							str.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
 								.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
