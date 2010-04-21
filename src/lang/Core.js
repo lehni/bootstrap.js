@@ -35,7 +35,7 @@ if (!this.__proto__) {
 	for (var i in fix)
 		fix[i].prototype.__proto__ = fix[i].prototype;
 }
-#endif // !FIX_PROTO			
+#endif // !FIX_PROTO
 
 #ifdef BROWSER_LEGACY
 // define undefined ;)
@@ -49,13 +49,13 @@ new function() { // bootstrap
 	 * Object.prototype.has, as the local version then seems to be overriden
 	 * by that. Giving it a idfferent name fixes it.
 	 */
-#ifdef RHINO // TODO: Flags
+#ifdef ECMASCRIPT_3
 	function has(obj, name) {
 		return obj.hasOwnProperty(name);
 	}
-#else // !RHINO
-	// TODO: Move to Browser legacy? as hasOwnProperty is supported except
-	// for Safari 2. Sync flags with Hash#each!
+#else // !ECMASCRIPT_3
+	// Check if environment supports hasOwnProperty, and use a differnt version
+	// of has if ti does, for higher performance as checking on each has() call.
 	var has = {}.hasOwnProperty
 		? function(obj, name) {
 			return obj.hasOwnProperty(name);
@@ -74,43 +74,58 @@ new function() { // bootstrap
 			// be defined on legacy browsers.
 			return obj[name] !== (obj.__proto__ || Object.prototype)[name];
 #endif // !EXTEND_OBJECT
-		}
-#endif // !RHINO
+		};
+#endif // !ECMASCRIPT_3
 
 #ifdef GETTER_SETTER // TODO: Flags, Better name?
-	var define = Object.defineProperty, describe = Object.getOwnPropertyDescriptor;
-#ifdef BROWSER
-	try {
-		// As these methods exist on IE8 but can only work on DOM nodes
-		// we have to test and see if it works.
-		// Thanks MS for the short-sigthedness to implement it in this way!
-		define({}, 'ms', {});
-	} catch (e) {
-		// Fallback for all browsers that do not support the standard way (yet)
-		define = function(obj, name, desc) {
-			if ((desc.get || desc.set) && obj.__defineGetter__) {
-				if (desc.get) obj.__defineGetter__(obj, desc.get);
-				if (desc.set) obj.__defineSetter__(obj, desc.set);
-			} else {
-				obj[name] = desc.value;
-			}
-		}
-
-		describe = function(obj, name) {
-			var get = obj.__lookupGetter && obj.__lookupGetter__(name);
-			return get
-				? { enumerable: true, configurable: true, get: get, set: obj.__lookupSetter__(name) }
-				: { enumerable: true, configurable: true, writable: true, value: obj[name] };
-/* 
-				// This would be more correct but slower.
-				// TODO: Measure and see how bad it is:
-				: has(obj, name)
-					? { enumerable: true, configurable: true, writable: true, value: obj[name] }
-					: null;
-*/
+#ifdef ECMASCRIPT_5 // Ecma Script 5 compliant engines such as Rhino
+	function define(obj, name, desc) {
+		// Not all objects support Object.defineProperty, so fall back to 
+		// simply setting properties
+		try {
+			return Object.defineProperty(obj, name, desc);
+		} catch (e) {
+			// Fallback
+			obj[name] = desc.value;
 		}
 	}
-#endif // BROWSER
+
+	function describe(obj, name) {
+		try {
+			return Object.getOwnPropertyDescriptor(obj, name);
+		} catch (e) {
+			return has(obj, name)
+				? { enumerable: true, configurable: true, writable: true, value: obj[name] }
+				: null;
+		}
+	}
+#else // !ECMASCRIPT_5
+	// Support a mixed environment of some ES 5 features present, along with
+	// __defineGetter/Setter__, as found in Browsers today.
+	var _define = Object.defineProperty, _describe = Object.getOwnPropertyDescriptor;
+
+	function define(obj, name, desc) {
+		if (_define)
+			try { return _define(obj, name, desc); } catch (e) {}
+		if ((desc.get || desc.set) && obj.__defineGetter__) {
+			if (desc.get) obj.__defineGetter__(obj, desc.get);
+			if (desc.set) obj.__defineSetter__(obj, desc.set);
+		} else {
+			obj[name] = desc.value;
+		}
+	}
+
+	function describe(obj, name) {
+		if (_describe)
+			try { return _describe(obj, name); } catch (e) {}
+		var get = obj.__lookupGetter__ && obj.__lookupGetter__(name);
+		return get
+			? { enumerable: true, configurable: true, get: get, set: obj.__lookupSetter__(name) }
+			: has(obj, name)
+				? { enumerable: true, configurable: true, writable: true, value: obj[name] }
+				: null;
+	}
+#endif // !ECMASCRIPT_5
 #endif // !GETTER_SETTER
 
 	/**
@@ -215,9 +230,10 @@ new function() { // bootstrap
 					// makes sense and also avoids double-injection for beans with both
 					// getters and setters.
 #ifdef BEANS_OLD
-					if (src.beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
-#else // !BEANS_OLD
+					// Support old and new format of bean flag.
 					if ((src.beans || src._beans) && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
+#else // !BEANS_OLD
+					if (src.beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
 #endif // !BEANS_OLD
 						try {
 							field(bean[3].toLowerCase() + bean[4], {
@@ -260,7 +276,7 @@ new function() { // bootstrap
 #else // !BEANS
 					field(name, true, generics);
 #endif // !BEANS
-#ifdef BROWSER // BROWSER
+#ifdef BROWSER
 			// IE (and some other browsers?) never enumerate these, even 
 			// if they are simply set on an object. Force their creation.
 			// Do not create generics for these, and check them for not

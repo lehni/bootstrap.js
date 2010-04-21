@@ -42,31 +42,32 @@ Hash = Base.extend(Enumerable, {
 		if (!bind) bind = this;
 		iter = Base.iterator(iter);
 		try {
-			// TODO: Update compile macro flag names / standardise. RHINO -> ES3.1?
-#ifdef RHINO
+#ifdef ECMASCRIPT_5
+			// We can rely on Object.keys being present
 			for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
 				iter.call(bind, this[key = keys[i]], key, this);
-#else // !RHINO
+#else // !ECMASCRIPT_5
+			// Check for Object.keys and use for-in as a fallback
 			if (Object.keys) {
 				for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
 					iter.call(bind, this[key = keys[i]], key, this);
-#ifdef BROWSER_LEGACY
+#ifndef ECMASCRIPT_3
 			} else if (this.hasOwnProperty) {
-#else // !BROWSER_LEGACY
+#else // ECMASCRIPT_3
 			} else {
-#endif // !BROWSER_LEGACY
+#endif // ECMASCRIPT_3
 				for (var i in this)
 					if (this.hasOwnProperty(i))
 						iter.call(bind, this[i], i, this);
-#ifdef BROWSER_LEGACY
+#ifndef ECMASCRIPT_3
 			} else {
 				for (var i in this)
 					// See Core.js has() for explanations
 				 	(this[i] !== (this.__proto__ || Object.prototype)[i])
 						iter.call(bind, this[i], i, this);
-#endif // BROWSER_LEGACY
+#endif // !ECMASCRIPT_3
 			}
-#endif // !RHINO
+#endif // !ECMASCRIPT_5
 		} catch (e) {
 			if (e !== Base.stop) throw e;
 		}

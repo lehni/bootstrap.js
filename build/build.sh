@@ -35,14 +35,13 @@ then
 	mkdir ../out/
 fi
 
-./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DECMASCRIPT_3 -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DECMASCRIPT_3 -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-
-./preprocess.sh ../src/build.js ../out/bootstrap-scriptographer.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DBEANS_OLD -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO  -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-scriptographer.js "-DRHINO -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DBEANS_OLD -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 if [ -d ../src/tests/ ]
 then
