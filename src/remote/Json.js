@@ -6,6 +6,7 @@
 
 #ifdef ECMASCRIPT_5
 
+// We can fully rely on the native JSON object to be there.
 Json = {
 #ifdef RHINO
 	encode: function(obj, properties) {
@@ -32,7 +33,7 @@ Json = {
 
 Json = function(JSON) {
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
-	// Support the native Json object if it is there:
+	// Support the native Json object if it is there, fall back on JS version.
 	return {
 		encode: JSON
 #ifdef RHINO
