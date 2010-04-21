@@ -1,5 +1,5 @@
-#ifndef __lang_Core__
-#define __lang_Core__
+#ifndef __lang_Base__
+#define __lang_Base__
 
 /**
  * Bootstrap JavaScript Library
@@ -21,7 +21,7 @@
  */
 
 ////////////////////////////////////////////////////////////////////////////////
-// Core (inject / extend)
+// Base
 
 #ifdef FIX_PROTO
 // Fix __proto__ for browsers where it is not implemented. Do this before
@@ -37,7 +37,7 @@ if (!this.__proto__) {
 }
 #endif // !FIX_PROTO
 
-new function() { // bootstrap
+new function() { // Bootstrap scope
 	/**
 	 * Private function that checks if an object contains a given property.
 	 * Naming it 'has' causes problems on Opera when defining
@@ -635,4 +635,4 @@ $stop = $break = Base.stop;
 
 #endif // DEFINE_GLOBALS
 
-#endif // __lang_Core__
+#endif // __lang_Base__

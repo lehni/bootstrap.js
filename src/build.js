@@ -1,5 +1,5 @@
 #include "macros/macros.js"
-#include "lang/Core.js"
+#include "lang/Base.js"
 #include "lang/Enumerable.js"
 #include "lang/Hash.js"
 #include "lang/Array.js"

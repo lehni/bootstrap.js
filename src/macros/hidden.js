@@ -33,7 +33,7 @@
 #ifdef BROWSER
 #comment Add toString,valueOf to the hidden fields on browsers, as they are never
 #comment enumerated on IE and therefore need to be copied explicitely if defined,
-#comment see Core.js.
+#comment see Base.js.
 #define HIDDEN_FIELDS_5 HIDDEN_FIELDS_4|toString|valueOf
 #else // !BROWSER
 #define HIDDEN_FIELDS_5 HIDDEN_FIELDS_4

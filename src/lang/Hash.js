@@ -62,7 +62,7 @@ Hash = Base.extend(Enumerable, {
 #ifndef ECMASCRIPT_3 // !ECMASCRIPT_3
 			} else {
 				for (var i in this)
-					// See Core.js has() for explanations of the below
+					// See Base.js has() for explanations of the below
 #ifdef EXTEND_OBJECT
 				 	if (this[i] !== this.__proto__[i])
 #else // !EXTEND_OBJECT
