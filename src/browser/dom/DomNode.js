@@ -235,11 +235,9 @@ DomNode = Base.extend(new function() {
 			// Store a reference to the native node.
 			this.$ = el;
 			// Store a reference in the native node to the wrapper.
-			// Needs to be cleaned up by garbage collection. See above
+			// Needs to be cleaned up by garbage collection. See above.
 			// Not all nodes allow setting of values. E.g. on IE, textnodes don't
-			// Now text nodes should not even be wrapped here, but they are needed
-			// in #getChildren / getChildren.remove(). TODO: find a solution?
-			// Until then, we just ingore them and do not store the wrapper.
+			// For now we just ingore them and do not store the wrapper.
 			try {
 				el._wrapper = this;
 				nodes[nodes.length] = el;
@@ -504,8 +502,7 @@ DomNode.inject(new function() {
 
 		// Returns all the Element's children including text nodes
 		getChildNodes: function() {
-			// TODO: Use DomNodes instead of DomElements collection here
-		 	return new this._collection(this.$.childNodes);
+		 	return new DomNodes(this.$.childNodes);
 		},
 
 		hasChildNodes: function() {

@@ -26,9 +26,8 @@
 //   evalScripts
 //   evalResponse
 //   emulation
-//   json
+//   type (json, html, xml)
 //   secure
-//   html
 //   update
 //   filter
 
@@ -75,7 +74,6 @@ Request = Base.extend(Chain, Callback, new function() {
 			encoding: 'utf-8',
 			emulation: true,
 			secure: false
-			// TODO: Instead of json: true / html: true / xml: true, use type = 'json' etc.?
 		},
 
 		initialize: function(/* url: 'string', options: 'object', handler: 'function' */) {
@@ -86,8 +84,11 @@ Request = Base.extend(Chain, Callback, new function() {
 			// argument though.
 			if (params.handler)
 				this.addEvent('complete', params.handler);
+			// Always set type to html if updating elements
+			if (this.options.update)
+				this.options.type = 'html';
 			this.headers = new Hash(this.options.headers);
-			if (this.options.json) {
+			if (this.options.type == 'json') {
 				this.setHeader('Accept', 'application/json');
 				this.setHeader('X-Request', 'JSON');
 			}
@@ -95,9 +96,6 @@ Request = Base.extend(Chain, Callback, new function() {
 				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' +
 					(this.options.encoding ? '; charset=' + this.options.encoding : ''));
 			}
-			// Always set html to true if updating elements
-			if (this.options.update)
-				this.options.html = true;
 			this.headers.merge(this.options.headers);
 		},
 
@@ -126,17 +124,14 @@ Request = Base.extend(Chain, Callback, new function() {
 				// Try fetching value from the first tetarea in the document first,
 				// since that's the convention to send data with iframes now, just
 				// like in dojo.
-				// TODO: Handle xml, html, json separately?
-				var area = !this.options.html && doc.getElementsByTagName('textarea')[0];
+				var html = this.options.type == 'html', area = !html
+					&& doc.getElementsByTagName('textarea')[0];
 				var text = doc && (area && area.value || doc.body
-					&& (this.options.html && doc.body.innerHTML
-						|| doc.body.textContent || doc.body.innerText)) || '';
-				// First tag in IE ends up in <head>, safe it
-				// TODO: Is this still the case or only on Mac IE? If so, remove it...
-				var head = Browser.TRIDENT && this.options.html && doc.getElementsByTagName('head')[0];
-				text = head ? head.innerHTML + text : text;
+					&& (html && doc.body.innerHTML || doc.body.textContent
+					|| doc.body.innerText)) || '';
 				// Clear src
 				this.frame.element.setProperty('src', '');
+				// TODO: Add support for xml?
 				this.success(text);
 				// We need the iframe to stay around for a little while,
 				// otherwise it appears to load endlessly. Insert it back in
@@ -155,7 +150,8 @@ Request = Base.extend(Chain, Callback, new function() {
 
 		success: function(text, xml) {
 			var args;
-			if (this.options.html) {
+			switch (this.options.type) {
+			case 'html':
 				var match = text.match(/<body[^>]*>([\u0000-\uffff]*?)<\/body>/i);
 				var stripped = this.stripScripts(match ? match[1] : text);
 				if (this.options.update)
@@ -163,9 +159,10 @@ Request = Base.extend(Chain, Callback, new function() {
 				if (this.options.evalScripts)
 					this.executeScript(stripped.script);
 				args = [ stripped.html, text ];
-			} else if (this.options.json) {
+				break;
+			case 'json'
 				args = [ Json.decode(text, this.options.secure), text ];
-			} else {
+			default: // xml?
 				args = [ this.processScripts(text), xml ]
 			}
 			this.fireEvent('complete', args)
