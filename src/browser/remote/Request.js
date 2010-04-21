@@ -160,8 +160,9 @@ Request = Base.extend(Chain, Callback, new function() {
 					this.executeScript(stripped.script);
 				args = [ stripped.html, text ];
 				break;
-			case 'json'
+			case 'json':
 				args = [ Json.decode(text, this.options.secure), text ];
+				break;
 			default: // xml?
 				args = [ this.processScripts(text), xml ]
 			}
