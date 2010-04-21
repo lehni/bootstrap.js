@@ -95,7 +95,7 @@ Input = FormElement.extend({
 			return this.$.value;
 	},
 
-	// TODO: decide if setValue for checkboxes / radios should actually change
+	// TODO: Decide if setValue for checkboxes / radios should actually change
 	// the value or set checked if the values match! Maybe a new function is
 	// needed that does that, e.g. set / getCurrent
 	setValue: function(val) {

@@ -26,9 +26,6 @@ DomDocument = DomElement.extend({
 	},
 
 	createTextNode: function(text) {
-		// TODO: Add wrapper for text nodes too. This will solve the prolem for
-		// wrongly wrapped textnodes as elements in getChildNodes too.
-		// TODO: Consider renaming to createText
 		return $(this.$.createTextNode(text));
 	},
 

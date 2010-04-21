@@ -135,7 +135,7 @@ Request = Base.extend(Chain, Callback, new function() {
 					&& (this.options.html && doc.body.innerHTML
 						|| doc.body.textContent || doc.body.innerText)) || '';
 				// First tag in IE ends up in <head>, safe it
-				// TODO: Is this still the case or only on Mac IE?
+				// TODO: Is this still the case or only on Mac IE? If so, remove it...
 				var head = Browser.TRIDENT && this.options.html && doc.getElementsByTagName('head')[0];
 				text = head ? head.innerHTML + text : text;
 				// Clear src

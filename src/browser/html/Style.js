@@ -82,7 +82,6 @@ HtmlElement.inject(new function() {
 				}
 				style = this.getComputedStyle(name);
 			}
-			// TODO: this does not belong here
 			if (name == 'visibility')
 				return /^(visible|inherit(|ed))$/.test(style);
 #ifdef __lang_Color__
@@ -141,11 +140,11 @@ HtmlElement.inject(new function() {
 				 	value = value == 'true' && 'visible' || value == 'false' && 'hidden' || value;
 					break;
 				case 'opacity':
-					this.opacity = value = parseFloat(value);
-					this.setStyle('visibility', !!value);
 					// Set opacity to 1 if it's 0 and set visibility to 0 instead,
 					// to fix a problem on Firefox on Mac, where antialiasing is affected
 					// otherwise... TODO: Find better solution?
+					this.opacity = value = parseFloat(value);
+					this.setStyle('visibility', !!value);
 					if (!value) value = 1;
 					if (!el.currentStyle || !el.currentStyle.hasLayout) el.style.zoom = 1;
 					if (Browser.TRIDENT) el.style.filter = value > 0 && value < 1 ? 'alpha(opacity=' + value * 100 + ')' : '';
