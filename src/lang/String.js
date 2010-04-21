@@ -44,16 +44,9 @@ String.inject({
 	},
 
 	capitalize: function() {
-#ifdef BROWSER_LEGACY
-		// MACIE does not seem to know \b in Regexps
-		return (' ' + this).replace(/\s[a-z]/g, function(match) {
-			return match.toUpperCase();
-		}).substring(1);
-#else // !BROWSER_LEGACY
 		return this.replace(/\b[a-z]/g, function(match) {
 			return match.toUpperCase();
 		});
-#endif // !BROWSER_LEGACY
 	},
 
 	escapeRegExp: function() {
@@ -88,35 +81,5 @@ String.inject({
 		return /^[^<]*(<(.|\s)+>)[^>]*$/.test(this);
 	}
 });
-
-#ifdef BROWSER_LEGACY
-
-////////////////////////////////////////////////////////////////////////////////
-// String Legacy
-
-// String replace with a function as a second argument does not work on quite
-// a few browsers. Fix it here:
-
-if ('aa'.replace(/\w/g, function() { return arguments[1] }) !== '01') {
-	String.inject({
-		replace: function(search, replace) {
-			// If no function is specified, use the internal implementation
-			if (typeof replace != 'function')
-				return this.base(search, replace);
-			var parts = [], pos = 0, a;
-			while (a = search.exec(this)) {
-				a.push(a.index, a.input);
-				parts.push(this.substring(pos, a.index), replace.apply(null, a));
-				pos = a.index + a[0].length;
-				if (!search.global) break;
-			}
-			if (!parts.length) return this;
-			parts.push(this.substring(pos));
-			return parts.join('');
-		}
-	});
-}
-
-#endif // BROWSER_LEGACY
 
 #endif // __lang_String__

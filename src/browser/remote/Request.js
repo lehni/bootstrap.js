@@ -122,9 +122,6 @@ Request = Base.extend(Chain, Callback, new function() {
 				doc = frame && (frame.contentDocument || frame.contentWindow || frame).document;
 			if (this.running && frame && loc && (!loc.href || loc.href.indexOf(this.url) != -1)
 				&& /^(loaded|complete|undefined)$/.test(doc.readyState)) {
-#ifdef BROWSER_LEGACY
-				this.timer.clear();
-#endif // BROWSER_LEGACY
 				this.running = false;
 				// Try fetching value from the first tetarea in the document first,
 				// since that's the convention to send data with iframes now, just
@@ -283,10 +280,6 @@ Request = Base.extend(Chain, Callback, new function() {
 			this.url = url;
 			// Check frame first, as this is never reused.
 			if (this.frame) {
-#ifdef BROWSER_LEGACY
-				if (Browser.TRIDENT5)
-					this.timer = this.onFrameLoad.periodic(50, this);
-#endif // !BROWSER_LEGACY
 				// Are we sending the request by submitting a form or simply
 				// setting the src?
 				var form = !string && data;

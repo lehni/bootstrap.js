@@ -4,104 +4,17 @@
 #include "Enumerable.js"
 #include "Hash.js"
 
-#ifdef BROWSER_LEGACY
-
-////////////////////////////////////////////////////////////////////////////////
-// Array Legacy
-
-/**
- * Simulate stanadard Array methods on legacy browsers.
- * All these methods explicitely alter length, as they might be used for
- * array-like objects (e.g. the HtmlElements array).
- */
-if (!Array.prototype.push) {
-	Array.inject({
-		push: function() {
-			for (var i = 0, l = arguments.length; i < l; i++)
-				this[this.length++] = arguments[i];
-			return this.length;
-		},
-
-		pop: function() {
-			var i = this.length - 1;
-			var old = this[i];
-			delete this[i];
-			this.length = i;
-			return old;
-		},
-
-		shift: function() {
-			var old = this[0];
-			for (var i = 0, l = this.length - 1; i < l; i++)
-				this[i] = this[i + 1];
-			delete this[this.length - 1];
-			this.length--;
-			return old;
-		},
-
-		unshift: function() {
-			var len = this.length, num = arguments.length;
-			this.length += num;
-			for (var i = len - 1; i >= 0; i--)
-				this[i + num] = this[i];
-			for (i = 0; i < num; i++)
-				this[i] = arguments[i];
-			return this.length;
-		},
-
-		splice: function(start, del) {
-			var res = new Array(del), len = this.length;
-			// Collect all the removed elements.
-			for (var i = 0; i < del; i++)
-				res[i] = this[i + start];
-			var num = arguments.length - 2;
-			if (num > 0) del -= num;
-			if (del > 0) {
-				// Move the entries up by the amount of entries to remove.
-				for (i = start, l = len - del; i < l; i ++)
-					this[i] = this[i + del];
-				// Delete the entries that are not used any more.
-				// This is needed for pseudo arrays.
-				for (i = len - del; i < len; i++)
-					delete this[i];
-				this.length = len - del;
-			} else {
-				// Negative del means there are more new entries than old
-				// entries to remove.
-				// Adjust length first for speed up on native arrays,
-				// by forcing reallocation to the righ sice.
-				this.length = len - del;
-				// Move the entries down by the emount of new entries - the
-				// amount of entries to remove.
-				for (i = len - 1; i >= start; i--)
-					this[i - del] = this[i];
-			}
-			// Add the new entries
-			if (num > 0)
-				for (i = 0; i < num; i++)
-					this[i + start] = arguments[i + 2];
-			return res;
-		},
-
-		/**
-		 * On legacy IE, slice does not work correctly with negative indices.
-		 */
-		slice: function(start, end) {
-			if (start < 0) start += this.length;
-			if (end < 0) end += this.length;
-			else if (end == null) end = this.length;
-			var res = new Array(end - start);
-			for (var i = start; i < end; i++)
-				res[i - start] = this[i];
-			return res;
-		}
-	});
-}
-
-#endif // BROWSER_LEGACY
-
 ////////////////////////////////////////////////////////////////////////////////
 // Array
+
+#ifdef ECMASCRIPT_5
+
+Array.inject(Enumerable, {
+	generics: true,
+	// tell Base.type what to return for arrays.
+	_type: 'array',
+
+#else // !ECMASCRIPT_5
 
 Array.inject({
 	generics: true,
@@ -109,12 +22,13 @@ Array.inject({
 	// tell Base.type what to return for arrays.
 	_type: 'array',
 
+	// Define standard methods that might not be present and only get injected
+	// if they don't exist because of preserve: true
 	forEach: function(iter, bind) {
 		for (var i = 0, l = this.length; i < l; i++)
 			iter.call(bind, this[i], i, this);
 	},
 
-	// TODO: Why is this here and not in browser legacy above?
 	indexOf: function(obj, i) {
 		i = i || 0;
 		if (i < 0) i = Math.max(0, this.length + i);
@@ -123,7 +37,6 @@ Array.inject({
 		return -1;
 	},
 
-	// TODO: Why is this here and not in browser legacy above?
 	lastIndexOf: function(obj, i) {
 		i = i != null ? i : this.length - 1;
 		if (i < 0) i = Math.max(0, this.length + i);
@@ -173,6 +86,8 @@ Array.inject({
 }, Enumerable, {
 	BEANS_TRUE
 	generics: true,
+
+#endif // !ECMASCRIPT_5
 
 	each: function(iter, bind) {
 		try {
@@ -231,8 +146,8 @@ Array.inject({
 	toArray: function() {
 #ifdef BROWSER
 		var res = this.concat([]);
-		// fix Opoera bug where arguments are arrays but do not
-		// concatenate correctly (a new array is returned with [0] == this).
+		// Fix Opera bug where arguments are arrays but do not concatenate
+		// correctly (a new array is returned with [0] == this).
 		return res[0] == this ? Enumerable.toArray.call(this) : res;
 #else // !BROWSER
 		return this.concat([]);

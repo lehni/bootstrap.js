@@ -15,7 +15,7 @@
 # preprocess.sh SOURCE DESTINATION ARGUMENTS MODE
 #
 # ARGUMENTS:
-#	e.g. "-DBROWSER -DBROWSER_LEGACY"
+#	e.g. "-DBROWSER -DECMASCRIPT_3"
 #
 # MODE:
 #	commented	Preprocessed but still formated and commented

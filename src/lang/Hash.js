@@ -51,7 +51,7 @@ Hash = Base.extend(Enumerable, {
 			if (Object.keys) {
 				for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
 					iter.call(bind, this[key = keys[i]], key, this);
-#ifndef ECMASCRIPT_3
+#ifndef ECMASCRIPT_3 // !ECMASCRIPT_3
 			} else if (this.hasOwnProperty) {
 #else // ECMASCRIPT_3
 			} else {
@@ -59,11 +59,15 @@ Hash = Base.extend(Enumerable, {
 				for (var i in this)
 					if (this.hasOwnProperty(i))
 						iter.call(bind, this[i], i, this);
-#ifndef ECMASCRIPT_3
+#ifndef ECMASCRIPT_3 // !ECMASCRIPT_3
 			} else {
 				for (var i in this)
-					// See Core.js has() for explanations
-				 	(this[i] !== (this.__proto__ || Object.prototype)[i])
+					// See Core.js has() for explanations of the below
+#ifdef EXTEND_OBJECT
+				 	if (this[i] !== this.__proto__[i])
+#else // !EXTEND_OBJECT
+				 	if (this[i] !== (this.__proto__ || Object.prototype)[i])
+#endif // !EXTEND_OBJECT
 						iter.call(bind, this[i], i, this);
 #endif // !ECMASCRIPT_3
 			}

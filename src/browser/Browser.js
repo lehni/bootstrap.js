@@ -66,11 +66,4 @@ Browser = new function() {
 	return fields;
 };
 
-#ifdef BROWSER_LEGACY
-if (!this.encodeURIComponent) {
-	encodeURIComponent = escape;
-	decodeURIComponent = unescape;
-}
-#endif // BROWSER_LEGACY
-
 #endif // __browser_Browser__

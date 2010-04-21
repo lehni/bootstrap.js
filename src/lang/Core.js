@@ -37,11 +37,6 @@ if (!this.__proto__) {
 }
 #endif // !FIX_PROTO
 
-#ifdef BROWSER_LEGACY
-// define undefined ;)
-undefined = this.undefined;
-#endif // BROWSER_LEGACY
-
 new function() { // bootstrap
 	/**
 	 * Private function that checks if an object contains a given property.
@@ -425,19 +420,8 @@ new function() { // bootstrap
 			// Use the new inject instead of the one in ctor, in case it was
 			// overriden.
 			// Needed when overriding static inject as in HtmlElements.js.
-#ifdef BROWSER_LEGACY
-			// TODO: Remove
-			// Do not rely on this.inject.apply, as this might not yet be defined
-			// on legacy browsers yet. Pass on up to 6 src arguments.
-			// This should be more than enough when extending using different
-			// interfaces.
-			ctor.inject = this.inject;
-			var a = arguments;
-			return ctor.inject(a[0], a[1], a[2], a[3], a[4], a[5]);
-#else // !BROWSER_LEGACY
 			// Only inject if there's something to actually inject.
 			return arguments.length ? this.inject.apply(ctor, arguments) : ctor;
-#endif // !BROWSER_LEGACY
 		},
 
 		pretend: function(fn) {

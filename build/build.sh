@@ -35,9 +35,9 @@ then
 	mkdir ../out/
 fi
 
-./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DECMASCRIPT_3 -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DECMASCRIPT_3 -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO  -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
@@ -45,8 +45,8 @@ fi
 
 if [ -d ../src/tests/ ]
 then
-./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DBROWSER_LEGACY -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 fi
 
 #Template:

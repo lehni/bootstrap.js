@@ -210,22 +210,6 @@ DomElement.inject(new function() {
 						this.$.addEventListener(name, bound, false);
 					} else if (this.$.attachEvent) {
 						this.$.attachEvent('on' + name, bound);
-#ifdef BROWSER_LEGACY
-					} else {
-						// Simulate multiple callbacks, with support for
-						// stopPropagation and preventDefault
-						this.$['on' + name] = function(event) {
-							entries.each(function(entry) {
-								entry.bound(event);
-								if (event.event.cancelBubble)
-									throw Base.stop;
-							});
-							// Passing "this" for bind above breaks throw Base.stop
-							// on MACIE.
-							// The reason is maybe that this is a native element?
-							return event.event.returnValue;
-						};
-#endif // !BROWSER_LEGACY
 					}
 				}
 				// Func is the one to be called through fireEvent. see dragstart
@@ -238,12 +222,6 @@ DomElement.inject(new function() {
 		removeEvent: function(type, func) {
 			var entries = (this.events || {})[type], entry;
 			if (func && entries) {
-#ifdef BROWSER_LEGACY
-				// When shutting down, added functions seem to disappear here on
-				// Mac IE. Fix it the easy way.
-				// TODO: Check if still needed?
-				entries = this.events[type] = Array.create(entries);
-#endif // !BROWSER_LEGACY
 				if (entry = entries.remove(function(entry) { return entry.func == func })) {
 					var name = entry.name, pseudo = DomEvent.events[type];
 					if (pseudo && pseudo.remove) pseudo.remove.call(this, func);
@@ -252,10 +230,6 @@ DomElement.inject(new function() {
 							this.$.removeEventListener(name, entry.bound, false);
 						} else if (this.$.detachEvent) {
 							this.$.detachEvent('on' + name, entry.bound);
-#ifdef BROWSER_LEGACY
-						} else if (!entries.length) {
-							this.$['on' + name] = null;
-#endif // !BROWSER_LEGACY
 						}
 					}
 				}

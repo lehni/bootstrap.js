@@ -18,12 +18,7 @@
 // TODO: Consider splitting this into Position and Dimension, or naming it
 // Measure instead
 DomElement.inject(new function() {
-#ifdef BROWSER_LEGACY
-	function cumulate(name, parent, iter, fix) {
-		fix = fix && Browser.TRIDENT && Browser.MAC;
-#else // !BROWSER_LEGACY
 	function cumulate(name, parent, iter) {
-#endif // !BROWSER_LEGACY
 		var left = name + 'Left', top = name + 'Top';
 		return function(that) {
 			var cur, next = that, x = 0, y = 0;
@@ -32,13 +27,6 @@ DomElement.inject(new function() {
 				x += cur.$[left] || 0;
 				y += cur.$[top] || 0;
 			} while((next = DomNode.wrap(cur.$[parent])) && (!iter || iter(cur, next)))
-#ifdef BROWSER_LEGACY
-			// Fix body on Mac IE
-			if (fix) ['margin', 'padding'].each(function(val) {
-				x += that.getStyle(val + '-left').toInt() || 0;
-				y += that.getStyle(val + '-top').toInt() || 0;
-			}, cur); // TODO: is it correct to pass cur here??? Verify on Mac IE
-#endif // BROWSER_LEGACY
 			return { x: x, y: y };
 		}
 	}

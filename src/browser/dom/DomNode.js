@@ -518,7 +518,7 @@ DomNode.inject(new function() {
 				// Fix a bug on Mac IE when inserting Option elements to Select
 				// elements, where the text on these objects is lost after insertion
 				// -> inserters.before does the same.
-				// This is still needed on IE7, so do not mark it BROWSER_LEGACY
+				// This appears to still be needed on IE7.
 				var text = Browser.TRIDENT && el.$.text;
 				if (text) el.$.text = '';
 				this.$.appendChild(el.$);
