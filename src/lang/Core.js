@@ -66,19 +66,19 @@ new function() { // bootstrap
 			// name in the prototype. If the value is equal it's defined in one
 			// of the prototypes, not the object itself.
 #ifdef EXTEND_OBJECT
-			// We're extending Object, so we can assume __proto__ to always be there,
-			// even when it's simulated on browsers not supporting it.
+			// We're extending Object, so we can assume __proto__ to always be
+			// there, even when it's simulated on browsers not supporting it.
 			return obj[name] !== obj.__proto__[name];
 #else // !EXTEND_OBJECT
-			// Object.prototype is untouched, so we cannot assume __proto__ to always
-			// be defined on legacy browsers.
+			// Object.prototype is untouched, so we cannot assume __proto__ to
+			// always be defined on legacy browsers.
 			return obj[name] !== (obj.__proto__ || Object.prototype)[name];
 #endif // !EXTEND_OBJECT
 		};
 #endif // !ECMASCRIPT_3
 
-#ifdef PROPERTY_DEFINITION
-#ifdef ECMASCRIPT_5 // Ecma Script 5 compliant engines such as Rhino
+#ifdef PROPERTY_DEFINITION // Use or simulate the standard Object.defineProperty
+#ifdef ECMASCRIPT_5 // ECMAScript version 5 compliant engines such as Rhino
 	function define(obj, name, desc) {
 		// Not all objects support Object.defineProperty, so fall back to 
 		// simply setting properties
@@ -100,8 +100,8 @@ new function() { // bootstrap
 		}
 	}
 #else // !ECMASCRIPT_5
-	// Support a mixed environment of some ES 5 features present, along with
-	// __defineGetter/Setter__, as found in Browsers today.
+	// Support a mixed environment of some ECMAScript 5 features present,
+	// along with __defineGetter/Setter__ functions, as found in browsers today.
 	var _define = Object.defineProperty, _describe = Object.getOwnPropertyDescriptor;
 
 	function define(obj, name, desc) {
@@ -145,8 +145,8 @@ new function() { // bootstrap
 		 */
 #ifdef BEANS
 		function field(name, val, dontCheck, generics) {
-			// This does even work for prop: 0, as it will just be looked up again
-			// through describe...
+			// This does even work for prop: 0, as it will just be looked up
+			// again through describe...
 			if (!val)
 				val = (val = describe(src, name)) && (val.get ? val : val.value);
 			var type = typeof val, func = type == 'function', res = val,
@@ -178,21 +178,23 @@ new function() { // bootstrap
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
-						// If the base function has already the _version field set,
-						// it is a function previously defined through inject.
-						// In this case, the value of _version decides what to do:
-						// If we're in the same compilation cicle, Aspect behavior
-						// is used, by continuously referencing the previously defined
-						// functions in the same cicle.
-						// Otherwise, the real previous function is fetched from _previous,
-						// making sure we do not end up in aspect-like changes of the
-						// multiple instances of the same function, compiled in different
-						// cicles.
-						// Since Helma always recompiles code from all repositories for a
-						// given prototype when a change happens in one of them, we
-						// also need to compare dest, and skip backwards until we find
-						// the first version that is not compiled for this prototype
-						// (== dest). Otherwise we would produce referential loops.
+						// If the base function has already the _version field
+						// set, it is a function previously defined through
+						// inject. In this case, the value of _version decides
+						// what to do:
+						// If we're in the same compilation cicle, Aspect
+						// behavior is used, by continuously referencing the
+						// previously defined functions in the same cicle.
+						// Otherwise, the real previous function is fetched from
+						// _previous, making sure we do not end up in aspect-like
+						// changes of the multiple instances of the same function,
+						// compiled in different cicles.
+						// Since Helma always recompiles code from all
+						// repositories for a given prototype when a change
+						// happens in one of them, we also need to compare dest,
+						// and skip backwards until we find the first version that
+						// is not compiled for this prototype (== dest).
+						// Otherwise we would produce referential loops.
 						while (prev._version && prev._version != version && prev._dest == dest)
 							prev = prev._previous;
 #endif // HELMA
@@ -211,8 +213,9 @@ new function() { // bootstrap
 							finally { this.base = tmp; }
 						}).pretend(val);
 #ifdef HELMA
-						// If versioning is used, set the new version now, and keep a reference to the
-						// real previous function, as used in the code above.
+						// If versioning is used, set the new version now, and
+						// keep a reference to the real previous function, as
+						// used in the code above.
 						if (version) {
 							res._version = version;
 							res._previous = prev;
@@ -225,10 +228,10 @@ new function() { // bootstrap
 #endif // HELMA
 					}
 #ifdef BEANS
-					// Only set produce bean properties when getters are specified.
-					// This does not produce properties for setter-only properties which
-					// makes sense and also avoids double-injection for beans with both
-					// getters and setters.
+					// Only set produce bean properties when getters are
+					// specified. This does not produce properties for setter-
+					// only properties which makes sense and also avoids double-
+					// injection for beans with both getters and setters.
 #ifdef BEANS_OLD
 					// Support old and new format of bean flag.
 					if ((src.beans || src._beans) && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
@@ -250,7 +253,8 @@ new function() { // bootstrap
 				// generics for DomElement#get / #set.
 				if (!res || func || !res.get && !res.set)
 					res = { value: res, writable: true };
-				// Only set/change configurable and enumerable if this field is configurable
+				// Only set/change configurable and enumerable if this field is
+				// configurable
 				if ((describe(dest, name) || { configurable: true }).configurable) {
 					res.configurable = true;
 					res.enumerable = enumerable;
@@ -325,15 +329,16 @@ new function() { // bootstrap
 #ifdef HELMA
 				// On the server side, we need some kind of version handling for
 				// HopObjects because every time a prototype gets updated, the js
-				// file is evaluated in the same scope again. Using Prototype.inject
-				// in combination with base calls would result in a growing chain of
-				// calls to previous versions if no version handling would be
+				// file is evaluated in the same scope again. Using .inject()
+				// in combination with base calls would result in a growing chain
+				// of calls to previous versions if no version handling would be
 				// involved.
 				// The versions are used further up to determine wether the
-				// previously defined function in the same prototype should be used
-				// (AOP-like), or the same function in the real super prototype.
-				// _version is only added to constructors that are or inherit from HopObject,
-				// and is automatically increased in onCodeUpdate, as defined bellow.
+				// previously defined function in the same prototype should be
+				// used (AOP-like), or the same function in the real super
+				// prototype. _version is only added to constructors that are or
+				// inherit from HopObject, and is automatically increased in
+				// onCodeUpdate, as defined bellow.
 				var version = (this == HopObject || proto instanceof HopObject)
 						&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
@@ -355,12 +360,13 @@ new function() { // bootstrap
 					// See if it is already defined, and override in a way that
 					// allows outside definitions of onCodeUpdate to coexist with
 					// Bootstrap.js. Use _wrapped to flag the function that
-					// increases _version. Only override if it's another function or
-					// if it is not defined yet.
+					// increases _version. Only override if it's another function
+					// or if it is not defined yet.
 					var update = proto.onCodeUpdate;
 					if (!update || !update._wrapped) {
 						var res = function(name) {
-							// "this" points to the prototype here. Update its constructor's _version
+							// "this" points to the prototype here. Update its
+							// constructor's _version
 							this.constructor._version = (this.constructor._version || 0) + 1;
 							// Call the previously defined funciton, if any
 							if (update)
@@ -371,10 +377,10 @@ new function() { // bootstrap
 						proto.onCodeUpdate = res;
 					}
 					// Support for initialize in HopObject, in a way similar to
-					// how native inheritance is handled: Produce an unnamed closure
-					// as the constructor that checks for initialize and calls it.
-					// Passing ctor.dont to it prevents that from happening.
-					// Boots is relying on this to work.
+					// how native inheritance is handled: Produce an unnamed
+					// closure as the constructor that checks for initialize and
+					// calls it. Passing ctor.dont to it prevents that from
+					// happening. Boots is relying on this to work.
 					if (src.initialize) {
 						var ctor = proto.constructor;
 						ctor.dont = {};
@@ -497,8 +503,8 @@ new function() { // bootstrap
 			// as it's used for Function.prototype.extend as well. But when
 			// extending objects, we want to return a new object that inherits
 			// from "this". In that case, the constructor is never used again,
-			// its just created to create a new object with the proper inheritance
-			// set and is garbage collected right after.
+			// its just created to create a new object with the proper
+			// inheritance set and is garbage collected right after.
 			var res = new (extend(this));
 			return res.inject.apply(res, arguments);
 		},
@@ -557,10 +563,10 @@ new function() { // bootstrap
 			},
 
 			/**
-			 * Converts the argument to an iterator function. If none is specified,
-			 * the identity function is returned.
-			 * This supports normal functions, which are returned unmodified, and
-			 * values to compare to. Wherever this function is used in the
+			 * Converts the argument to an iterator function. If none is
+			 * specified, the identity function is returned.
+			 * This supports normal functions, which are returned unmodified,
+			 * and values to compare to. Wherever this function is used in the
 			 * Enumerable functions, a value, a Function or null may be passed.
 			 */
 			iterator: function(iter) {
@@ -582,10 +588,11 @@ new function() { // bootstrap
 			/**
 			 * A special constant, to be thrown by closures passed to each()
 			 *
-			 * $continue / Base.next is not implemented, as the same functionality can
-			 * achieved by using return in the closure. In prototype, the implementation
-			 * of $continue also leads to a huge speed decrease, as the closure is
-			 * wrapped in another closure that does nothing else than handling $continue.
+			 * $continue / Base.next is not implemented, as the same
+			 * functionality can achieved by using return in the closure.
+			 * In prototype, the implementation of $continue also leads to a huge
+			 * speed decrease, as the closure is wrapped in another closure that
+			 * does nothing else than handling $continue.
 			 */
 			stop: {}
 		}
