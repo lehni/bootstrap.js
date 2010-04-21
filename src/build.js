@@ -3,7 +3,6 @@
 #include "lang/Enumerable.js"
 #include "lang/Hash.js"
 #include "lang/Array.js"
-#include "lang/Base.js"
 #include "lang/Function.js"
 #include "lang/Number.js"
 #include "lang/String.js"
