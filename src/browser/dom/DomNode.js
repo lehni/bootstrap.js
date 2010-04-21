@@ -385,7 +385,7 @@ DomNode.inject(new function() {
 		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
 	].associate();
 	var properties = Hash.append({ // props
-		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420
+		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420 || Browser.PRESTO && Browser.VERSION < 9
 			? function(node) {
 				return node.$.innerText !== undefined ? 'innerText' : 'nodeValue'
 			} : 'textContent',

@@ -23,7 +23,11 @@ Browser = new function() {
 
 	var engines = {
 		presto: function() {
-			return !window.opera ? false : getVersion('Presto/', 2);
+			// Opera < v.10 does not report Presto versions, so use Opera versions
+			// there instead. As presto starts at 22.15 the range of the value
+			// does not clash and we can compare, e.g. Browser.VERSION < 10.
+			// Also, Opera 8 reports "...Opera 8...", while 9 reports "...Opera/9..."
+			return !window.opera ? false : getVersion('Presto/', 2) || getVersion('Opera[/ ]', 1);
 		},
 
 		trident: function() {
