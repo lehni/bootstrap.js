@@ -6,8 +6,6 @@
 
 + Remove SET_ITERATOR
 
-- Rename BROWSER_LEGACY to BROWSER_OLD_LEGACY, and use BROWSER_LEGACY for newer legacy things, but not on Rhino! (use Rhino as a measure for what's legacy for now, and get rid of RHINO?)
-
 + Remove Base.iterate:
   + Only support function iterators
   + Default for thisObject is global scope for all default JavaScript methods, except for each, which explicitly behaves differently than forEach

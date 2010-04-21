@@ -10,7 +10,6 @@
 # bootstrap library:
 #
 # bootstrap.browser.js	For new generation browsers.
-# bootstrap-legacy.js	For legacy browsers (IE 5, Opera 7, etc)
 # bootsrap-rhino.js		For Rhino based JS engines in Java
 # bootstrap-helma.js	For Helma, the JS Web Application Server
 #
@@ -37,7 +36,6 @@ fi
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-browser.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-beans.js "-DBROWSER -DECMASCRIPT_3 -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
-./preprocess.sh ../src/build.js ../out/bootstrap-legacy.js "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO  -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
