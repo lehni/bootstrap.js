@@ -22,13 +22,13 @@
 #comment inheriting static propreties from the constructor in extend().
 #define HIDDEN_FIELDS_3 HIDDEN_FIELDS_2|prototype
 
-#ifndef GETTER_SETTER
+#ifndef PROPERTY_DEFINITION
 #comment If constructor cannot be hidden by setting enumerable: false in define(),
 #comment we need to explicitely add it to the hidden fields.
 #define HIDDEN_FIELDS_4 HIDDEN_FIELDS_3|constructor
-#else // GETTER_SETTER
+#else // PROPERTY_DEFINITION
 #define HIDDEN_FIELDS_4 HIDDEN_FIELDS_3
-#endif // GETTER_SETTER
+#endif // PROPERTY_DEFINITION
 
 #ifdef BROWSER
 #comment Add toString,valueOf to the hidden fields on browsers, as they are never

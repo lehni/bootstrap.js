@@ -77,7 +77,7 @@ new function() { // bootstrap
 		};
 #endif // !ECMASCRIPT_3
 
-#ifdef GETTER_SETTER // TODO: Flags, Better name?
+#ifdef PROPERTY_DEFINITION
 #ifdef ECMASCRIPT_5 // Ecma Script 5 compliant engines such as Rhino
 	function define(obj, name, desc) {
 		// Not all objects support Object.defineProperty, so fall back to 
@@ -126,7 +126,7 @@ new function() { // bootstrap
 				: null;
 	}
 #endif // !ECMASCRIPT_5
-#endif // !GETTER_SETTER
+#endif // !PROPERTY_DEFINITION
 
 	/**
 	 * Private function that injects functions from src into dest, overriding
@@ -153,13 +153,13 @@ new function() { // bootstrap
 				prev = dest[name], bean;
 #else // !BEANS
 		function field(name, dontCheck, generics) {
-#ifdef GETTER_SETTER
+#ifdef PROPERTY_DEFINITION
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
 				func = typeof val == 'function', res = val, prev = dest[name];
-#else // !BEANS && !GETTER_SETTER
+#else // !BEANS && !PROPERTY_DEFINITION
 			var val = src[name], func = typeof val == 'function', res = val,
 				prev = dest[name];
-#endif // !GETTER_SETTER
+#endif // !PROPERTY_DEFINITION
 #endif // !BEANS
 			// Make generics first, as we might jump out bellow in the
 			// val !== (src.__proto__ || Object.prototype)[name] check,
@@ -172,7 +172,7 @@ new function() { // bootstrap
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-			// TODO: on proper JS implementation, dontCheck is always set
+			// TODO: On proper JS implementation, dontCheck is always set
 			// Add this with a compile switch here!
 			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src.preserve)) {
 				if (func) {
@@ -202,11 +202,11 @@ new function() { // bootstrap
 							// Look up the base function each time if we can,
 							// to reflect changes to the base class after
 							// inheritance.
-#ifdef GETTER_SETTER
+#ifdef PROPERTY_DEFINITION
 							define(this, 'base', { value: fromBase ? base[name] : prev, configurable: true });
-#else // !GETTER_SETTER
+#else // !PROPERTY_DEFINITION
 							this.base = fromBase ? base[name] : prev;
-#endif // !GETTER_SETTER
+#endif // !PROPERTY_DEFINITION
 							try { return val.apply(this, arguments); }
 							finally { this.base = tmp; }
 						}).pretend(val);
@@ -243,7 +243,7 @@ new function() { // bootstrap
 						} catch (e) {}
 #endif // BEANS
 				}
-#ifdef GETTER_SETTER
+#ifdef PROPERTY_DEFINITION
 				// No need to look up getter if this is a function already.
 				// This also prevents _collection from becoming a getter, as
 				// DomElements is a constructor function and has both get / set
@@ -256,9 +256,9 @@ new function() { // bootstrap
 					res.enumerable = enumerable;
 				}
 				define(dest, name, res);
-#else // !GETTER_SETTER
+#else // !PROPERTY_DEFINITION
 				dest[name] = res;
-#endif // !GETTER_SETTER
+#endif // !PROPERTY_DEFINITION
 			}
 		}
 		// Iterate through all definitions in src with an iteator function
@@ -397,12 +397,12 @@ new function() { // bootstrap
 		extend: function(src/* , ... */) {
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
-#ifdef GETTER_SETTER
+#ifdef PROPERTY_DEFINITION
 			var proto = new this(this.dont), ctor = extend(proto);
 			define(proto, 'constructor', { value: ctor, writable: true, configurable: true });
-#else // !GETTER_SETTER
+#else // !PROPERTY_DEFINITION
 			var proto = new this(this.dont), ctor = proto.constructor = extend(proto);
-#endif // !GETTER_SETTER
+#endif // !PROPERTY_DEFINITION
 			// An object to be passed as the first parameter in constructors
 			// when initialize should not be called. This needs to be a property
 			// of the created constructor, so that if .extend is called on native
@@ -507,10 +507,10 @@ new function() { // bootstrap
 			// Expose some local privates as Base generics.
 			has: has,
 			each: each,
-#ifdef GETTER_SETTER
+#ifdef PROPERTY_DEFINITION
 			define: define,
 			describe: describe,
-#endif
+#endif // PROPERTY_DEFINITION
 
 			type: function(obj) {
 #ifdef BROWSER
