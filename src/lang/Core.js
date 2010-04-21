@@ -89,8 +89,8 @@ new function() { // bootstrap
 		// Fallback for all browsers that do not support the standard way (yet)
 		define = function(obj, name, desc) {
 			if ((desc.get || desc.set) && obj.__defineGetter__) {
-				if (desc._get) obj.__defineGetter__(obj, desc._get);
-				if (desc._set) obj.__defineSetter__(obj, desc._set);
+				if (desc.get) obj.__defineGetter__(obj, desc.get);
+				if (desc.set) obj.__defineSetter__(obj, desc.set);
 			} else {
 				obj[name] = desc.value;
 			}
