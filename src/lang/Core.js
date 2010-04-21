@@ -49,8 +49,7 @@ new function() { // bootstrap
 	 * Object.prototype.has, as the local version then seems to be overriden
 	 * by that. Giving it a idfferent name fixes it.
 	 */
-// TODO: Flags
-#ifdef RHINO
+#ifdef RHINO // TODO: Flags
 	function has(obj, name) {
 		return obj.hasOwnProperty(name);
 	}
@@ -78,21 +77,7 @@ new function() { // bootstrap
 		}
 #endif // !RHINO
 
-// TODO: Flags
-#ifdef RHINO
-	var keys = Object.keys;
-#else // !RHINO
-	var keys = Object.keys || function(obj) {
-		var ids = [];
-		for (var i in obj)
-			if (has(obj, i))
-				ids.push(i);
-		return ids;
-	};
-#endif // !RHINO
-
-// TODO: Flags, Better name?
-#ifdef GETTER_SETTER
+#ifdef GETTER_SETTER // TODO: Flags, Better name?
 	var define = Object.defineProperty, describe = Object.getOwnPropertyDescriptor;
 #ifdef BROWSER
 	try {
@@ -144,7 +129,7 @@ new function() { // bootstrap
 		 * Private function that injects one field with given name
 		 */
 #ifdef BEANS
-		function field(name, val, generics, dontCheck) {
+		function field(name, val, dontCheck, generics) {
 			// This does even work for prop: 0, as it will just be looked up again
 			// through describe...
 			if (!val)
@@ -152,7 +137,7 @@ new function() { // bootstrap
 			var type = typeof val, func = type == 'function', res = val,
 				prev = dest[name], bean;
 #else // !BEANS
-		function field(name, generics, dontCheck) {
+		function field(name, dontCheck, generics) {
 #ifdef GETTER_SETTER
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
 				func = typeof val == 'function', res = val, prev = dest[name];
@@ -172,7 +157,7 @@ new function() { // bootstrap
 				return bind && dest[name].apply(bind,
 					Array.prototype.slice.call(arguments, 1));
 			}
-			// TODO: on proper JS implementation, dontCheck is never set and never passed.
+			// TODO: on proper JS implementation, dontCheck is always set
 			// Add this with a compile switch here!
 			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src._preserve)) {
 				if (func) {
@@ -234,7 +219,7 @@ new function() { // bootstrap
 							field(bean[3].toLowerCase() + bean[4], {
 								get: src['get' + bean[2]] || src['is' + bean[2]],
 								set: src['set' + bean[2]]
-							});
+							}, true);
 						} catch (e) {}
 #endif // BEANS
 				}
@@ -264,12 +249,12 @@ new function() { // bootstrap
 		// for base to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
-			for (var names = keys(src), name, i = 0, l = names.length; i < l; i++)
-				if (!/^(HIDDEN_FIELDS)$/.test(name = names[i]))
+			for (var name in src)
+				if (has(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
 #ifdef BEANS
-					field(name, null, generics, true);
+					field(name, null, true, generics);
 #else // !BEANS
-					field(name, generics, true);
+					field(name, true, generics);
 #endif // !BEANS
 #ifdef BROWSER // BROWSER
 			// IE (and some other browsers?) never enumerate these, even 
@@ -501,7 +486,6 @@ new function() { // bootstrap
 		statics: {
 			// Expose some local privates as Base generics.
 			has: has,
-			keys: keys,
 			each: each,
 #ifdef GETTER_SETTER
 			define: define,

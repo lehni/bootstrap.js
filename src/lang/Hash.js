@@ -108,13 +108,10 @@ Hash = Base.extend(Enumerable, {
 	},
 
 	/**
-	 * Collects the keys of each element and returns them in an array.
+	 * Returns the keys of all elements in an array.
 	 */
-	// TODO: Consider naming keys(), to go with Object.keys(), same for getValues / getSize
 	getKeys: function() {
-		return this.map(function(val, key) {
-			return key;
-		});
+		return Hash.getKeys(this);
 	},
 
 	/**
@@ -136,6 +133,16 @@ Hash = Base.extend(Enumerable, {
 		create: function(obj) {
 			return arguments.length == 1 && obj.constructor == Hash
 				? obj : Hash.prototype.initialize.apply(new Hash(), arguments);
+		},
+
+		/**
+		 * Returns the keys of all elements in an array.
+		 * Uses the native Object.keys if available.
+		 */
+		getKeys: Object.keys || function(obj) {
+			return Hash.map(function(val, key) {
+				return key;
+			});
 		}
 	}
 });
