@@ -11,6 +11,7 @@
 
 Array.inject(Enumerable, {
 	generics: true,
+	BEANS_TRUE
 	// tell Base.type what to return for arrays.
 	_type: 'array',
 
@@ -84,8 +85,8 @@ Array.inject({
 		return value;
 	}
 }, Enumerable, {
-	BEANS_TRUE
 	generics: true,
+	BEANS_TRUE
 
 #endif // !ECMASCRIPT_5
 
