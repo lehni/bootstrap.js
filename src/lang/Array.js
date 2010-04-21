@@ -104,8 +104,8 @@ if (!Array.prototype.push) {
 // Array
 
 Array.inject({
-	_generics: true,
-	_preserve: true,
+	generics: true,
+	preserve: true,
 	// tell Base.type what to return for arrays.
 	_type: 'array',
 
@@ -171,8 +171,8 @@ Array.inject({
 		return value;
 	}
 }, Enumerable, {
-	_BEANS
-	_generics: true,
+	BEANS_TRUE
+	generics: true,
 
 	each: function(iter, bind) {
 		try {
@@ -414,7 +414,7 @@ Array.inject(new function() {
 	var fields = ['push','pop','shift','unshift','sort','reverse','join','slice','splice','forEach',
 		'indexOf','lastIndexOf','filter','map','every','some','reduce','concat'].each(function(name) {
 		this[name] = proto[name];
-	}, { _generics: true, _preserve: true });
+	}, { generics: true, preserve: true });
 
 	// Make sure there are generics for all of them
 	Array.inject(fields);

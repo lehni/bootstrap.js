@@ -150,7 +150,7 @@ new function() { // bootstrap
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
 			// to produce generics of them.
-			if (generics && func && (!src._preserve || !generics[name])) generics[name] = function(bind) {
+			if (generics && func && (!src.preserve || !generics[name])) generics[name] = function(bind) {
 				// Do not call Array.slice generic here, as on Safari,
 				// this seems to confuse scopes (calling another
 				// generic from generic-producing code).
@@ -159,7 +159,7 @@ new function() { // bootstrap
 			}
 			// TODO: on proper JS implementation, dontCheck is always set
 			// Add this with a compile switch here!
-			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src._preserve)) {
+			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src.preserve)) {
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
@@ -214,7 +214,11 @@ new function() { // bootstrap
 					// This does not produce properties for setter-only properties which
 					// makes sense and also avoids double-injection for beans with both
 					// getters and setters.
-					if (src._beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
+#ifdef BEANS_OLD
+					if (src.beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
+#else // !BEANS_OLD
+					if ((src.beans || src._beans) && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
+#endif // !BEANS_OLD
 						try {
 							field(bean[3].toLowerCase() + bean[4], {
 								get: src['get' + bean[2]] || src['is' + bean[2]],
@@ -318,10 +322,10 @@ new function() { // bootstrap
 						&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
-				inject(proto, src, false, base && base.prototype, src._generics && this);
+				inject(proto, src, false, base && base.prototype, src.generics && this);
 #else // HELMA
 				// Pass version
-				inject(proto, src, false, base && base.prototype, src._generics && this, version);
+				inject(proto, src, false, base && base.prototype, src.generics && this, version);
 #endif // HELMA
 				// Define new static fields as enumerable, and inherit from base.
 				// enumerable is necessary so they can be copied over from base,

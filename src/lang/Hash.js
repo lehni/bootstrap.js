@@ -18,7 +18,7 @@
  * advantage of how Prototype handles it.
  */
 Hash = Base.extend(Enumerable, {
-	_generics: true,
+	generics: true,
 
 	/**
 	 * Constructs a new Hash. The constructor takes a variable amount of

@@ -9,7 +9,7 @@
 // Form related functions, but available in all elements:
 
 HtmlElement.inject({
-	_BEANS
+	BEANS_TRUE
 
 	getFormElements: function() {
 		return this.getElements(['input', 'select', 'textarea']);
@@ -52,7 +52,7 @@ HtmlElement.inject({
 // SelectElement and OptionElement. Also, think of ImageElement (with setSrc...).
 
 Form = HtmlElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_tag: 'form',
 	_properties: ['action', 'method', 'target'],
 	_methods: ['submit'],
@@ -71,7 +71,7 @@ Form = HtmlElement.extend({
 });
 
 FormElement = HtmlElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_properties: ['name', 'disabled'],
 	_methods: ['focus', 'blur'],
 
@@ -84,7 +84,7 @@ FormElement = HtmlElement.extend({
 });
 
 Input = FormElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_tag: 'input',
 	_properties: ['type', 'checked', 'defaultChecked', 'readOnly', 'maxLength'],
 	_methods: ['click'],
@@ -107,13 +107,13 @@ Input = FormElement.extend({
 });
 
 TextArea = FormElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_tag: 'textarea',
 	_properties: ['value']
 });
 
 Select = FormElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
 
@@ -148,7 +148,7 @@ Select = FormElement.extend({
 
 // Name it SelectOption instead of Option, as Option is the native prototype.
 SelectOption = FormElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_tag: 'option',
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
 });

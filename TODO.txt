@@ -24,5 +24,5 @@
 - Rename Function#getBody to #body, etc. ?
 - Rename Array#getFirst() ? hmmm! tricky
 
-- Remove support for _beans and use explicit getter / setters instead? Ask Jonathan Puckey
+x Remove support for beans and use explicit getter / setters instead? Ask Jonathan Puckey
 

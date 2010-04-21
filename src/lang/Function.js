@@ -41,8 +41,8 @@ Function.inject(new function() {
 #endif // BROWSER
 
 	return {
-		_BEANS
-		_generics: true,
+		BEANS_TRUE
+		generics: true,
 
 		/**
 		 * Returns the function's name, if not unnamed.

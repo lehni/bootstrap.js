@@ -7,7 +7,7 @@
 // DomDocument
 
 DomDocument = DomElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_type: 'document',
 
 	initialize: function() {

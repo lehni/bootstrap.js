@@ -42,7 +42,7 @@ fi
 ./preprocess.sh ../src/build.js ../out/bootstrap-rhino.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-./preprocess.sh ../src/build.js ../out/bootstrap-scriptographer.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
+./preprocess.sh ../src/build.js ../out/bootstrap-scriptographer.js "-DRHINO -DEXTEND_OBJECT -DGETTER_SETTER -DBEANS -DBEANS_OLD -DDEBUG -DDEFINE_GLOBALS" $MODE
 
 if [ -d ../src/tests/ ]
 then

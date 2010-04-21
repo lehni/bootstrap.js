@@ -7,7 +7,7 @@
 // Base
 
 Base.inject({
-	_generics: true,
+	generics: true,
 
 #ifdef DEBUG
 	debug: function() {

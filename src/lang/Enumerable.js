@@ -15,9 +15,9 @@
 // But that's not enough, since find and others are still called
 // on this.
 Enumerable = {
-	_generics: true,
+	generics: true,
 	// Make sure it's not overriding native functions when injecting into Array
-	_preserve: true,
+	preserve: true,
 
 	/**
 	 * Searches the list for the first element where the passed iterator

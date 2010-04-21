@@ -9,7 +9,7 @@
 // Let Window point to DomWindow for now, so new Window(...) can be called.
 // This makese for nicer code, but might have to change in the future.
 Window = DomWindow = DomElement.extend({
-	_BEANS
+	BEANS_TRUE
 	_type: 'window',
 	// Don't automatically call this.base in overridden initialize methods
 	_initialize: false,

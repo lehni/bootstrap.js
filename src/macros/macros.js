@@ -13,13 +13,13 @@
 #endif // !GETTER_SETTER
 
 #ifdef BEANS
-#comment Define the _BEANS parameter, to be added to the object that defines the
+#comment Define the BEANS_TRUE Macro, to be added to the object that defines the
 #comment fields to be injected, if getters and setters should be produced if the
 #comment function name matches this form: get/set/is[A-Z]...
 #comment This only does something if getter / setter support is there.
-#define _BEANS _beans: true,
+#define BEANS_TRUE beans: true,
 #else // !BEANS
-#define _BEANS
+#define BEANS_TRUE
 #endif // !BEANS
 
 #comment It appears that __proto__ is broken on IE browsers, so we even need it

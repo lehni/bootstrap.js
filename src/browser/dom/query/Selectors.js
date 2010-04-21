@@ -186,7 +186,7 @@ DomElement.inject(new function() {
 	}
 
 	return {
-		_BEANS
+		BEANS_TRUE
 
 		getElements: function(selectors, nowrap) {
 			var elements = nowrap ? [] : new this._collection();

@@ -19,7 +19,7 @@ DomElements = DomNodes.extend();
 // DomElement
 
 DomElement = DomNode.extend({
-	_BEANS
+	BEANS_TRUE
 	// Tells Base.type the type to return when encountering an element.
 	_type: 'element',
 	_collection: DomElements,
@@ -95,7 +95,7 @@ DomElement.inject(new function() {
 	}
 
 	return {
-		_BEANS
+		BEANS_TRUE
 		_properties: ['id'],
 
 		getTag: function() {

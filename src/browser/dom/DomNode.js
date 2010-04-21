@@ -196,7 +196,7 @@ DomNode = Base.extend(new function() {
 	var dont = {};
 
 	return {
-		_BEANS
+		BEANS_TRUE
 		// Tells Base.type the type to return when encountering an node.
 		_type: 'node',
 		_collection: DomNodes,
@@ -456,7 +456,7 @@ DomNode.inject(new function() {
 	}
 
 	var fields = {
-		_BEANS
+		BEANS_TRUE
 		_properties: ['text'],
 
 		set: function(name, value) {

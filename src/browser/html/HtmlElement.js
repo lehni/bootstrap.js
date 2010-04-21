@@ -27,7 +27,7 @@ HtmlElement = DomElement.extend({
 // Use the modified inject function from above which injects both into HtmlElement
 // and HtmlElements.
 HtmlElement.inject({
-	_BEANS
+	BEANS_TRUE
 	_properties: ['html'],
 
 	getClass: function() {

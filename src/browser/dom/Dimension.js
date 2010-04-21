@@ -81,7 +81,7 @@ DomElement.inject(new function() {
 	var getScrollOffset = cumulate('scroll', 'parentNode');
 
 	var fields = {
-		_BEANS
+		BEANS_TRUE
 
 		getSize: function() {
 			return body(this)
@@ -185,7 +185,7 @@ DomElement.inject(new function() {
 [DomDocument, DomWindow].each(function(ctor) {
 	ctor.inject(this);
 }, {
-	_BEANS
+	BEANS_TRUE
 
 	getSize: function() {
 		if (Browser.PRESTO || Browser.WEBKIT) {
