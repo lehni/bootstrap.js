@@ -78,11 +78,12 @@ new function() { // Bootstrap scope
 		// Not all objects support Object.defineProperty, so fall back to 
 		// simply setting properties
 		try {
-			return Object.defineProperty(obj, name, desc);
+			Object.defineProperty(obj, name, desc);
 		} catch (e) {
 			// Fallback
 			obj[name] = desc.value;
 		}
+		return obj;
 	}
 
 	function describe(obj, name) {
@@ -108,6 +109,7 @@ new function() { // Bootstrap scope
 		} else {
 			obj[name] = desc.value;
 		}
+		return obj;
 	}
 
 	function describe(obj, name) {
