@@ -27,8 +27,12 @@ Json = {
 	encode: JSON.stringify,
 #endif // !RHINO && !BROWSER
 	decode: function(str, secure) {
-		// No need for security checks when using native JSON.
-		return JSON.parse(str);
+		try {
+			// No need for security checks when using native JSON.
+			return JSON.parse(str);
+		} catch (e) {
+			return null;
+		}
 	}
 };
 
@@ -92,8 +96,12 @@ Json = function(JSON) {
 
 		decode: JSON
 			? function(str, secure) {
-				// No need for security checks when using native JSON.
-				return JSON.parse(str);
+				try {
+					// No need for security checks when using native JSON.
+					return JSON.parse(str);
+				} catch (e) {
+					return null;
+				}
 			}
 			: function(str, secure) {
 				try {
