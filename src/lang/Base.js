@@ -23,21 +23,20 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Base
 
-#ifdef FIX_PROTO
-// Fix __proto__ for browsers where it is not implemented. Do this before
-// anything else, for "var i in" to work.
-if (!this.__proto__) {
+new function() { // Bootstrap scope
+	#ifdef FIX_PROTO
+	// Fix __proto__ for browsers where it is not implemented (IE and Opera).
+	// Do this before anything else, for "var i in" to work without filtering.
 #ifdef EXTEND_OBJECT
-	var fix = [Object, Function, Number, Boolean, String, Array, Date, RegExp];
+	var fix = !this.__proto__ && [Object, Function, Number, Boolean, String, Array, Date, RegExp];
 #else // !EXTEND_OBJECT
-	var fix = [Function, Number, Boolean, String, Array, Date, RegExp];
+	var fix = !this.__proto__ && [Function, Number, Boolean, String, Array, Date, RegExp];
 #endif // !EXTEND_OBJECT
-	for (var i in fix)
-		fix[i].prototype.__proto__ = fix[i].prototype;
-}
+	if (fix)
+		for (var i in fix)
+			fix[i].prototype.__proto__ = fix[i].prototype;
 #endif // !FIX_PROTO
 
-new function() { // Bootstrap scope
 	/**
 	 * Private function that checks if an object contains a given property.
 	 * Naming it 'has' causes problems on Opera when defining
@@ -46,14 +45,24 @@ new function() { // Bootstrap scope
 	 */
 #ifdef ECMASCRIPT_3
 	function has(obj, name) {
+#ifdef FIX_PROTO
+		return (!fix || name != '__proto__') && obj.hasOwnProperty(name);
+#else // !FIX_PROTO
 		return obj.hasOwnProperty(name);
+#endif // !FIX_PROTO
 	}
 #else // !ECMASCRIPT_3
 	// Check if environment supports hasOwnProperty, and use a differnt version
 	// of has if ti does, for higher performance as checking on each has() call.
+	// All Browsers that need FIX_PROTO (IE and Opera) have hasOwnProperty, so
+	// the version without hasOwnProperty does not need to check for __proto__
 	var has = {}.hasOwnProperty
 		? function(obj, name) {
+#ifdef FIX_PROTO
+			return (!fix || name != '__proto__') && obj.hasOwnProperty(name);
+#else // !FIX_PROTO
 			return obj.hasOwnProperty(name);
+#endif // !FIX_PROTO
 		}
 		: function(obj, name) {
 			// We need to filter out what does not belong to the object itself.
@@ -197,17 +206,20 @@ new function() { // Bootstrap scope
 #endif // HELMA
 						var fromBase = base && base[name] == prev;
 						res = (function() {
-							var tmp = this.base;
 							// Look up the base function each time if we can,
 							// to reflect changes to the base class after
 							// inheritance.
 #ifdef PROPERTY_DEFINITION
+							var tmp = describe(this, 'base');
 							define(this, 'base', { value: fromBase ? base[name] : prev, configurable: true });
-#else // !PROPERTY_DEFINITION
-							this.base = fromBase ? base[name] : prev;
-#endif // !PROPERTY_DEFINITION
 							try { return val.apply(this, arguments); }
-							finally { this.base = tmp; }
+							finally { tmp ? define(this, 'base', tmp) : delete this.base; }
+#else // !PROPERTY_DEFINITION
+							var tmp = this.base;
+							this.base = fromBase ? base[name] : prev;
+							try { return val.apply(this, arguments); }
+							finally { tmp ? this.base = tmp : delete this.base; }
+#endif // !PROPERTY_DEFINITION
 						}).pretend(val);
 #ifdef HELMA
 						// If versioning is used, set the new version now, and
@@ -299,7 +311,11 @@ new function() { // Bootstrap scope
 		function ctor(dont) {
 #ifdef FIX_PROTO
 			// Fix __proto__
-			this.__proto__ = obj;
+#ifdef PROPERTY_DEFINITION
+			if (fix) define(this, '__proto__', { value: obj });
+#else // !PROPERTY_DEFINITION
+			if (fix) this.__proto__ = obj;
+#endif // !PROPERTY_DEFINITION
 #endif // FIX_PROTO
 			// Call the constructor function, if defined and we're not inheriting
 			// in which case ctor.dont would be set, see further bellow.

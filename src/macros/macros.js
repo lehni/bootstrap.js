@@ -21,8 +21,8 @@
 #endif // !BEANS
 
 #ifdef BROWSER
-#comment It appears that __proto__ is broken on IE browsers, so we even need it
-#comment for non legacy browsers:
+#comment It appears that __proto__ is not supported on IE and Opera browsers,
+#comment so we need the fix for non legacy browsers too:
 #define FIX_PROTO
 #endif // BROWSER
 

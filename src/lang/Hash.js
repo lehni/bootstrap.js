@@ -38,32 +38,25 @@ Hash = Base.extend(Enumerable, {
 	},
 
 	each: function(iter, bind) {
-		if (!bind) bind = this;
-		iter = Base.iterator(iter);
+		// Do not use Object.keys for iteration as iterators might modify
+		// the object we're iterating over, making the hasOwnProperty still
+		// necessary.
+#ifdef PROPERTY_DEFINITION
+		// If PROPERTY_DEFINITION is used, we can fully rely on hasOwnProperty,
+		// as even for FIX_PROTO, define(this, '__proto__', {}) is used.
+		var bind = bind || this, iter = Base.iterator(iter);
 		try {
-			// Do not use Object.keys for iteration as iterators might modify
-			// the object we're iterating over, making the hasOwnProperty still
-			// necessary.
-#ifdef ECMASCRIPT_3
 			for (var i in this)
 				if (this.hasOwnProperty(i))
 					iter.call(bind, this[i], i, this);
-#else // !ECMASCRIPT_3
-			if (this.hasOwnProperty) {
-				for (var i in this)
-					if (this.hasOwnProperty(i))
-						iter.call(bind, this[i], i, this);
-			} else {
-				for (var i in this)
-					// See Base.js has() for explanations of the below
-#ifdef EXTEND_OBJECT
-				 	if (this[i] !== this.__proto__[i])
-#else // !EXTEND_OBJECT
-				 	if (this[i] !== (this.__proto__ || Object.prototype)[i])
-#endif // !EXTEND_OBJECT
-						iter.call(bind, this[i], i, this);
-			}
-#endif // !ECMASCRIPT_3
+#else // !PROPERTY_DEFINITION
+		// Rely on Base.has instead of hasOwnProperty directly.
+		var bind = bind || this, iter = Base.iterator(iter), has = Base.has;
+		try {
+			for (var i in this)
+				if (has(this, i))
+					iter.call(bind, this[i], i, this);
+#endif // !PROPERTY_DEFINITION
 		} catch (e) {
 			if (e !== Base.stop) throw e;
 		}
