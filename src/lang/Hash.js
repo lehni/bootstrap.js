@@ -31,8 +31,7 @@ Hash = Base.extend(Enumerable, {
 			for (var i = 0, l = arguments.length; i < l; i += 2)
 				this[arguments[i]] = arguments[i + 1];
 		} else {
-			// Use the faster append if there's only one parameter.
-			this[arguments.length == 1 ? 'append' : 'merge'].apply(this, arguments);
+			this.append.apply(this, arguments);
 		}
 		// Explicitly return object as it is used in Hash.create's return statement
 		return this;

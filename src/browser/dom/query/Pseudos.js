@@ -106,14 +106,20 @@ DomElement.pseudos = new function() {
 	return {
 		'nth-child': {
 			parser: function(argument) {
-				var match = argument ? argument.match(/^([+-]?\d*)?([devon]+)?([+-]?\d*)?$/) : [null, 1, 'n', 0];
+				var match = argument ? argument.match(/^([+-]?\d*)?([a-z]+)?([+-]?\d*)?$/) : [null, 1, 'n', 0];
 				if (!match) return null;
-				var i = parseInt(match[1]);
-				var a = isNaN(i) ? 1 : i;
-				var special = match[2];
-				var b = (parseInt(match[3]) || 0) - 1;
-				while (b < 1) b += a;
-				while (b >= a) b -= a;
+				var i = parseInt(match[1]),
+					a = isNaN(i) ? 1 : i,
+					special = match[2],
+					b = parseInt(match[3]) || 0;
+				if (a != 0) {
+					b--;
+					while (b < 1) b += a;
+					while (b >= a) b -= a;
+				} else {
+					a = b;
+					special = 'index';
+				}
 				switch (special) {
 					case 'n': return { a: a, b: b, special: 'n' };
 					case 'odd': return { a: 2, b: 0, special: 'n' };

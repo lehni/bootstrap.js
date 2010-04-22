@@ -96,7 +96,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' +
 					(this.options.encoding ? '; charset=' + this.options.encoding : ''));
 			}
-			this.headers.merge(this.options.headers);
+			this.headers.append(this.options.headers);
 		},
 
 		onStateChange: function() {
