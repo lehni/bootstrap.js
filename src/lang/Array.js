@@ -100,13 +100,11 @@ Array.inject({
 	},
 
 	collect: function(iter, bind) {
-		var res = [];
-		for (var i = 0, l = this.length; i < l; i++) {
-		 	var val = iter.call(bind, this[i], i, this);
-			if (val != null)
-				res[res.length] = val;
-		}
-		return res;
+		var that = this;
+		return this.each(function(val, i) {
+			if ((val = iter.call(bind, val, i, that)) != null)
+				this[this.length] = val;
+		}, []);
 	},
 
 	findEntry: function(iter, bind) {
