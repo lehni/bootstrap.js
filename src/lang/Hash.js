@@ -42,24 +42,18 @@ Hash = Base.extend(Enumerable, {
 		if (!bind) bind = this;
 		iter = Base.iterator(iter);
 		try {
-#ifdef ECMASCRIPT_5
-			// We can rely on Object.keys being present
-			for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
-				iter.call(bind, this[key = keys[i]], key, this);
-#else // !ECMASCRIPT_5
-			// Check for Object.keys and use for-in as a fallback
-			if (Object.keys) {
-				for (var keys = Object.keys(this), key, i = 0, l = keys.length; i < l; i++)
-					iter.call(bind, this[key = keys[i]], key, this);
-#ifndef ECMASCRIPT_3 // !ECMASCRIPT_3
-			} else if (this.hasOwnProperty) {
-#else // ECMASCRIPT_3
-			} else {
-#endif // ECMASCRIPT_3
+			// Do not use Object.keys for iteration as iterators might modify
+			// the object we're iterating over, making the hasOwnProperty still
+			// necessary.
+#ifdef ECMASCRIPT_3
+			for (var i in this)
+				if (this.hasOwnProperty(i))
+					iter.call(bind, this[i], i, this);
+#else // !ECMASCRIPT_3
+			if (this.hasOwnProperty) {
 				for (var i in this)
 					if (this.hasOwnProperty(i))
 						iter.call(bind, this[i], i, this);
-#ifndef ECMASCRIPT_3 // !ECMASCRIPT_3
 			} else {
 				for (var i in this)
 					// See Base.js has() for explanations of the below
@@ -69,9 +63,8 @@ Hash = Base.extend(Enumerable, {
 				 	if (this[i] !== (this.__proto__ || Object.prototype)[i])
 #endif // !EXTEND_OBJECT
 						iter.call(bind, this[i], i, this);
-#endif // !ECMASCRIPT_3
 			}
-#endif // !ECMASCRIPT_5
+#endif // !ECMASCRIPT_3
 		} catch (e) {
 			if (e !== Base.stop) throw e;
 		}
