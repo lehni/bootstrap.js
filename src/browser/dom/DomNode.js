@@ -565,11 +565,27 @@ DomNode.inject(new function() {
 				// afterwards, if there are more than one:
 				if (els.length > 0)
 					this.$.parentNode.replaceChild(els[0].$, this.$);
-				for (var i = els.length - 1; i >= 1; i--)
+				for (var i = els.length - 1; i > 0; i--)
 					els[i].insertAfter(els[0]);
 				return el.result;
 			}
 			return null;
+		},
+
+		/**
+		 * Wraps the passed elements around the current one.
+		 * Elements are converted through toNodes
+		 *
+		 * Inspired by: jQuery
+		 */
+		wrap: function() {
+			var el = this.injectBefore.apply(this, arguments), last;
+			do {
+				last = el;
+				el = el.getFirst();
+			} while(el);
+			last.appendChild(this);
+			return last;
 		},
 
 		clone: function(contents) {

@@ -155,22 +155,6 @@ DomElement.inject(new function() {
 			return !!this.getChildren(match).length;
 		},
 
-		/**
-		 * Wraps the passed elements around the current one.
-		 * Elements are converted through toNodes
-		 *
-		 * Inspired by: jQuery
-		 */
-		wrap: function() {
-			var el = this.injectBefore.apply(this, arguments), last;
-			do {
-				last = el;
-				el = el.getFirst();
-			} while(el);
-			last.appendChild(this);
-			return last;
-		},
-
 		toString: function() {
 			return (this.$.tagName || this._type).toLowerCase() +
 				(this.$.id ? '#' + this.$.id : '');
