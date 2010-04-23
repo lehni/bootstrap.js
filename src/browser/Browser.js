@@ -31,8 +31,7 @@ Browser = new function() {
 		},
 
 		trident: function() {
-			var ver/*@cc_on=@_jscript_version@*/;
-			return !ver ? false : ver >= 5 && ver < 5.5 ? 5 : ver == 5.5 ? 5.5 : ver * 10 - 50;
+			return !window.ActiveXObject ? false : getVersion('MSIE ', 1);
 		},
 
 		webkit: function() {
