@@ -49,6 +49,7 @@ String.inject({
 		});
 	},
 
+	// TODO: Is this a good name? Does it need to be improved? (lighter.js relies on it).
 	escapeRegExp: function() {
 		return this.replace(/([-.*+?^${}()|[\]\/\\])/g, '\\$1');
 	},

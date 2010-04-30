@@ -416,6 +416,8 @@ new function() { // Bootstrap scope
 		extend: function(src/* , ... */) {
 			// The new prototype extends the constructor on which extend is called.
 			// Fix constructor
+			// TODO: Consider using Object.create instead of using this.dont if
+			// available?
 #ifdef PROPERTY_DEFINITION
 			var proto = new this(this.dont), ctor = extend(proto);
 			define(proto, 'constructor', { value: ctor, writable: true, configurable: true });
