@@ -85,6 +85,7 @@ Array.inject({
 		return value;
 	}
 }, Enumerable, {
+	// TODO: this.each / this.findEntry / this.indexOf breaks many generics!
 	generics: true,
 	BEANS_TRUE
 
@@ -143,14 +144,7 @@ Array.inject({
 	 * version.
 	 */
 	toArray: function() {
-#ifdef BROWSER
-		var res = this.concat([]);
-		// Fix Opera bug where arguments are arrays but do not concatenate
-		// correctly (a new array is returned with [0] == this).
-		return res[0] == this ? Enumerable.toArray.call(this) : res;
-#else // !BROWSER
-		return this.concat([]);
-#endif // !BROWSER
+		return Array.prototype.slice.call(this);
 	},
 
 	/**
@@ -320,13 +314,12 @@ Array.inject({
 });
 
 Array.inject(new function() {
-	var proto = Array.prototype;
-
 	// Fields that are hidden in Array.prototype are explicitely copied over,
 	// so that they can be inherited in extend() below, and generics are created
 	// for them too.
-	var fields = ['push','pop','shift','unshift','sort','reverse','join','slice','splice','forEach',
-		'indexOf','lastIndexOf','filter','map','every','some','reduce','concat'].each(function(name) {
+	var proto = Array.prototype, fields = ['push','pop','shift','unshift','sort',
+		'reverse','join','slice','splice','forEach','indexOf','lastIndexOf',
+		'filter','map','every','some','reduce','concat'].each(function(name) {
 		this[name] = proto[name];
 	}, { generics: true, preserve: true });
 
@@ -349,8 +342,8 @@ Array.inject(new function() {
 
 #ifdef BROWSER
 		// Safari breaks native concat on sub classes of arrays. Simulate it here.
+		// TODO: Test if newer versions are find with this.
 		concat: function(list) {
-			// TODO: Test if newer versions are find with this.
 			return Browser.WEBKIT
 				? new Array(this.length + list.length).append(this).append(list)
 				: Array.concat(this, list);
@@ -370,21 +363,24 @@ Array.inject(new function() {
 	return {
 		statics: {
 			/**
-			 * Converts the list to an array. Various types are supported.
+			 * Creates an array from the past object.
 			 */
-			create: function(list) {
-				if (!Base.check(list)) return [];
-				if (Base.type(list) == 'array') return list;
-				if (list.toArray)
-					return list.toArray();
-				if (list.length != null) {
-					var res = [];
-					for (var i = 0, l = list.length; i < l; i++)
-						res[i] = list[i];
-				} else {
-					res = [list];
-				}
-				return res;
+			create: function(obj) {
+				if (obj == null)
+					return [];
+				if (obj.toArray)
+					return obj.toArray();
+				if (typedef obj.length == 'number')
+					return Array.prototype.slice.call(obj);
+				return [obj];
+			},
+
+			/**
+			 * Makes sure the passed object is an array and converts it to one
+			 * if not through Array.create.
+			 */
+			convert: function(obj) {
+				return Base.type(obj) == 'array' ? list : Array.create(obj);
 			},
 
 			extend: function(src) {

@@ -54,7 +54,7 @@ Fx.CSS = new function() {
 
 	return {
 		start: function(element, property, values) {
-			values = Array.create(values);
+			values = Array.convert(values);
 			// If only one value is specified, use the current state as the
 			// starting point.
 			if (!Base.check(values[1]))
@@ -65,7 +65,7 @@ Fx.CSS = new function() {
 
 		set: function(value) {
 			// Array.create splits strings at white spaces through String#toArray
-			return Array.create(value).map(function(val) {
+			return Array.convert(value).map(function(val) {
 				val = val + '';
 				var res = parsers.find(function(parser, key) {
 					var value = parser.match(val);
