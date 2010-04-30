@@ -93,7 +93,7 @@ Asset = new function() {
 			// Request will recieve a notification, while the script does not.
 			if (Browser.WEBKIT && Browser.VERSION < 420)
 				new Request({ url: src, method: 'get' }).addEvent('success', function() {
-					script.fireEvent.delay(1, script, ['load']);
+					script.fireEvent('load', [], 1);
 				}).send();
 			return script;
 		},
@@ -117,7 +117,7 @@ Asset = new function() {
 				});
 			});
 			if (image.width && image.height)
-				element.fireEvent.delay(1, element, ['load']);
+				element.fireEvent('load', [], 1);
 			return element.setProperties(getProperties(props));
 		},
 
