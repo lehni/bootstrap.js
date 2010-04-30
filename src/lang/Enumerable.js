@@ -184,7 +184,9 @@ Enumerable = {
 	 * Converts the Enumerable to a normal array.
 	 */
 	toArray: function() {
-		return this.map();
+		return this.map(function(value) {
+			return value;
+		});
 	}
 };
 
