@@ -1,8 +1,14 @@
-- Remove dependency on dontEnum and start moving to Object.defineProperty, also for getters / setters, where possible.
+- Fix problems with generics: true
 
-- Add support for hasOwnProperty wherever has is used (available in all modern browsers it seems).
+- Use Object.create in inheritance if available
 
-- Use Object.keys in Object_each if available, as it only returns the keys in the object itself, not the parents. (only available in Chrome and Rhino right now)
+- Make sure native Function#bind() is not overridden if there, also, make sure the overridden version behaves the same.
+
++ Remove dependency on dontEnum and start moving to Object.defineProperty, also for getters / setters, where possible.
+
++ Add support for hasOwnProperty wherever has is used (available in all modern browsers it seems).
+
+x DONT: Use Object.keys in Object_each if available, as it only returns the keys in the object itself, not the parents. (only available in Chrome and Rhino right now)
 
 + Remove SET_ITERATOR
 
@@ -16,11 +22,11 @@
   - and Hash#forEach in the same was as Array?
   + Define Base.each to use Array.each or Hash.each generics (or just (? Array : Hash).prototype.each for speed)
 
-- Rename Hash#getKeys to #keys (and use Object.keys if available) ?
-- Rename Hash#getValues to #values ?
-- Rename Hash#getSize to #size ?
-- Rename Function#getBody to #body, etc. ?
-- Rename Array#getFirst() ? hmmm! tricky
+x Rename Hash#getKeys to #keys (and use Object.keys if available) ?
+x Rename Hash#getValues to #values ?
+x Rename Hash#getSize to #size ?
+x Rename Function#getBody to #body, etc. ?
+x Rename Array#getFirst() ? hmmm! tricky
 
 x Remove support for beans and use explicit getter / setters instead? Ask Jonathan Puckey
 
