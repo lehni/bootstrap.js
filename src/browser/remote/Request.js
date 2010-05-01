@@ -230,7 +230,7 @@ Request = Base.extend(Chain, Callback, new function() {
 						this.cancel();
 						break;
 					case 'chain':
-						this.chain(this.send.bind(this, arguments));
+						this.chain(this.send.wrap(this, arguments));
 					default:
 						return this;
 				}

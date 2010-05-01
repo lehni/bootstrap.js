@@ -5,55 +5,56 @@
 // Function
 
 Function.inject(new function() {
+
 #ifdef BROWSER
-	function timer(that, set, delay, bind, args) {
-		// If delay is not defined, execute right away and return the result
-		// of the function. This is used in fireEvent.
-		if (delay === undefined)
-			// IE seems to not support passing undefined for args in apply,
-			// so make sure it's always defined:
-			return that.apply(bind, args ? args : []);
-		var func = that.bind(bind, args);
-		var timer = set(func, delay);
-		func.clear = function() {
-			clearTimeout(timer);
-			clearInterval(timer);
+
+	function timer(set) {
+		return function(delay, bind, args) {
+			// It's a bit of a shame we can't use the ES5 bind() here easily:
+			var func = this.wrap(bind, args);
+			// If delay is not defined, execute right away and return the result
+			// of the function. This is used in fireEvent.
+			if (delay === undefined)
+				return func();
+			var timer = set(func, delay);
+			func.clear = function() {
+				clearTimeout(timer);
+				clearInterval(timer);
+			};
+			return func;
 		};
-		return func;
 	}
 
-	return {
-		generics: true,
-
-		delay: function(delay, bind, args) {
-			return timer(this, setTimeout, delay, bind, args);
-		},
-
-		periodic: function(delay, bind, args) {
-			return timer(this, setInterval, delay, bind, args);
-		},
-#else // !BROWSER
-	return {
-		generics: true,
 #endif // BROWSER
 
-		// TODO: This is standard now, but defined differently!
-		// Rename, or change to standard implementation
-		bind: function(bind, args) {
-			var that = this;
+	return {
+		generics: true,
+		preserve: true,
+
+#ifdef BROWSER
+
+		delay: timer(setTimeout),
+		periodic: timer(setInterval),
+
+#endif // BROWSER
+
+#ifndef ECMASCRIPT_5
+
+		bind: function(bind) {
+			var that = this, slice = Array.prototype.slice,
+				args = arguments.length > 1 ? slice.call(arguments, 1) : null;
 			return function() {
-				return that.apply(bind, args || arguments);
+				return that.apply(bind, args ? arguments.length > 0
+					? args.concat(slice.call(arguments)) : args : arguments);
 			}
 		},
 
-		attempt: function(bind, args) {
+#endif // !ECMASCRIPT_5
+
+		wrap: function(bind, args) {
 			var that = this;
 			return function() {
-				try {
-					return that.apply(bind, args || arguments);
-				} catch (e) {
-					return e;
-				}
+				return that.apply(bind, args || arguments);
 			}
 		}
 	}
