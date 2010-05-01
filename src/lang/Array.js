@@ -190,7 +190,6 @@ Array.inject({
 	 */
 	subtract: function(items) {
 		for (var i = 0, l = items.length; i < l; i++)
-			// TODO: Conflict between Array#remove and DomElement(s)#remove. Resolve!
 			Array.remove(this, items[i]);
 		return this;
 	},
@@ -370,7 +369,7 @@ Array.inject(new function() {
 					return [];
 				if (obj.toArray)
 					return obj.toArray();
-				if (typedef obj.length == 'number')
+				if (typeof obj.length == 'number')
 					return Array.prototype.slice.call(obj);
 				return [obj];
 			},
