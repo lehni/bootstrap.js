@@ -251,7 +251,7 @@ Array.inject({
 	 * adds all elements in the passed array, if they are not contained
 	 * in the array already.
 	 */
-	/* TODO: needed?
+	/* TODO: needed? Call unite instead? or union?
 	include: function(obj) {
 		return Base.each(obj, function(val) {
 			if (this.indexOf(val) == -1) this.push(val);
