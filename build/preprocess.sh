@@ -18,9 +18,10 @@
 #	e.g. "-DBROWSER -DECMASCRIPT_3"
 #
 # MODE:
-#	commented	Preprocessed but still formated and commented
-#	stripped	Formated but without comments
-#	compressed	No comments and no whitespaces
+#	commented		Preprocessed but still formated and commented (default)
+#	stripped		Formated but without comments
+#	compressed		No comments and no whitespaces
+#	compiled		Uses Google Closure Compiler to reduce file size even more
 
 case $4 in
 	stripped)
@@ -35,5 +36,10 @@ case $4 in
 		./filepp.pl $3 $1 | sed -n '/^[ 	][ 	]*$/d
 			/./,/^$/!d
 			p' > $2
+		;;
+	compiled)
+		./filepp.pl $3 $1 > temp.js
+		java -jar compiler.jar --js temp.js --js_output_file $2
+		rm temp.js
 		;;
 esac

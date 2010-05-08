@@ -9,7 +9,7 @@
 # The build script that produces all the different versions of the
 # bootstrap library:
 #
-# bootstrap.browser.js	For new generation browsers.
+# bootstrap-browser.js	For new generation browsers.
 # bootsrap-rhino.js		For Rhino based JS engines in Java
 # bootstrap-helma.js	For Helma, the JS Web Application Server
 #
@@ -20,6 +20,7 @@
 #	commented		Preprocessed but still formated and commented (default)
 #	stripped		Formated but without comments
 #	compressed		No comments and no whitespaces
+#	compiled		Uses Google Closure Compiler to reduce file size even more
 
 if [ $# -eq 0 ]
 then
@@ -41,7 +42,9 @@ fi
 ./preprocess.sh ../src/build.js ../out/bootstrap-helma.js "-DHELMA -DRHINO  -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/build.js ../out/bootstrap-scriptographer.js "-DRHINO -DECMASCRIPT_5 -DEXTEND_OBJECT -DBEANS -DBEANS_OLD -DDEBUG -DDEFINE_GLOBALS" $MODE
 
-if [ -d ../src/tests/ ]
+# tests, turn off for now by adding __
+
+if [ -d ../src/tests__/ ]
 then
 ./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE

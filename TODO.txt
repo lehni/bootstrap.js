@@ -1,3 +1,5 @@
+- Don't overwrite String.prototype.trim ?
+
 - Fix problems with generics: true
 
 - Use Object.create in inheritance if available
