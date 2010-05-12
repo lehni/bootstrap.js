@@ -379,7 +379,7 @@ Array.inject(new function() {
 			 * if not through Array.create.
 			 */
 			convert: function(obj) {
-				return Base.type(obj) == 'array' ? list : Array.create(obj);
+				return Base.type(obj) == 'array' ? obj : Array.create(obj);
 			},
 
 			extend: function(src) {
