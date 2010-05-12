@@ -92,7 +92,7 @@ Request = Base.extend(Chain, Callback, new function() {
 				this.setHeader('Accept', 'application/json');
 				this.setHeader('X-Request', 'JSON');
 			}
-			if (this.options.urlEncoded && this.options.method == 'post') {
+			if (this.options.urlEncoded && /^(post|put)$/.test(this.options.method)) {
 				this.setHeader('Content-Type', 'application/x-www-form-urlencoded' +
 					(this.options.encoding ? '; charset=' + this.options.encoding : ''));
 			}
