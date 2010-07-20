@@ -14,7 +14,7 @@ Json = {
 		return Base.type(obj) != 'java' ? JSON.stringify(obj, properties) : null;
 	},
 
-#elif defined(BROWSER) // BROWSER
+#else if defined(BROWSER) // BROWSER
 	// Unfortunately IE does not natively support __proto__, so
 	// we need to filter it out from Json
 	encode: function(obj, properties) {
@@ -48,7 +48,7 @@ Json = function(JSON) {
 				// Do not send native Java objects through JSON.stringify
 				return Base.type(obj) != 'java' ? JSON.stringify(obj, properties) : null;
 			}
-#elif defined(BROWSER) // BROWSER
+#else if defined(BROWSER) // BROWSER
 			? function(obj, properties) {
 				// Unfortunately IE does not natively support __proto__, so
 				// we need to filter it out from Json
