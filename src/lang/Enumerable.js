@@ -47,8 +47,8 @@ Enumerable = {
 		return entry && entry.result;
 	},
 
-	contains: function(obj) {
-		return !!this.findEntry(obj);
+	contains: function(iter) {
+		return !!this.findEntry(iter);
 	},
 
 	remove: function(iter, bind) {
