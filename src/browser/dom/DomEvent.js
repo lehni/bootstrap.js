@@ -46,7 +46,7 @@ DomEvent = Base.extend(new function() {
 			this.type = event.type;
 			this.target = DomNode.wrap(event.target || event.srcElement);
 			if (this.target && this.target.$.nodeType == 3)
-				this.target = this.target.getParent(); // Safari
+				this.target = this.target.getParentNode(); // Safari
 			this.shift = event.shiftKey;
 			this.control = event.ctrlKey;
 			this.alt = event.altKey;
