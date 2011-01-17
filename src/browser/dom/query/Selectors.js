@@ -98,7 +98,7 @@ DomElement.inject(new function() {
 
 	function parse(selector) {
 		var params = { tag: '*', id: null, classes: [], attributes: [], pseudos: [] };
-		selector.replace(/:([^:(]+)*(?:\((["']?)(.*?)\2\))?|\[(\w+)(?:([!*^$~|]?=)(["']?)(.*?)\6)?\]|\.[\w-]+|#[\w-]+|\w+|\*/g, function(part) {
+		selector.replace(/:([^:(]+)*(?:\((["']?)(.*?)\2\))?|\[([\w-]+)(?:([!*^$~|]?=)(["']?)(.*?)\6)?\]|\.[\w-]+|#[\w-]+|\w+|\*/g, function(part) {
 			switch (part.charAt(0)) {
 				case '.': params.classes.push(part.slice(1)); break;
 				case '#': params.id = part.slice(1); break;
