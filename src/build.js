@@ -38,6 +38,7 @@
 #include "browser/html/Style.js"
 #include "browser/html/HtmlForm.js"
 #include "browser/html/Selection.js"
+#include "browser/html/HtmlImage.js"
 
 // Globals
 #include "browser/Globals.js"
