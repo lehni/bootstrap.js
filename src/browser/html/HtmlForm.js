@@ -149,4 +149,4 @@ HtmlOption = HtmlFormElement.extend({
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
 });
 
-#endif // __browser_html_Form__	
+#endif // __browser_html_Form__

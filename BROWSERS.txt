@@ -3,11 +3,11 @@ JavaScript Features:
                                  SF2 SF3 SF4 WKN FF  GC  OP  IE8 IE7 IE6
 
 Object#hasOwnProperty            -   x   x   x   x   x   x   x   x   x
-Object.defineProperty            -   -   -   x   -   x   -   1   -   - 
+Object.defineProperty            -   -   -   x   -   x   -   1   -   -
 Object.defineProperties          -   -   -   x   -   x   -   -   -   -
 Object.getOwnPropertyDescriptor  -   -   -   x   -   x   -   1   -   -
-Object.keys                      -   -   -   x   -   x   -   -   -   -          
-__defineGetter__	         -   x   x   x   x   x   x   -   -   -
+Object.keys                      -   -   -   x   -   x   -   -   -   -
+__defineGetter__                 -   x   x   x   x   x   x   -   -   -
 
 1) Only on DOM Nodes
 
