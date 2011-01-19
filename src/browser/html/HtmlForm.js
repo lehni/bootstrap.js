@@ -4,9 +4,9 @@
 #include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
-// Form
+// HtmlForm
 
-// Form related functions, but available in all elements:
+// HtmlForm related functions, but available in all elements:
 
 HtmlElement.inject({
 	BEANS_TRUE
@@ -48,10 +48,7 @@ HtmlElement.inject({
 	}
 });
 
-// TODO: Consider naming these FormElement, InputElement, TextAreaElement,
-// SelectElement and OptionElement. Also, think of ImageElement (with setSrc...).
-
-Form = HtmlElement.extend({
+HtmlForm = HtmlElement.extend({
 	BEANS_TRUE
 	_tag: 'form',
 	_properties: ['action', 'method', 'target'],
@@ -70,7 +67,7 @@ Form = HtmlElement.extend({
 	}
 });
 
-FormElement = HtmlElement.extend({
+HtmlFormElement = HtmlElement.extend({
 	BEANS_TRUE
 	_properties: ['name', 'disabled'],
 	_methods: ['focus', 'blur'],
@@ -83,7 +80,7 @@ FormElement = HtmlElement.extend({
 	}
 });
 
-Input = FormElement.extend({
+HtmlInput = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'input',
 	_properties: ['type', 'checked', 'defaultChecked', 'readOnly', 'maxLength'],
@@ -106,13 +103,13 @@ Input = FormElement.extend({
 	}
 });
 
-TextArea = FormElement.extend({
+HtmlTextArea = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'textarea',
 	_properties: ['value']
 });
 
-Select = FormElement.extend({
+HtmlSelect = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
@@ -146,8 +143,7 @@ Select = FormElement.extend({
 	}
 });
 
-// Name it SelectOption instead of Option, as Option is the native prototype.
-SelectOption = FormElement.extend({
+HtmlOption = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'option',
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']

@@ -332,7 +332,7 @@ Request = Base.extend(Chain, Callback, new function() {
 	};
 });
 
-Form.inject({
+HtmlForm.inject({
 	send: function(url) {
 		if (!this.sender)
 			this.sender = new Request({ link: 'cancel' });

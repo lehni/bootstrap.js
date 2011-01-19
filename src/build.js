@@ -36,7 +36,7 @@
 #include "browser/html/HtmlElement.js"
 #include "browser/html/HtmlDocument.js"
 #include "browser/html/Style.js"
-#include "browser/html/Form.js"
+#include "browser/html/HtmlForm.js"
 #include "browser/html/Selection.js"
 
 // Globals

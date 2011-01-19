@@ -176,7 +176,7 @@ DomNode = Base.extend(new function() {
 		var match;
 		// Check classCheck first, since it can override the _tag setting
 		return classCheck && el.className && (match = el.className.match(classCheck)) && match[2] && classes[match[2]] ||
-			// Check _tag settings for extended HtmlElement prototypes bound to tagNames, e.g. Form, etc.
+			// Check _tag settings for extended HtmlElement prototypes bound to tagNames, e.g. HtmlForm, etc.
 			el.tagName && tags[el.tagName] ||
 			// Html elements
 			el.className !== undefined && HtmlElement ||

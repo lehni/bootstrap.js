@@ -1,12 +1,12 @@
 #ifndef __browser_html_Selection__
 #define __browser_html_Selection__
 
-#include "Form.js"
+#include "HtmlForm.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Selection
 
-FormElement.inject({
+HtmlFormElement.inject({
 	setSelection: function(start, end) {
 		var sel = end == undefined ? start : { start: start, end: end };
 		this.focus();
