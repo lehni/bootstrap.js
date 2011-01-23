@@ -260,7 +260,11 @@ new function() { // Bootstrap scope
 				// This also prevents _collection from becoming a getter, as
 				// DomElements is a constructor function and has both get / set
 				// generics for DomElement#get / #set.
+#ifdef RHINO
+				if (!res || func || res instanceof java.lang.Object || !res.get && !res.set)
+#else // !RHINO
 				if (!res || func || !res.get && !res.set)
+#endif // !RHINO
 					res = { value: res, writable: true };
 				// Only set/change configurable and enumerable if this field is
 				// configurable
