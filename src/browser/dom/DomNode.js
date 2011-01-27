@@ -628,6 +628,10 @@ DomNode.inject(new function() {
 			return this;
 		},
 
+		hasProperty: function(name) {
+			return this.getProperty(name) !== undefined;
+		},
+
 		removeProperty: function(name) {
 			var key = properties[name], bool = key && bools[name];
 			key = key && typeof key == 'function' ? key(this) : key;
