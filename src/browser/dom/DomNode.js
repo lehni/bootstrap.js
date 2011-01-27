@@ -611,6 +611,13 @@ DomNode.inject(new function() {
 			return DomNode.wrap(clone);
 		},
 
+		hasProperty: function(name) {
+			var key = properties[name];
+			// Support key branching through functions, as needed by 'text' on IE
+			key = key && typeof key == 'function' ? key(this) : key;
+			return key ? this.$[key] !== undefined : this.$.hasAttribute(name);
+		},
+
 		getProperty: function(name) {
 			var key = properties[name], value;
 			// Support key branching through functions, as needed by 'text' on IE
@@ -626,10 +633,6 @@ DomNode.inject(new function() {
 			else if (!defined) return this.removeProperty(name);
 			key ? this.$[key] = value : this.$.setAttribute(name, value);
 			return this;
-		},
-
-		hasProperty: function(name) {
-			return this.getProperty(name) !== undefined;
 		},
 
 		removeProperty: function(name) {
