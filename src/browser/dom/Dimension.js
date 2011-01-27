@@ -150,6 +150,22 @@ DomElement.inject(new function() {
 			var bounds = this.getBounds();
 			return pos.x >= bounds.left && pos.x < bounds.right &&
 				pos.y >= bounds.top && pos.y < bounds.bottom;
+		},
+
+		/**
+		 * Tests wether element is within the window bounds and thus visible.
+		 * Also returns false if display style is set to none.
+		 * @fully specifies wether to test for full or partial visibility.
+		 */
+		isVisible: function(fully) {
+			var top = Browser.window.getScrollOffset().y,
+				bottom = top + Browser.window.getSize().height;
+			var bounds = this.getBounds();
+			return (bounds.height > 0 || bounds.width > 0) // visible
+					&& (bounds.top >= top && bounds.bottom <= bottom // fully
+						|| (fully && bounds.top <= top && bounds.bottom >= bottom) // fully & bigger than screen
+						|| !fully && (bounds.top <= top && bounds.bottom >= top // partly top
+							|| bounds.top <= bottom && bounds.bottom >= bottom)); // partly bottom
 		}
 	};
 
