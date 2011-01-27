@@ -158,9 +158,8 @@ DomElement.inject(new function() {
 		 * @fully specifies wether to test for full or partial visibility.
 		 */
 		isVisible: function(fully) {
-			var top = Browser.window.getScrollOffset().y,
-				bottom = top + Browser.window.getSize().height;
-			var bounds = this.getBounds();
+			var win = this.getWindow(), top = win.getScrollOffset().y,
+				bottom = top + win.getSize().height, bounds = this.getBounds();
 			return (bounds.height > 0 || bounds.width > 0) // visible
 					&& (bounds.top >= top && bounds.bottom <= bottom // fully
 						|| (fully && bounds.top <= top && bounds.bottom >= bottom) // fully & bigger than screen
