@@ -122,13 +122,6 @@ Array.inject({
 
 	remove: function(iter, bind) {
 		var entry = this.findEntry(iter, bind);
-		if (entry.key != null)
-			this.splice(entry.key, 1);
-		return entry.value;
-	},
-
-	remove: function(iter, bind) {
-		var entry = this.findEntry(iter, bind);
 		if (entry) {
 			this.splice(entry.key, 1);
 			return entry.value;
@@ -168,7 +161,7 @@ Array.inject({
 	},
 
 	/**
-	 * Appends the items of the passed array.
+	 * Appends the items of the passed array to this array.
 	 */
 	append: function(items) {
 		// It would be nice if calling push with the items of the array
@@ -189,6 +182,20 @@ Array.inject({
 			Array.remove(this, items[i]);
 		return this;
 	},
+	// TODO: Consider using this instead, as it does not modify the actual array:
+	/**
+	 * Returns a new array containing all objects from this array that are not
+	 * contained in items.
+	 */
+	/*
+	subtract: function(items) {
+		var res = [];
+		for (var i = this.length - 1; i >= 0; i--)
+			if (!Array.find(items, this[i]))
+				res.push(this[i]);
+		return res;
+	},
+	*/
 
 	/**
 	 * Removes all objects from this array that are not contained in items.
@@ -199,6 +206,19 @@ Array.inject({
 				this.splice(i, 1);
 		return this;
 	},
+	// TODO: Consider using this instead, as it does not modify the actual array:
+	/**
+	 * Returns a new array containing all objects contained in both arrays.
+	 */
+	/*
+	intersect: function(items) {
+		var res = [];
+		for (var i = this.length - 1; i >= 0; i--)
+			if (!!Array.find(items, this[i]))
+				res.push(this[i]);
+		return res;
+	},
+	*/
 
 	/**
 	 * Creates a hash object containing the array's values associated to the
