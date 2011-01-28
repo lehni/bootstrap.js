@@ -405,6 +405,9 @@ Array.inject(new function() {
 				// Simulate extending of Array, by actually extending Base and
 				// injecting the Array fields, which explicitely contain the
 				// native functions too (see bellow).
+				// Notice: since fields as the preserve flag set, the 
+				// Array#clone() will not override the Base#clone method,
+				// so derived arrays will successfully clone themselves.
 				var ret = Base.extend(fields, src);
 				// The subclass can use the normal extend again:
 				ret.extend = Function.extend;
