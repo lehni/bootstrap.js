@@ -175,52 +175,6 @@ Array.inject({
 	},
 
 	/**
-	 * Removes all objects contained in items.
-	 */
-	subtract: function(items) {
-		for (var i = 0, l = items.length; i < l; i++)
-			Array.remove(this, items[i]);
-		return this;
-	},
-	// TODO: Consider using this instead, as it does not modify the actual array:
-	/**
-	 * Returns a new array containing all objects from this array that are not
-	 * contained in items.
-	 */
-	/*
-	subtract: function(items) {
-		var res = [];
-		for (var i = this.length - 1; i >= 0; i--)
-			if (!Array.find(items, this[i]))
-				res.push(this[i]);
-		return res;
-	},
-	*/
-
-	/**
-	 * Removes all objects from this array that are not contained in items.
-	 */
-	intersect: function(items) {
-		for (var i = this.length - 1; i >= 0; i--)
-			if (!items.find(this[i]))
-				this.splice(i, 1);
-		return this;
-	},
-	// TODO: Consider using this instead, as it does not modify the actual array:
-	/**
-	 * Returns a new array containing all objects contained in both arrays.
-	 */
-	/*
-	intersect: function(items) {
-		var res = [];
-		for (var i = this.length - 1; i >= 0; i--)
-			if (!!Array.find(items, this[i]))
-				res.push(this[i]);
-		return res;
-	},
-	*/
-
-	/**
 	 * Creates a hash object containing the array's values associated to the
 	 * given keys as defined by obj.
 	 * This is based on mootools' associate, but extended by the possibility
@@ -325,6 +279,30 @@ Array.inject({
 	 */
 	getLast: function() {
 		return this[this.length - 1];
+	}
+}, new function() {
+	// Merge sutract / combine in one function through a producer:
+	function combine(subtract) {
+		return function(items) {
+			var res = new this.constructor();
+			for (var i = this.length - 1; i >= 0; i--)
+				if (subtract == !Array.find(items, this[i]))
+					res.push(this[i]);
+			return res;
+		}
+	}
+
+	return {
+		/**
+		 * Returns a new array containing all objects from this array that are
+		 * not contained in items.
+		 */
+		subtract: combine(true),
+
+		/**
+		 * Returns a new array containing all objects contained in both arrays.
+		 */
+		intersect: combine(false)
 	}
 });
 
