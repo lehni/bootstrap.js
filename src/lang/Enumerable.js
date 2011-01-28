@@ -134,7 +134,7 @@ Enumerable = {
 	 * If no iterator is passed, the value is used directly.
 	 */
 	max: function(iter, bind) {
-		var that = this;
+		var that = this, iter = Base.iterator(iter);
 		return Base.each(this, function(val, i) {
 			val = iter.call(bind, val, i, that);
 			if (val >= (this.max || val)) this.max = val;
@@ -147,7 +147,7 @@ Enumerable = {
 	 * If no iterator is passed, the value is used directly.
 	 */
 	min: function(iter, bind) {
-		var that = this;
+		var that = this, iter = Base.iterator(iter);
 		return Base.each(this, function(val, i) {
 			val = iter.call(bind, val, i, that);
 			if (val <= (this.min || val)) this.min = val;
@@ -170,7 +170,7 @@ Enumerable = {
 	 * Inspired by Prototype.js
 	 */
 	sortBy: function(iter, bind) {
-		var that = this;
+		var that = this, iter = Base.iterator(iter);
 		// TODO: Does not work as generics
 		return this.map(function(val, i) {
 			return { value: val, compare: iter.call(bind, val, i, that) };
