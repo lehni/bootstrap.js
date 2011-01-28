@@ -17,14 +17,14 @@ Array.inject(Enumerable, {
 
 #else // !ECMASCRIPT_5
 
+// Define standard methods that might not be present and only get injected
+// if they don't exist because of preserve: true
 Array.inject({
 	generics: true,
 	preserve: true,
 	// tell Base.type what to return for arrays.
 	_type: 'array',
 
-	// Define standard methods that might not be present and only get injected
-	// if they don't exist because of preserve: true
 	forEach: function(iter, bind) {
 		for (var i = 0, l = this.length; i < l; i++)
 			iter.call(bind, this[i], i, this);
@@ -328,6 +328,7 @@ Array.inject({
 	}
 });
 
+// Now add code that makes Array.extend() a possibilitiy:
 Array.inject(new function() {
 	// Fields that are hidden in Array.prototype are explicitely copied over,
 	// so that they can be inherited in extend() below, and generics are created
@@ -338,7 +339,8 @@ Array.inject(new function() {
 		this[name] = proto[name];
 	}, { generics: true, preserve: true });
 
-	// Make sure there are generics for all of them
+	// Make sure there are generics for all of them. Again this is not dangerous
+	// because we'rew using preserve: true
 	Array.inject(fields);
 
 	// Now add the fields to be injected into sub-prototypes from Array.
