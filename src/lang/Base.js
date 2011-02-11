@@ -110,14 +110,11 @@ new function() { // Bootstrap scope
 	var _define = Object.defineProperty, _describe = Object.getOwnPropertyDescriptor;
 
 	function define(obj, name, desc) {
+		// Unfortunately Safari seems to ignore configurable: true and
+		// does not override existing properties, so we need to delete
+		// first:
 		if (_define)
-			try {
-				// Unfortunately Safari seems to ignore configurable: true and
-				// does not override existing properties, so we need to delete
-				// first:
-				delete obj[name];
-				return _define(obj, name, desc);
-			} catch (e) {}
+			try { delete obj[name]; return _define(obj, name, desc); } catch (e) {}
 		if ((desc.get || desc.set) && obj.__defineGetter__) {
 			if (desc.get) obj.__defineGetter__(name, desc.get);
 			if (desc.set) obj.__defineSetter__(name, desc.set);
