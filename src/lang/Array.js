@@ -281,7 +281,7 @@ Array.inject({
 		return this[this.length - 1];
 	}
 }, new function() {
-	// Merge sutract / combine in one function through a producer:
+	// Merge sutract / intersect in one function through a producer:
 	function combine(subtract) {
 		return function(items) {
 			var res = new this.constructor();
