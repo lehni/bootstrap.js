@@ -111,7 +111,13 @@ new function() { // Bootstrap scope
 
 	function define(obj, name, desc) {
 		if (_define)
-			try { return _define(obj, name, desc); } catch (e) {}
+			try {
+				// Unfortunately Safari seems to ignore configurable: true and
+				// does not override existing properties, so we need to delete
+				// first:
+				delete obj[name];
+				return _define(obj, name, desc);
+			} catch (e) {}
 		if ((desc.get || desc.set) && obj.__defineGetter__) {
 			if (desc.get) obj.__defineGetter__(name, desc.get);
 			if (desc.set) obj.__defineSetter__(name, desc.set);
