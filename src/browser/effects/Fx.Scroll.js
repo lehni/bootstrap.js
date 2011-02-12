@@ -80,9 +80,12 @@ Fx.Scroll = Fx.extend({
 		return this.start(false, 'bottom');
 	},
 
-	toElement: function(el) {
-		var offset = DomElement.get(el).getOffset();
-		return this.start(offset.x, offset.y);
+	toElement: function(el, options) {
+		var el = DomElement.get(el), offset = el.getOffset(),
+			current = el.getWindow().getScrollOffset();
+		return this.start(
+				!options || options.x ? offset.x : current.x,
+				!options || options.y ? offset.y : current.y);
 	}
 });
 
