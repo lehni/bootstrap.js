@@ -11,7 +11,7 @@ DomDocument = DomElement.extend({
 	_type: 'document',
 
 	initialize: function() {
-		if(Browser.TRIDENT && Browser.VERSION < 7)
+		if (Browser.TRIDENT && Browser.VERSION < 7)
 			try {
 				// Fix background flickering on IE.
 				this.$.execCommand('BackgroundImageCache', false, true);
