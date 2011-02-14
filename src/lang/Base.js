@@ -149,18 +149,23 @@ new function() { // Bootstrap scope
 #else // !HELMA
 	function inject(dest, src, enumerable, base, generics) {
 #endif // !HELMA
+#ifdef BEANS
+		var beans;
+
 		/**
 		 * Private function that injects one field with given name
 		 */
-#ifdef BEANS
 		function field(name, val, dontCheck, generics) {
 			// This does even work for prop: 0, as it will just be looked up
 			// again through describe...
 			if (!val)
 				val = (val = describe(src, name)) && (val.get ? val : val.value);
 			var type = typeof val, func = type == 'function', res = val,
-				prev = dest[name], bean;
+				prev = dest[name], bean, part;
 #else // !BEANS
+		/**
+		 * Private function that injects one field with given name
+		 */
 		function field(name, dontCheck, generics) {
 #ifdef PROPERTY_DEFINITION
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
@@ -244,18 +249,12 @@ new function() { // Bootstrap scope
 					// specified. This does not produce properties for setter-
 					// only properties which makes sense and also avoids double-
 					// injection for beans with both getters and setters.
-#ifdef BEANS_OLD
-					// Support old and new format of bean flag.
-					if ((src.beans || src._beans) && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
-#else // !BEANS_OLD
-					if (src.beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
-#endif // !BEANS_OLD
-						try {
-							field(bean[3].toLowerCase() + bean[4], {
-								get: src['get' + bean[2]] || src['is' + bean[2]],
-								set: src['set' + bean[2]]
-							}, true);
-						} catch (e) {}
+					// Just collect beans for now, and look them up in dest at
+					// the end of fields injection. This make sure this.base()
+					// works in beans too, and inherits setters for redefined
+					// getters in subclasses.
+					if (beans && (bean = name.match(/^(get|is)(([A-Z])(.*))$/)))
+						beans.push([ bean[3].toLowerCase() + bean[4], bean[2] ]);
 #endif // BEANS
 				}
 #ifdef PROPERTY_DEFINITION
@@ -289,6 +288,14 @@ new function() { // Bootstrap scope
 		// for base to detect calls.
 		// dest[name] then is set to either src[name] or the wrapped function.
 		if (src) {
+#ifdef BEANS
+#ifdef BEANS_OLD
+			// Support old and new format of bean flag.
+			beans = (src.beans || src._beans) && [];
+#else // !BEANS_OLD
+			beans = src.beans && [];
+#endif // !BEANS_OLD
+#endif // BEANS
 			for (var name in src)
 				if (has(src, name) && !/^(HIDDEN_FIELDS)$/.test(name))
 #ifdef BEANS
@@ -304,6 +311,18 @@ new function() { // Bootstrap scope
 			field('toString');
 			field('valueOf');
 #endif // BROWSER
+#ifdef BEANS
+			// Now finally define beans as well. Look up methods on dest, for
+			// support of this.base() (See above).
+			for (var i = 0, l = beans && beans.length; i < l; i++)
+				try {
+					var bean = beans[i], part = bean[1];
+					field(bean[0], {
+						get: dest['get' + part] || dest['is' + part],
+						set: dest['set' + part]
+					}, true);
+				} catch (e) {}
+#endif // BEANS
 		}
 	}
 
