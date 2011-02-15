@@ -83,6 +83,15 @@ Array.inject({
 		for (var l = this.length; i < l; i++)
 			value = fn.call(null, value, this[i], i, this);
 		return value;
+	},
+
+	statics: {
+		// Define Array.isArray if it does not exist already. Note that this
+		// is only defined if there is no Array.isArray already, due to the
+		// preserve: true setting above.
+		isArray: function(obj) {
+			return Object.prototype.toString.call(obj) === '[object Array]';
+		}
 	}
 }, Enumerable, {
 	// TODO: this.each / this.findEntry / this.indexOf breaks many generics!
