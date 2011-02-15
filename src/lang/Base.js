@@ -145,9 +145,9 @@ new function() { // Bootstrap scope
 	 */
 #ifdef HELMA
 	// Real base is used for the versioning mechanism as desribed above.
-	function inject(dest, src, enumerable, base, generics, version) {
+	function inject(dest, src, enumerable, base, preserve, generics, version) {
 #else // !HELMA
-	function inject(dest, src, enumerable, base, generics) {
+	function inject(dest, src, enumerable, base, preserve, generics) {
 #endif // !HELMA
 #ifdef BEANS
 		var beans;
@@ -179,7 +179,7 @@ new function() { // Bootstrap scope
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
 			// to produce generics of them.
-			if (generics && func && (!src.preserve || !generics[name])) generics[name] = function(bind) {
+			if (generics && func && (!preserve || !generics[name])) generics[name] = function(bind) {
 				// Do not call Array.slice generic here, as on Safari,
 				// this seems to confuse scopes (calling another
 				// generic from generic-producing code).
@@ -188,7 +188,7 @@ new function() { // Bootstrap scope
 			}
 			// TODO: On proper JS implementation, dontCheck is always set
 			// Add this with a compile switch here!
-			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !src.preserve)) {
+			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !preserve)) {
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
@@ -382,18 +382,20 @@ new function() { // Bootstrap scope
 						&& (proto.constructor._version || (proto.constructor._version = 1));
 #endif // HELMA
 #ifndef HELMA // !HELMA
-				inject(proto, src, false, base && base.prototype, src.generics && this);
+				inject(proto, src, false, base && base.prototype, src.preserve, src.generics && this);
 #else // HELMA
 				// Pass version
-				inject(proto, src, false, base && base.prototype, src.generics && this, version);
+				inject(proto, src, false, base && base.prototype, src.preserve, src.generics && this, version);
 #endif // HELMA
 				// Define new static fields as enumerable, and inherit from base.
 				// enumerable is necessary so they can be copied over from base,
 				// and it does not disturb to be enumerable in the constructor.
+				// Use the preserve setting in src.preserve for statics too, not
+				// their own.
 #ifndef HELMA // !HELMA
-				inject(this, src.statics, true, base);
+				inject(this, src.statics, true, base, src.preserve);
 #else // HELMA
-				inject(this, src.statics, true, base, null, version);
+				inject(this, src.statics, true, base, src.preserve, null, version);
 				// For versioning, define onCodeUpdate to update _version each time:
 				if (version) {
 					// See if it is already defined, and override in a way that
