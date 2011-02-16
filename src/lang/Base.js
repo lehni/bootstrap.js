@@ -150,32 +150,32 @@ new function() { // Bootstrap scope
 	function inject(dest, src, enumerable, base, preserve, generics) {
 #endif // !HELMA
 #ifdef BEANS
-		var beans;
+		var beans, bean;
+#endif // BEANS
 
 		/**
 		 * Private function that injects one field with given name
 		 */
+#ifdef BEANS
+		// For beans we need to provide a version of field() that takes an
+		// optional val argument. See bellow.
 		function field(name, val, dontCheck, generics) {
 			// This does even work for prop: 0, as it will just be looked up
-			// again through describe...
-			if (!val)
-				val = (val = describe(src, name)) && (val.get ? val : val.value);
-			var func = typeof val == 'function', res = val, bean,
-				prev = val && val.get ? null : dest[name];
+			// again through describe. Only the first line of variable definitions
+			// is special fo beans, the rest is shared with PROPERTY_DEFINITION
+			// bellow
+			var val = val || (val = describe(src, name)) && (val.get ? val : val.value),
 #else // !BEANS
-		/**
-		 * Private function that injects one field with given name
-		 */
 		function field(name, dontCheck, generics) {
-#ifdef PROPERTY_DEFINITION
-			var val = (val = describe(src, name)) && (val.get ? val : val.value),
-				func = typeof val == 'function', res = val,
-				prev = val && val.get ? null : dest[name];
-#else // !BEANS && !PROPERTY_DEFINITION
-			var val = src[name], func = typeof val == 'function', res = val,
-				prev = dest[name];
-#endif // !PROPERTY_DEFINITION
 #endif // !BEANS
+#ifdef PROPERTY_DEFINITION // || BEANS (PROPERTY_DEFINITION is always on for BEANS)
+#ifndef BEANS
+			var val = (val = describe(src, name)) && (val.get ? val : val.value),
+#endif // !BEANS
+				func = typeof val == 'function', res = val, prev = val && val.get ? null : dest[name];
+#else // !PROPERTY_DEFINITION
+			var val = src[name], func = typeof val == 'function', res = val, prev = dest[name];
+#endif // !PROPERTY_DEFINITION
 			// Make generics first, as we might jump out bellow in the
 			// val !== (src.__proto__ || Object.prototype)[name] check,
 			// e.g. when explicitely reinjecting Array.prototype methods
