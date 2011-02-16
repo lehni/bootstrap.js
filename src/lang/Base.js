@@ -160,8 +160,8 @@ new function() { // Bootstrap scope
 			// again through describe...
 			if (!val)
 				val = (val = describe(src, name)) && (val.get ? val : val.value);
-			var type = typeof val, func = type == 'function', res = val,
-				prev = dest[name], bean, part;
+			var func = typeof val == 'function', res = val, bean,
+				prev = val && val.get ? null : dest[name];
 #else // !BEANS
 		/**
 		 * Private function that injects one field with given name
@@ -169,7 +169,8 @@ new function() { // Bootstrap scope
 		function field(name, dontCheck, generics) {
 #ifdef PROPERTY_DEFINITION
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
-				func = typeof val == 'function', res = val, prev = dest[name];
+				func = typeof val == 'function', res = val,
+				prev = val && val.get ? null : dest[name];
 #else // !BEANS && !PROPERTY_DEFINITION
 			var val = src[name], func = typeof val == 'function', res = val,
 				prev = dest[name];
