@@ -172,7 +172,12 @@ new function() { // Bootstrap scope
 #ifndef BEANS
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
 #endif // !BEANS
-				func = typeof val == 'function', res = val, prev = val && val.get ? null : dest[name];
+				func = typeof val == 'function', res = val,
+				// Only lookup previous value if we preserve or define a function
+				// that might need it for this.base(). If we're defining a getter,
+				// don't lookup previous value, but look if the property exists
+				// using name in dest and store result in prev
+				prev = preserve || func ? (val && val.get ? name in dest : dest[name]) : null;
 #else // !PROPERTY_DEFINITION
 			var val = src[name], func = typeof val == 'function', res = val, prev = dest[name];
 #endif // !PROPERTY_DEFINITION
@@ -189,7 +194,7 @@ new function() { // Bootstrap scope
 			}
 			// TODO: On proper JS implementation, dontCheck is always set
 			// Add this with a compile switch here!
-			if ((dontCheck || val !== undefined && has(src, name)) && (!prev || !preserve)) {
+			if ((dontCheck || val !== undefined && has(src, name)) && (!preserve || !prev)) {
 				if (func) {
 					if (prev && /\bthis\.base\b/.test(val)) {
 #ifdef HELMA
