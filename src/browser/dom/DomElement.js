@@ -1,14 +1,14 @@
-#ifndef __browser_dom_DomElement__
-#define __browser_dom_DomElement__
+//#ifndef __browser_dom_DomElement__
+//#define __browser_dom_DomElement__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomElements
@@ -166,11 +166,11 @@ DomElement.inject(new function() {
 	};
 });
 
-#ifdef DEFINE_GLOBALS
+//#ifdef DEFINE_GLOBALS
 
 $ = DomElement.get;
 $$ = DomElement.getAll;
 
-#endif // DEFINE_GLOBALS
+//#endif // DEFINE_GLOBALS
 
-#endif // __browser_dom_DomElement__
+//#endif // __browser_dom_DomElement__

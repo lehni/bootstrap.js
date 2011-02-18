@@ -1,7 +1,7 @@
-#ifndef __browser_dom_DomEvent_Drag__
-#define __browser_dom_DomEvent_Drag__
+//#ifndef __browser_dom_DomEvent_Drag__
+//#define __browser_dom_DomEvent_Drag__
 
-#include "DomEvent.js"
+//#include "DomEvent.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Drag
@@ -65,4 +65,4 @@ DomEvent.add(new function() {
 	};
 });
 
-#endif // __browser_dom_DomEvent_Drag__
+//#endif // __browser_dom_DomEvent_Drag__

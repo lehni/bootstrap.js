@@ -1,5 +1,5 @@
-#ifndef __browser_dom_DomNode__
-#define __browser_dom_DomNode__
+//#ifndef __browser_dom_DomNode__
+//#define __browser_dom_DomNode__
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomNodes
@@ -745,4 +745,4 @@ DomNode.inject(new function() {
 	return fields;
 });
 
-#endif // __browser_dom_DomNode__
+//#endif // __browser_dom_DomNode__

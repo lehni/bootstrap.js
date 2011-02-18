@@ -1,7 +1,7 @@
-#ifndef __browser_html_DomWindow__
-#define __browser_html_DomWindow__
+//#ifndef __browser_html_DomWindow__
+//#define __browser_html_DomWindow__
 
-#include "DomElement.js"
+//#include "DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomWindow
@@ -73,4 +73,4 @@ Window = DomWindow = DomElement.extend({
 	}
 });
 
-#endif // __browser_html_DomWindow__
+//#endif // __browser_html_DomWindow__

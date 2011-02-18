@@ -1,14 +1,14 @@
-#ifndef __browser_remote_Asset__
-#define __browser_remote_Asset__
+//#ifndef __browser_remote_Asset__
+//#define __browser_remote_Asset__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Asset
@@ -135,4 +135,4 @@ Asset = new function() {
 	}
 };
 
-#endif // __browser_remote_Asset__
+//#endif // __browser_remote_Asset__

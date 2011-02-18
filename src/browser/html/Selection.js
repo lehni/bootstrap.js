@@ -1,7 +1,7 @@
-#ifndef __browser_html_Selection__
-#define __browser_html_Selection__
+//#ifndef __browser_html_Selection__
+//#define __browser_html_Selection__
 
-#include "HtmlForm.js"
+//#include "HtmlForm.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Selection
@@ -74,4 +74,4 @@ HtmlFormElement.inject({
 	}
 });
 
-#endif // __browser_html_Selection__
+//#endif // __browser_html_Selection__

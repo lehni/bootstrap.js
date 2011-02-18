@@ -97,7 +97,7 @@ my $shebang = 1;
 
 # allow $keywordchar, $contchar, $optlineendchar and $macroprefix 
 # to be perl regexps
-my $charperlre = 0;
+my $charperlre = 1;
 
 # character(s) which prefix environment variables - defaults to shell-style '$'
 my $envchar = "\$";

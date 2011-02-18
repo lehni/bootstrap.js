@@ -1,20 +1,20 @@
-#ifndef __lang_Json__
-#define __lang_Json__
+//#ifndef __lang_Json__
+//#define __lang_Json__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Json
 
-#ifdef ECMASCRIPT_5
+//#ifdef ECMASCRIPT_5
 
 // We can fully rely on the native JSON object to be there.
 Json = {
-#ifdef RHINO
+//#ifdef RHINO
 	encode: function(obj, properties) {
 		// Do not send native Java objects through JSON.stringify
 		return Base.type(obj) != 'java' ? JSON.stringify(obj, properties) : null;
 	},
 
-#else if defined(BROWSER) // BROWSER
+//#else if defined(BROWSER) // BROWSER
 	// Unfortunately IE does not natively support __proto__, so
 	// we need to filter it out from Json
 	encode: function(obj, properties) {
@@ -23,9 +23,9 @@ Json = {
 		});
 	},
 
-#else // !RHINO && !BROWSER
+//#else // !RHINO && !BROWSER
 	encode: JSON.stringify,
-#endif // !RHINO && !BROWSER
+//#endif // !RHINO && !BROWSER
 	decode: function(str, secure) {
 		try {
 			// No need for security checks when using native JSON.
@@ -36,19 +36,19 @@ Json = {
 	}
 };
 
-#else // !ECMASCRIPT_5
+//#else // !ECMASCRIPT_5
 
 Json = function(JSON) {
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
 	// Support the native Json object if it is there, fall back on JS version.
 	return {
 		encode: JSON
-#ifdef RHINO
+//#ifdef RHINO
 			? function(obj, properties) {
 				// Do not send native Java objects through JSON.stringify
 				return Base.type(obj) != 'java' ? JSON.stringify(obj, properties) : null;
 			}
-#else if defined(BROWSER) // BROWSER
+//#else if defined(BROWSER) // BROWSER
 			? function(obj, properties) {
 				// Unfortunately IE does not natively support __proto__, so
 				// we need to filter it out from Json
@@ -56,9 +56,9 @@ Json = function(JSON) {
 					return key == '__proto__' ? undefined : value;
 				});
 			}
-#else // !RHINO && !BROWSER
+//#else // !RHINO && !BROWSER
 			? JSON.stringify
-#endif // !RHINO && !BROWSER
+//#endif // !RHINO && !BROWSER
 			: function(obj, properties) {
 				if (Base.type(properties) == 'array') {
 					// Convert properties to a lookup table:
@@ -107,12 +107,12 @@ Json = function(JSON) {
 				try {
 					// Make sure the incoming data is actual JSON
 					// Logic borrowed from http://json.org/json2.js
-#ifdef BROWSER
+//#ifdef BROWSER
 					// Make sure leading/trailing whitespace is removed (IE can't handle it)
 					return Base.type(str) == 'string' && (str = str.trim()) &&
-#else // !BROWSER
+//#else // !BROWSER
 					return Base.type(str) == 'string' && str &&
-#endif // !BROWSER
+//#endif // !BROWSER
 						(!secure || /^[\],:{}\s]*$/.test(
 							str.replace(/\\(?:["\\\/bfnrt]|u[0-9a-fA-F]{4})/g, "@")
 								.replace(/"[^"\\\n\r]*"|true|false|null|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?/g, "]")
@@ -125,6 +125,6 @@ Json = function(JSON) {
 	};
 }(this.JSON);
 
-#endif // !ECMASCRIPT_5
+//#endif // !ECMASCRIPT_5
 
-#endif // __lang_Json__
+//#endif // __lang_Json__

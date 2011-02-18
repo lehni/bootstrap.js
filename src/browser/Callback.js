@@ -1,14 +1,14 @@
-#ifndef __browser_Callback__
-#define __browser_Callback__
+//#ifndef __browser_Callback__
+//#define __browser_Callback__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Callback
@@ -84,4 +84,4 @@ Callback = {
 	}
 };
 
-#endif // __browser_Callback__
+//#endif // __browser_Callback__

@@ -1,13 +1,13 @@
-#ifndef __lang_Array__
-#define __lang_Array__
+//#ifndef __lang_Array__
+//#define __lang_Array__
 
-#include "Enumerable.js"
-#include "Hash.js"
+//#include "Enumerable.js"
+//#include "Hash.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Array
 
-#ifdef ECMASCRIPT_5
+//#ifdef ECMASCRIPT_5
 
 Array.inject(Enumerable, {
 	generics: true,
@@ -15,7 +15,7 @@ Array.inject(Enumerable, {
 	// tell Base.type what to return for arrays.
 	_type: 'array',
 
-#else // !ECMASCRIPT_5
+//#else // !ECMASCRIPT_5
 
 // Define standard methods that might not be present and only get injected
 // if they don't exist because of preserve: true
@@ -98,7 +98,7 @@ Array.inject({
 	generics: true,
 	BEANS_TRUE
 
-#endif // !ECMASCRIPT_5
+//#endif // !ECMASCRIPT_5
 
 	each: function(iter, bind) {
 		try {
@@ -344,7 +344,7 @@ Array.inject(new function() {
 			this.length = 0;
 		},
 
-#ifdef BROWSER
+//#ifdef BROWSER
 		// Safari breaks native concat on sub classes of arrays. Simulate it here.
 		// TODO: Test if newer versions are find with this.
 		concat: function(list) {
@@ -352,7 +352,7 @@ Array.inject(new function() {
 				? new Array(this.length + list.length).append(this).append(list)
 				: Array.concat(this, list);
 		},
-#endif // BROWSER
+//#endif // BROWSER
 
 		// The native toString does not work for classes inheriting from Array.
 		// but luckily join does the same and works.
@@ -406,11 +406,11 @@ Array.inject(new function() {
 	};
 });
 
-#ifdef DEFINE_GLOBALS
+//#ifdef DEFINE_GLOBALS
 
 // Short-cut to Array.create
 $A = Array.create;
 
-#endif // DEFINE_GLOBALS
+//#endif // DEFINE_GLOBALS
 
-#endif // __lang_Array__
+//#endif // __lang_Array__

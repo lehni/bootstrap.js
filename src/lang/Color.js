@@ -1,8 +1,8 @@
-#ifndef __lang_Color__
-#define __lang_Color__
+//#ifndef __lang_Color__
+//#define __lang_Color__
 
-#include "String.js"
-#include "Array.js"
+//#include "String.js"
+//#include "Array.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Color
@@ -85,4 +85,4 @@ String.inject({
 	}
 });
 
-#endif // __lang_Color__
+//#endif // __lang_Color__

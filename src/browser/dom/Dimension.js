@@ -1,16 +1,16 @@
-#ifndef __browser_dom_Dimension__
-#define __browser_dom_Dimension__
+//#ifndef __browser_dom_Dimension__
+//#define __browser_dom_Dimension__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "DomElement.js"
+//#include "DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Dimension
@@ -256,4 +256,4 @@ DomElement.inject(new function() {
 	}
 });
 
-#endif // __browser_dom_Dimension__
+//#endif // __browser_dom_Dimension__

@@ -1,5 +1,5 @@
-#ifndef __lang_Math__
-#define __lang_Math__
+//#ifndef __lang_Math__
+//#define __lang_Math__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Math
@@ -14,4 +14,4 @@ Math.rand = function(first, second) {
 		: Math.floor(Math.random() * (second - first) + first);
 }
 
-#endif // __lang_Math__
+//#endif // __lang_Math__

@@ -1,8 +1,8 @@
-#ifndef __lang_String__
-#define __lang_String__
+//#ifndef __lang_String__
+//#define __lang_String__
 
-#include "Number.js"
-#include "Array.js"
+//#include "Number.js"
+//#include "Array.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // String
@@ -83,4 +83,4 @@ String.inject({
 	}
 });
 
-#endif // __lang_String__
+//#endif // __lang_String__

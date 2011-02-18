@@ -1,5 +1,5 @@
-#ifndef __browser_Browser__
-#define __browser_Browser__
+//#ifndef __browser_Browser__
+//#define __browser_Browser__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Browser
@@ -69,4 +69,4 @@ Browser = new function() {
 	return fields;
 };
 
-#endif // __browser_Browser__
+//#endif // __browser_Browser__

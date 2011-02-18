@@ -1,16 +1,16 @@
-#ifndef __browser_effects_Fx__
-#define __browser_effects_Fx__
+//#ifndef __browser_effects_Fx__
+//#define __browser_effects_Fx__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "../Callback.js"
+//#include "../Callback.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fx
@@ -86,4 +86,4 @@ Fx = Base.extend(Chain, Callback, {
 	}
 });
 
-#endif // __browser_effects_Fx__
+//#endif // __browser_effects_Fx__

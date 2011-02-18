@@ -1,16 +1,16 @@
-#ifndef __browser_effects_Fx_Transitions__
-#define __browser_effects_Fx_Transitions__
+//#ifndef __browser_effects_Fx_Transitions__
+//#define __browser_effects_Fx_Transitions__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "Fx.js"
+//#include "Fx.js"
 
 Fx.Transitions = new Base().inject({
 	// Override the Fx.Transitions' inject function so that each function that
@@ -80,4 +80,4 @@ Fx.Transitions.inject(['Quad', 'Cubic', 'Quart', 'Quint'].each(function(name, i)
 	}
 }, {}));
 
-#endif // __browser_effects_Fx_Transitions__
+//#endif // __browser_effects_Fx_Transitions__

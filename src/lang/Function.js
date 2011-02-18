@@ -1,12 +1,12 @@
-#ifndef __lang_Function__
-#define __lang_Function__
+//#ifndef __lang_Function__
+//#define __lang_Function__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Function
 
 Function.inject(new function() {
 
-#ifdef BROWSER
+//#ifdef BROWSER
 
 	function timer(set) {
 		return function(delay, bind, args) {
@@ -25,20 +25,20 @@ Function.inject(new function() {
 		};
 	}
 
-#endif // BROWSER
+//#endif // BROWSER
 
 	return {
 		generics: true,
 		preserve: true,
 
-#ifdef BROWSER
+//#ifdef BROWSER
 
 		delay: timer(setTimeout),
 		periodic: timer(setInterval),
 
-#endif // BROWSER
+//#endif // BROWSER
 
-#ifndef ECMASCRIPT_5
+//#ifndef ECMASCRIPT_5
 
 		bind: function(bind) {
 			var that = this, slice = Array.prototype.slice,
@@ -49,7 +49,7 @@ Function.inject(new function() {
 			}
 		},
 
-#endif // !ECMASCRIPT_5
+//#endif // !ECMASCRIPT_5
 
 		wrap: function(bind, args) {
 			var that = this;
@@ -60,4 +60,4 @@ Function.inject(new function() {
 	}
 });
 
-#endif // __lang_Function__
+//#endif // __lang_Function__

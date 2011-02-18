@@ -1,14 +1,14 @@
-#ifndef __browser_dom_query_Selectors__
-#define __browser_dom_query_Selectors__
+//#ifndef __browser_dom_query_Selectors__
+//#define __browser_dom_query_Selectors__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Selectors
@@ -247,4 +247,4 @@ DomElement.inject(new function() {
 	};
 });
 
-#endif // __browser_dom_query_Selectors__
+//#endif // __browser_dom_query_Selectors__

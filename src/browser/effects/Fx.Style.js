@@ -1,16 +1,16 @@
-#ifndef __browser_effects_Fx_Style__
-#define __browser_effects_Fx_Style__
+//#ifndef __browser_effects_Fx_Style__
+//#define __browser_effects_Fx_Style__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "Fx.CSS.js"
+//#include "Fx.CSS.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fx.Style
@@ -50,4 +50,4 @@ HtmlElement.inject({
 	}
 });
 
-#endif // __browser_effects_Fx_Style__
+//#endif // __browser_effects_Fx_Style__

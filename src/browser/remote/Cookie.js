@@ -1,14 +1,14 @@
-#ifndef __browser_remote_Cookie__
-#define __browser_remote_Cookie__
+//#ifndef __browser_remote_Cookie__
+//#define __browser_remote_Cookie__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
 ////////////////////////////////////////////////////////////////////////////////
 // Cookie
@@ -29,4 +29,4 @@ Cookie = {
 	}
 };
 
-#endif // __browser_remote_Cookie__
+//#endif // __browser_remote_Cookie__

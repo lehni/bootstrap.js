@@ -1,5 +1,5 @@
-#ifndef __lang_Number__
-#define __lang_Number__
+//#ifndef __lang_Number__
+//#define __lang_Number__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Number
@@ -32,4 +32,4 @@ Number.inject({
 	}
 });
 
-#endif // __lang_Number__
+//#endif // __lang_Number__

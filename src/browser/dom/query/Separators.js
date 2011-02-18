@@ -1,16 +1,16 @@
-#ifndef __browser_dom_query_Separators__
-#define __browser_dom_query_Separators__
+//#ifndef __browser_dom_query_Separators__
+//#define __browser_dom_query_Separators__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "Selectors.js"
+//#include "Selectors.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Separators
@@ -66,4 +66,4 @@ DomElement.separators = {
 	]
 };
 
-#endif // __browser_dom_query_Separators__
+//#endif // __browser_dom_query_Separators__

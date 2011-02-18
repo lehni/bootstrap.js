@@ -1,7 +1,7 @@
-#ifndef __browser_dom_DomDocument__
-#define __browser_dom_DomDocument__
+//#ifndef __browser_dom_DomDocument__
+//#define __browser_dom_DomDocument__
 
-#include "DomElement.js"
+//#include "DomElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // DomDocument
@@ -54,4 +54,4 @@ DomDocument = DomElement.extend({
 	}
 });
 
-#endif // __browser_dom_DomDocument__
+//#endif // __browser_dom_DomDocument__

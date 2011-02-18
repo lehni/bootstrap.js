@@ -1,16 +1,16 @@
-#ifndef __browser_effects_Fx_CSS__
-#define __browser_effects_Fx_CSS__
+//#ifndef __browser_effects_Fx_CSS__
+//#define __browser_effects_Fx_CSS__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "Fx.js"
+//#include "Fx.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Fx.CSS
@@ -18,7 +18,7 @@
 Fx.CSS = new function() {
 
 	var parsers = new Hash({
-#ifdef __lang_Color__
+//#ifdef __lang_Color__
 		color: {
 			match: function(value) {
 				if (value.match(/^#[0-9a-f]{3,6}$/i)) return value.hexToRgb(true);
@@ -36,7 +36,7 @@ Fx.CSS = new function() {
 			}
 		},
 
-#endif // __lang_Color__
+//#endif // __lang_Color__
 		number: {
 			match: function(value) {
 				return parseFloat(value);
@@ -100,4 +100,4 @@ Fx.CSS = new function() {
 	}
 };
 
-#endif // __browser_effects_Fx_CSS__
+//#endif // __browser_effects_Fx_CSS__

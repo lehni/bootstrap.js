@@ -1,5 +1,5 @@
-#ifndef __lang_Enumerable__
-#define __lang_Enumerable__
+//#ifndef __lang_Enumerable__
+//#define __lang_Enumerable__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Enumerable
@@ -190,4 +190,4 @@ Enumerable = {
 	}
 };
 
-#endif // __lang_Enumerable__
+//#endif // __lang_Enumerable__

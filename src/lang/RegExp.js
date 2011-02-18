@@ -1,5 +1,5 @@
-#ifndef __lang_RegExp__
-#define __lang_RegExp__
+//#ifndef __lang_RegExp__
+//#define __lang_RegExp__
 
 ////////////////////////////////////////////////////////////////////////////////
 // RegExp
@@ -9,4 +9,4 @@ RegExp.inject({
 	_type: 'regexp'
 });
 
-#endif // __lang_RegExp__
+//#endif // __lang_RegExp__

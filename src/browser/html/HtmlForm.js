@@ -1,7 +1,7 @@
-#ifndef __browser_html_Form__
-#define __browser_html_Form__
+//#ifndef __browser_html_Form__
+//#define __browser_html_Form__
 
-#include "HtmlElement.js"
+//#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlForm
@@ -149,4 +149,4 @@ HtmlOption = HtmlFormElement.extend({
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']
 });
 
-#endif // __browser_html_Form__
+//#endif // __browser_html_Form__

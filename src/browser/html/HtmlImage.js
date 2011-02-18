@@ -1,7 +1,7 @@
-#ifndef __browser_html_Image__
-#define __browser_html_Image__
+//#ifndef __browser_html_Image__
+//#define __browser_html_Image__
 
-#include "HtmlElement.js"
+//#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlImage
@@ -12,4 +12,4 @@ HtmlImage = HtmlElement.extend({
 	_properties: ['src', 'alt', 'title']
 });
 
-#endif // __browser_html_Image__
+//#endif // __browser_html_Image__

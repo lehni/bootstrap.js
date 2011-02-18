@@ -1,16 +1,16 @@
-#ifndef __browser_effects_Fx_Elements__
-#define __browser_effects_Fx_Elements__
+//#ifndef __browser_effects_Fx_Elements__
+//#define __browser_effects_Fx_Elements__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "Fx.Styles.js"
+//#include "Fx.Styles.js"
 
 Fx.Elements = Fx.extend({
 	initialize: function(elements, options) {
@@ -62,4 +62,4 @@ Fx.Elements = Fx.extend({
 	}
 });
 
-#endif // __browser_effects_Fx_Elements__
+//#endif // __browser_effects_Fx_Elements__

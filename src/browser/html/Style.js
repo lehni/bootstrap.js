@@ -1,16 +1,16 @@
-#ifndef __browser_html_Style__
-#define __browser_html_Style__
+//#ifndef __browser_html_Style__
+//#define __browser_html_Style__
 
-#ifdef HIDDEN
+//#ifdef HIDDEN
 /**
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
  * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
-#endif // HIDDEN
+//#endif // HIDDEN
 
-#include "HtmlElement.js"
+//#include "HtmlElement.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Style
@@ -84,10 +84,10 @@ HtmlElement.inject(new function() {
 			}
 			if (name == 'visibility')
 				return /^(visible|inherit(|ed))$/.test(style);
-#ifdef __lang_Color__
+//#ifdef __lang_Color__
 			var color = style && style.match(/rgb[a]?\([\d\s,]+\)/);
 			if (color) return style.replace(color[0], color[0].rgbToHex());
-#endif // !__lang_Color__
+//#endif // !__lang_Color__
 			if (Browser.PRESTO || Browser.TRIDENT && isNaN(parseInt(style))) {
 				// Fix IE / Opera style that falsly include border and padding:
 				if (/^(width|height)$/.test(name)) {
@@ -195,4 +195,4 @@ HtmlElement.inject(new function() {
 	return fields;
 });
 
-#endif // __browser_html_Style__
+//#endif // __browser_html_Style__

@@ -1,5 +1,5 @@
-#ifndef __lang_Date__
-#define __lang_Date__
+//#ifndef __lang_Date__
+//#define __lang_Date__
 
 ////////////////////////////////////////////////////////////////////////////////
 // Date
@@ -12,16 +12,16 @@ Date.inject({
 		DAY: 86400000,
 		WEEK: 604800000, // 7 * DAY
 		MONTH: 2592000000, // 30 * DAY
-#ifdef ECMASCRIPT_5
+//#ifdef ECMASCRIPT_5
 		YEAR: 31536000000 // 365 * DAY
-#else // !ECMASCRIPT_5
+//#else // !ECMASCRIPT_5
 		YEAR: 31536000000, // 365 * DAY
 
 		now: Date.now || function() {
 			return +new Date();
 		}
-#endif // !ECMASCRIPT_5
+//#endif // !ECMASCRIPT_5
 	}
 });
 
-#endif // __lang_Date__
+//#endif // __lang_Date__

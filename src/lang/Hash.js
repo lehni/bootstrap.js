@@ -1,7 +1,7 @@
-#ifndef __lang_Hash__
-#define __lang_Hash__
+//#ifndef __lang_Hash__
+//#define __lang_Hash__
 
-#include "Enumerable.js"
+//#include "Enumerable.js"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Hash
@@ -41,7 +41,7 @@ Hash = Base.extend(Enumerable, {
 		// Do not use Object.keys for iteration as iterators might modify
 		// the object we're iterating over, making the hasOwnProperty still
 		// necessary.
-#ifdef PROPERTY_DEFINITION
+//#ifdef PROPERTY_DEFINITION
 		// If PROPERTY_DEFINITION is used, we can fully rely on hasOwnProperty,
 		// as even for FIX_PROTO, define(this, '__proto__', {}) is used.
 		var bind = bind || this, iter = Base.iterator(iter);
@@ -49,14 +49,14 @@ Hash = Base.extend(Enumerable, {
 			for (var i in this)
 				if (this.hasOwnProperty(i))
 					iter.call(bind, this[i], i, this);
-#else // !PROPERTY_DEFINITION
+//#else // !PROPERTY_DEFINITION
 		// Rely on Base.has instead of hasOwnProperty directly.
 		var bind = bind || this, iter = Base.iterator(iter), has = Base.has;
 		try {
 			for (var i in this)
 				if (has(this, i))
 					iter.call(bind, this[i], i, this);
-#endif // !PROPERTY_DEFINITION
+//#endif // !PROPERTY_DEFINITION
 		} catch (e) {
 			if (e !== Base.stop) throw e;
 		}
@@ -137,11 +137,11 @@ Hash = Base.extend(Enumerable, {
 	}
 });
 
-#ifdef DEFINE_GLOBALS
+//#ifdef DEFINE_GLOBALS
 
 // Short-cut to Hash.create
 $H = Hash.create;
 
-#endif // DEFINE_GLOBALS
+//#endif // DEFINE_GLOBALS
 
-#endif // __lang_Hash__
+//#endif // __lang_Hash__
