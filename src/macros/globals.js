@@ -1,6 +1,6 @@
 //#ifdef DEFINE_GLOBALS
 
-//#define DEFINE_BROWSER_GLOBAL(NAME, VALUE) $NAME = Browser.NAME = VALUE
+//#define DEFINE_BROWSER_GLOBAL(NAME, VALUE) var $NAME = Browser.NAME = VALUE
 
 //#else // !DEFINE_GLOBALS
 

@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Cookie
 
-Cookie = {
+var Cookie = {
 	set: function(name, value, expires, path) {
 		document.cookie = name + '=' + encodeURIComponent(value) + (expires ? ';expires=' +
 			expires.toGMTString() : '') + ';path=' + (path || '/');

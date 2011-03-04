@@ -16,7 +16,7 @@
 /**
  * Chain interface
  */
-Chain = {
+var Chain = {
 	chain: function(fn) {
 		(this._chain = this._chain || []).push(fn);
 		return this;
@@ -37,7 +37,7 @@ Chain = {
 /**
  * Callback interface
  */
-Callback = {
+var Callback = {
 	addEvent: function(type, fn) {
 		var ref = this.events = this.events || {};
 		ref = ref[type] = ref[type] || [];

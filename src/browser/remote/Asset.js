@@ -13,7 +13,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Asset
 
-Asset = new function() {
+var Asset = new function() {
 	// Clones props and remove all handlers:
 	function getProperties(props) {
 		return props ? Hash.create(props).each(function(val, key) {

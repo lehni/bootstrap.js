@@ -168,8 +168,8 @@ DomElement.inject(new function() {
 
 //#ifdef DEFINE_GLOBALS
 
-$ = DomElement.get;
-$$ = DomElement.getAll;
+var $ = DomElement.get,
+	$$ = DomElement.getAll;
 
 //#endif // DEFINE_GLOBALS
 

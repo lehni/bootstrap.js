@@ -4,7 +4,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Browser
 
-Browser = new function() {
+var Browser = new function() {
 	var name = window.orientation != undefined ? 'ipod'
 			: (navigator.platform.match(/mac|win|linux|nix/i) || ['other'])[0].toLowerCase();
 	var fields = {

@@ -409,7 +409,7 @@ Array.inject(new function() {
 //#ifdef DEFINE_GLOBALS
 
 // Short-cut to Array.create
-$A = Array.create;
+var $A = Array.create;
 
 //#endif // DEFINE_GLOBALS
 

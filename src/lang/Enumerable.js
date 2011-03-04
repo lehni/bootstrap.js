@@ -14,7 +14,7 @@
 // TODO: Base.each is used mostly so functions can be generalized.
 // But that's not enough, since find and others are still called
 // on this.
-Enumerable = {
+var Enumerable = {
 	generics: true,
 	// Make sure it's not overriding native functions when injecting into Array
 	preserve: true,

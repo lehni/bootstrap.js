@@ -678,11 +678,12 @@ var Base = new function() { // Bootstrap scope
 
 //#ifdef DEFINE_GLOBALS
 
-$each = Base.each;
-$type = Base.type;
-$check = Base.check;
-$pick = Base.pick;
-$stop = $break = Base.stop;
+var $each = Base.each,
+	$type = Base.type,
+	$check = Base.check,
+	$pick = Base.pick,
+	$stop = Base.stop,
+	$break = $stop;
 
 //#endif // DEFINE_GLOBALS
 

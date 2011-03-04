@@ -140,7 +140,7 @@ var Hash = Base.extend(Enumerable, {
 //#ifdef DEFINE_GLOBALS
 
 // Short-cut to Hash.create
-$H = Hash.create;
+var $H = Hash.create;
 
 //#endif // DEFINE_GLOBALS
 

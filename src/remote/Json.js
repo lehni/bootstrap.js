@@ -7,7 +7,7 @@
 //#ifdef ECMASCRIPT_5
 
 // We can fully rely on the native JSON object to be there.
-Json = {
+var Json = {
 //#ifdef RHINO
 	encode: function(obj, properties) {
 		// Do not send native Java objects through JSON.stringify
@@ -38,7 +38,7 @@ Json = {
 
 //#else // !ECMASCRIPT_5
 
-Json = function(JSON) {
+var Json = function(JSON) {
 	var special = { '\b': '\\b', '\t': '\\t', '\n': '\\n', '\f': '\\f', '\r': '\\r', '"' : '\\"', "'" : "\\'", '\\': '\\\\' };
 	// Support the native Json object if it is there, fall back on JS version.
 	return {
