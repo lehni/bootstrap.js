@@ -15,12 +15,12 @@
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlElements
 
-HtmlElements = DomElements.extend();
+var HtmlElements = DomElements.extend();
 
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlElement
 
-HtmlElement = DomElement.extend({
+var HtmlElement = DomElement.extend({
 	_collection: HtmlElements
 });
 

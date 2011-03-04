@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlImage
 
-HtmlImage = HtmlElement.extend({
+var HtmlImage = HtmlElement.extend({
 	BEANS_TRUE
 	_tag: 'img',
 	_properties: ['src', 'alt', 'title']

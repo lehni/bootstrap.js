@@ -10,7 +10,7 @@
  * returned values are collected in an array and converted to a DomNodes
  * array again, if it contains only nodes.
  */
-DomNodes = Array.extend(new function() {
+var DomNodes = Array.extend(new function() {
 	var unique = 0;
 	
 	return {
@@ -105,7 +105,7 @@ DomNodes = Array.extend(new function() {
 ////////////////////////////////////////////////////////////////////////////////
 // DomNode
 
-DomNode = Base.extend(new function() {
+var DomNode = Base.extend(new function() {
 	var nodes = [];
 	// LUTs for tags and class based constructors. Bootstrap can automatically
 	// use sub-prototype of DomNode for any given wrapped node based on

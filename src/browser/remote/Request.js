@@ -31,7 +31,7 @@
 //   update
 //   filter
 
-Request = Base.extend(Chain, Callback, new function() {
+var Request = Base.extend(Chain, Callback, new function() {
 	var unique = 0;
 
 	function createRequest(that) {

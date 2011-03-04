@@ -48,7 +48,7 @@ HtmlElement.inject({
 	}
 });
 
-HtmlForm = HtmlElement.extend({
+var HtmlForm = HtmlElement.extend({
 	BEANS_TRUE
 	_tag: 'form',
 	_properties: ['action', 'method', 'target'],
@@ -67,7 +67,7 @@ HtmlForm = HtmlElement.extend({
 	}
 });
 
-HtmlFormElement = HtmlElement.extend({
+var HtmlFormElement = HtmlElement.extend({
 	BEANS_TRUE
 	_properties: ['name', 'disabled'],
 	_methods: ['focus', 'blur'],
@@ -80,7 +80,7 @@ HtmlFormElement = HtmlElement.extend({
 	}
 });
 
-HtmlInput = HtmlFormElement.extend({
+var HtmlInput = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'input',
 	_properties: ['type', 'checked', 'defaultChecked', 'readOnly', 'maxLength'],
@@ -103,13 +103,13 @@ HtmlInput = HtmlFormElement.extend({
 	}
 });
 
-HtmlTextArea = HtmlFormElement.extend({
+var HtmlTextArea = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'textarea',
 	_properties: ['value']
 });
 
-HtmlSelect = HtmlFormElement.extend({
+var HtmlSelect = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'select',
 	_properties: ['type', 'selectedIndex'],
@@ -143,7 +143,7 @@ HtmlSelect = HtmlFormElement.extend({
 	}
 });
 
-HtmlOption = HtmlFormElement.extend({
+var HtmlOption = HtmlFormElement.extend({
 	BEANS_TRUE
 	_tag: 'option',
 	_properties: ['text', 'value', 'selected', 'defaultSelected', 'index']

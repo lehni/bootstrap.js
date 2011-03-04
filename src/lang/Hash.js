@@ -17,7 +17,7 @@
  * element. This is much simpler and faster, and I have not yet found out the
  * advantage of how Prototype handles it.
  */
-Hash = Base.extend(Enumerable, {
+var Hash = Base.extend(Enumerable, {
 	generics: true,
 
 	/**

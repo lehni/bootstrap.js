@@ -19,7 +19,7 @@
 // Bootstrap relies instead on #update that recieves a value to set and #get
 // to retrieve the current value. Any class extending Fx needs to define these.
 
-Fx = Base.extend(Chain, Callback, {
+var Fx = Base.extend(Chain, Callback, {
 	options: {
 		fps: 50,
 		unit: false,

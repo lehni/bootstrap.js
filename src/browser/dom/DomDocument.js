@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // DomDocument
 
-DomDocument = DomElement.extend({
+var DomDocument = DomElement.extend({
 	BEANS_TRUE
 	_type: 'document',
 

@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // HtmlDocument
 
-HtmlDocument = DomDocument.extend({
+var HtmlDocument = DomDocument.extend({
 	// Use HtmlElements collection instead of DomElements for HtmlDocuments
 	_collection: HtmlElements
 });

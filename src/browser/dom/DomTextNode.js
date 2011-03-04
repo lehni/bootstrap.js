@@ -6,7 +6,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // DomTextNode
 
-DomTextNode = DomNode.extend({
+var DomTextNode = DomNode.extend({
 	_type: 'textnode'
 });
 

@@ -16,7 +16,7 @@
 // DomEvent
 
 // Name it DomEvent instead of Event, as Event is a native prototype.
-DomEvent = Base.extend(new function() {
+var DomEvent = Base.extend(new function() {
 	// MACIE does not accept numbers for keys, so use strings:
 	var keys = {
 		 '8': 'backspace',
