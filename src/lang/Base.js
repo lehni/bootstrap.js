@@ -664,26 +664,6 @@ var Base = new function() { // Bootstrap scope
 			}, new this.constructor());
 		},
 
-//#ifdef DEBUG
-		debug: function() {
-			return /^(string|number|function|regexp)$/.test(Base.type(this)) ? this
-				: Base.each(this, function(val, key) { this.push(key + ': ' + val); }, []).join(', ');
-			/*
-			switch (Base.type(this)) {
-			case 'string': case 'number': case 'regexp':
-				return this;
-			case 'function':
-				return 'function ' + (this.name || '');
-			}
-			var buf = [];
-			for (var key in this)
-				if (Base.has(this, key))
-					buf.push(key + ': ' + Base.debug(this[key]));
-			return buf.join(', ');
-			*/
-		},
-//#endif !DEBUG
-
 		toQueryString: function() {
 			return Base.each(this, function(val, key) {
 //#ifdef BROWSER
