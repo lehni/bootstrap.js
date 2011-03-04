@@ -23,7 +23,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 // Base
 
-new function() { // Bootstrap scope
+var Base = new function() { // Bootstrap scope
 //#ifdef FIX_PROTO
 	// Fix __proto__ for browsers where it is not implemented (IE and Opera).
 	// Do this before anything else, for "var i in" to work without filtering.
@@ -501,10 +501,10 @@ new function() { // Bootstrap scope
 	// for example Object.
 	// Object is actually used for Base, and all JS objects inherit Bootstrap
 	// functionality!
-	Base = Object.inject({
+	return Object.inject({
 //#else // !EXTEND_OBJECT
 	// Let's not touch Object.prototype
-	Base = Object.extend({
+	return Object.extend({
 //#endif // !EXTEND_OBJECT
 		/**
 		 * Returns true if the object contains a property with the given name,
@@ -634,6 +634,16 @@ new function() { // Bootstrap scope
 	}, {
 		generics: true,
 
+		/**
+		 * Creates a new object of the same type and copies over all
+		 * name / value pairs from this object.
+		 */
+		clone: function() {
+			return Base.each(this, function(val, i) {
+				this[i] = val;
+			}, new this.constructor());
+		},
+
 //#ifdef DEBUG
 		debug: function() {
 			return /^(string|number|function|regexp)$/.test(Base.type(this)) ? this
@@ -653,16 +663,6 @@ new function() { // Bootstrap scope
 			*/
 		},
 //#endif !DEBUG
-
-		/**
-		 * Creates a new object of the same type and copies over all
-		 * name / value pairs from this object.
-		 */
-		clone: function() {
-			return Base.each(this, function(val, i) {
-				this[i] = val;
-			}, new this.constructor());
-		},
 
 		toQueryString: function() {
 			return Base.each(this, function(val, key) {
