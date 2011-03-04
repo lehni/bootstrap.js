@@ -44,7 +44,7 @@ HtmlElement.inject({
 	},
 
 	toQueryString: function() {
-		return Base.toQueryString(this.getValues());
+		return Hash.toQueryString(this.getValues());
 	}
 });
 

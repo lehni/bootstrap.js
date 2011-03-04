@@ -244,7 +244,7 @@ var Request = Base.extend(Chain, Callback, new function() {
 						data = data.toQueryString();
 					break;
 				case 'object':
-					data = Base.toQueryString(data);
+					data = Hash.toQueryString(data);
 					break;
 				default:
 					data = data.toString();

@@ -662,16 +662,6 @@ var Base = new function() { // Bootstrap scope
 			return Base.each(this, function(val, i) {
 				this[i] = val;
 			}, new this.constructor());
-		},
-
-		toQueryString: function() {
-			return Base.each(this, function(val, key) {
-//#ifdef BROWSER
-				this.push(key + '=' + encodeURIComponent(val));
-//#else // !BROWSER
-				this.push(key + '=' + escape(val));
-//#endif // !BROWSER
-			}, []).join('&');
 		}
 	});
 }

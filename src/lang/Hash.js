@@ -115,6 +115,17 @@ var Hash = Base.extend(Enumerable, {
 		}, { size: 0 }).size;
 	},
 
+	toQueryString: function() {
+		// Use Base.each for the generic
+		return Base.each(this, function(val, key) {
+//#ifdef BROWSER
+			this.push(key + '=' + encodeURIComponent(val));
+//#else // !BROWSER
+			this.push(key + '=' + escape(val));
+//#endif // !BROWSER
+		}, []).join('&');
+	},
+
 	statics: {
 		/**
 		 * Converts the passed object to a hash.
