@@ -35,7 +35,7 @@ Array.inject({
 		var max = Math.max(r, g, b), min = Math.min(r, g, b);
 		var delta = max - min;
 		brightness = max / 255;
-		saturation = (max != 0) ? delta / max : 0;
+		saturation = max != 0 ? delta / max : 0;
 		if (saturation == 0) {
 			hue = 0;
 		} else {

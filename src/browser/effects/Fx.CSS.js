@@ -47,7 +47,7 @@ Fx.CSS = new function() {
 			},
 
 			get: function(value, unit) {
-				return (unit) ? value + unit : value;
+				return unit ? value + unit : value;
 			}
 		}
 	});
