@@ -495,6 +495,12 @@ var Base = new function() { // Bootstrap scope
 			? Array : Hash).prototype.each.call(obj, iter, bind) : bind;
 	}
 
+	function clone(obj) {
+		return each(obj, function(val, i) {
+			this[i] = typeof val == 'object' ? clone(val) : val;
+		}, new obj.constructor());
+	}
+
 //#ifdef EXTEND_OBJECT
 	// From now on Function inject can be used to enhance any prototype,
 	// for example Object.
@@ -546,10 +552,19 @@ var Base = new function() { // Bootstrap scope
 			return res.inject.apply(res, arguments);
 		},
 
+		/**
+		 * Creates a new object of the same type and copies over all
+		 * name / value pairs from this object.
+		 */
+		clone: function() {
+			return clone(this);
+		},
+
 		statics: {
 			// Expose some local privates as Base generics.
 			has: has,
 			each: each,
+			clone: clone,
 //#ifdef PROPERTY_DEFINITION
 			define: define,
 			describe: describe,
@@ -650,18 +665,6 @@ var Base = new function() { // Bootstrap scope
 			 * does nothing else than handling $continue.
 			 */
 			stop: {}
-		}
-	}, {
-		generics: true,
-
-		/**
-		 * Creates a new object of the same type and copies over all
-		 * name / value pairs from this object.
-		 */
-		clone: function() {
-			return Base.each(this, function(val, i) {
-				this[i] = val;
-			}, new this.constructor());
 		}
 	});
 }
