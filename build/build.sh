@@ -49,9 +49,3 @@ then
 ./preprocess.sh ../src/tests/bootstrap-test.html.in ../out/bootstrap-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 ./preprocess.sh ../src/tests/element-test.html.in ../out/element-test.html "-DBROWSER -DDEBUG -DDEFINE_GLOBALS" $MODE
 fi
-
-#Template:
-
-./preprocess.sh ../src/util/Template.js ../out/Template-helma.js "-DRHINO -DHELMA" $MODE
-./preprocess.sh ../src/util/Template.js ../out/Template-rhino.js "-DRHINO" $MODE
-./preprocess.sh ../src/util/Template.js ../out/Template-browser.js "-DBROWSER" $MODE
