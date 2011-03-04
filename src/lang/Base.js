@@ -620,16 +620,17 @@ var Base = new function() { // Bootstrap scope
 			 */
 			read: function(args, index, length) {
 				var index = index || 0, length = length || args.length - index;
-				if (length == 1 && args[index] instanceof this) {
-					return args[index];
-				} else if (length != 0) {
-					var obj = new this(this.dont);
-					obj = obj.initialize.apply(obj, index > 0 || length < args.length
-							? Array.prototype.slice.call(args, index, index + length)
-							: args) || obj;
-					return obj;
+				if (length <= 1) {
+					var arg = args[index];
+					// Return null when nothing was provided
+					if (arg instanceof this || arg == null)
+						return arg;
 				}
-				return null;
+				var obj = new this(this.dont);
+				obj = obj.initialize.apply(obj, index > 0 || length < args.length
+						? Array.prototype.slice.call(args, index, index + length)
+						: args) || obj;
+				return obj;
 			},
 
 			/**
