@@ -3,10 +3,10 @@
 
 /**
  * Bootstrap JavaScript Library
- * (c) 2006 - 2010 Juerg Lehni, http://scratchdisk.com/
+ * (c) 2006 - 2011 Juerg Lehni, http://lehni.org/
  *
  * Bootstrap is released under the MIT license
- * http://bootstrap-js.net/
+ * http://bootstrapjs.org/
  *
  * Inspirations:
  * http://dean.edwards.name/weblog/2006/03/base/
@@ -17,7 +17,6 @@
  * Some code in this file is based on Mootools.net and adapted to the
  * architecture of Bootstrap, with added changes in design and architecture
  * where deemeded necessary.
- * See http://www.bootstrap-js.net/wiki/MootoolsDifferences
  */
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -594,6 +593,27 @@ var Base = new function() { // Bootstrap scope
 				for (var i = 0, l = arguments.length; i < l; i++)
 					if (arguments[i] !== undefined)
 						return arguments[i];
+				return null;
+			},
+
+			/**
+			 * Allow any Bootstrap class to read itself from any index in an
+			 * argument list or other array, by relying on its initialize()
+			 * function to perform the actual magic. This functionality turned
+			 * out to be generally very useful in Paper.js and was thus added
+			 * to the core.
+			 */
+			read: function(args, index, length) {
+				var index = index || 0, length = length || args.length - index;
+				if (length == 1 && args[index] instanceof this) {
+					return args[index];
+				} else if (length != 0) {
+					var obj = new this(this.dont);
+					obj = obj.initialize.apply(obj, index > 0 || length < args.length
+							? Array.prototype.slice.call(args, index, index + length)
+							: args) || obj;
+					return obj;
+				}
 				return null;
 			},
 
