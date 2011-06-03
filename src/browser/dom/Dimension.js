@@ -164,8 +164,12 @@ DomElement.inject(new function() {
 		 * @fully specifies wether to test for full or partial visibility.
 		 */
 		isVisible: function(fully) {
-			var win = this.getWindow(), top = win.getScrollOffset().y,
-				bottom = top + win.getSize().height, bounds = this.getBounds();
+			// TODO: This is not checking left and right at the moment
+			// TODO: This does not work for overflow divs. Use solution from
+			// paper.js for this.
+			var win = this.getWindow(), top = win.geScrollOffset().y,
+				bottom = top + win.getSize().height,
+				bounds = this.getBounds(true, true);
 			return (bounds.height > 0 || bounds.width > 0) // visible
 					&& (bounds.top >= top && bounds.bottom <= bottom // fully
 						|| (fully && bounds.top <= top && bounds.bottom >= bottom) // fully & bigger than screen
