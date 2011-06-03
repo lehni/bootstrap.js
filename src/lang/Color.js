@@ -19,12 +19,11 @@ Array.inject({
 
 	rgbToHex: function(toArray) {
 		if (this.length >= 3) {
-			if (this.length == 4 && this[3] == 0 && !toArray) return 'transparent';
+			if (this.length == 4 && this[3] == 0 && !toArray)
+				return 'transparent';
 			var hex = [];
-			for (var i = 0; i < 3; i++) {
-				var bit = (this[i] - 0).toString(16);
-				hex.push(bit.length == 1 ? '0' + bit : bit);
-			}
+			for (var i = 0; i < 3; i++)
+				hex.push((this[i] - 0).toPaddedString(2, 16));
 			return toArray ? hex : '#' + hex.join('');
 		}
 	},
