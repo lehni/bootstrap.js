@@ -30,7 +30,7 @@ DomElement.inject(new function() {
 		}
 	}
 
-	function bounds(fields, offset) {
+	function setBounds(fields, offset) {
 		// Pass one of these:
 		// (left, top, width, height, clip)
 		// ([left, top, width, height, clip])
@@ -51,7 +51,7 @@ DomElement.inject(new function() {
 		}
 	}
 
-	function body(that) {
+	function isBody(that) {
 		return that.getTag() == 'body';
 	}
 
@@ -71,7 +71,7 @@ DomElement.inject(new function() {
 		BEANS_TRUE
 
 		getSize: function() {
-			return body(this)
+			return isBody(this)
 				? this.getWindow().getSize()
 				: { width: this.$.offsetWidth, height: this.$.offsetHeight };
 		},
@@ -82,7 +82,7 @@ DomElement.inject(new function() {
 		 * which the offset is returned.
 		 */
 		getOffset: function(relative) {
-			if (body(this))
+			if (isBody(this))
 				return this.getWindow().getOffset();
 		 	if (relative && !DomNode.isNode(relative))
 				return getPositioned(this);
@@ -95,19 +95,19 @@ DomElement.inject(new function() {
 		},
 
 		getScrollOffset: function() {
-			return body(this)
+			return isBody(this)
 				? this.getWindow().getScrollOffset()
 			 	: getScrollOffset(this);
 		},
 
 		getScrollSize: function() {
-			return body(this)
+			return isBody(this)
 				? this.getWindow().getScrollSize()
 				: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
 		getBounds: function(relative) {
-			if (body(this))
+			if (isBody(this))
 				return this.getWindow().getBounds();
 			var off = this.getOffset(relative), el = this.$;
 			return {
@@ -120,14 +120,14 @@ DomElement.inject(new function() {
 			};
 		},
 
-		setBounds: bounds(['left', 'top', 'width', 'height', 'clip'], true),
+		setBounds: setBounds(['left', 'top', 'width', 'height', 'clip'], true),
 
-		setOffset: bounds(['left', 'top'], true),
+		setOffset: setBounds(['left', 'top'], true),
 
-		setSize: bounds(['width', 'height', 'clip']),
+		setSize: setBounds(['width', 'height', 'clip']),
 
 		setScrollOffset: function(x, y) {
-			if (body(this)) {
+			if (isBody(this)) {
 				this.getWindow().setScrollOffset(x, y);
 			} else {
 				// Convert { x: y: } to x / y
