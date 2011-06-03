@@ -79,12 +79,6 @@ var DomEvent = Base.extend(new function() {
 			}
 		},
 
-		stop: function() {
-			this.stopPropagation();
-			this.preventDefault();
-			return this;
-		},
-
 		stopPropagation: function() {
 			if (this.event.stopPropagation) this.event.stopPropagation();
 			else this.event.cancelBubble = true;
@@ -97,6 +91,10 @@ var DomEvent = Base.extend(new function() {
 			if (this.event.preventDefault) this.event.preventDefault();
 			else this.event.returnValue = false;
 			return this;
+		},
+
+		stop: function() {
+			return this.stopPropagation().preventDefault();
 		},
 
 		statics: {
