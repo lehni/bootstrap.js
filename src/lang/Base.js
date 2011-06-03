@@ -612,28 +612,6 @@ var Base = new function() { // Bootstrap scope
 			},
 
 			/**
-			 * Allow any Bootstrap class to read itself from any index in an
-			 * argument list or other array, by relying on its initialize()
-			 * function to perform the actual magic. This functionality turned
-			 * out to be generally very useful in Paper.js and was thus added
-			 * to the core.
-			 */
-			read: function(args, index, length) {
-				var index = index || 0, length = length || args.length - index;
-				if (length <= 1) {
-					var arg = args[index];
-					// Return null when nothing was provided
-					if (arg instanceof this || arg == null)
-						return arg;
-				}
-				var obj = new this(this.dont);
-				obj = obj.initialize.apply(obj, index > 0 || length < args.length
-						? Array.prototype.slice.call(args, index, index + length)
-						: args) || obj;
-				return obj;
-			},
-
-			/**
 			 * Converts the argument to an iterator function. If none is
 			 * specified, the identity function is returned.
 			 * This supports normal functions, which are returned unmodified,
