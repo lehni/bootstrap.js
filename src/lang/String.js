@@ -26,6 +26,12 @@ String.inject({
 
 	toFloat: Number.prototype.toFloat,
 
+	capitalize: function() {
+		return this.replace(/\b[a-z]/g, function(match) {
+			return match.toUpperCase();
+		});
+	},
+
 	camelize: function(separator) {
 		return this.replace(separator ? new RegExp('[' + separator + '](\\w)', 'g') : /-(\w)/g, function(all, chr) {
 			return chr.toUpperCase();
@@ -41,12 +47,6 @@ String.inject({
 
 	hyphenate: function(separator) {
 		return this.uncamelize(separator || '-').toLowerCase();
-	},
-
-	capitalize: function() {
-		return this.replace(/\b[a-z]/g, function(match) {
-			return match.toUpperCase();
-		});
 	},
 
 	// TODO: Is this a good name? Does it need to be improved? (lighter.js relies on it).
