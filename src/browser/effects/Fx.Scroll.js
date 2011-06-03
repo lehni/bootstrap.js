@@ -49,8 +49,8 @@ Fx.Scroll = Fx.extend({
 		var offsetSize = this.element.getSize(),
 			scrollSize = this.element.getScrollSize(),
 			scroll = this.element.getScrollOffset(),
-			values = { x: x, y: y };
-		var lookup = { x: 'width', y: 'height' };
+			values = { x: x, y: y },
+			lookup = { x: 'width', y: 'height' };
 		for (var i in values) {
 			var s = lookup[i];
 			var max = scrollSize[s] - offsetSize[s];
