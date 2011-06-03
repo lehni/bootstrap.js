@@ -81,7 +81,7 @@ DomElement.inject(new function() {
 		 * or absolute (false) offsets, or it can be an element in relation to
 		 * which the offset is returned.
 		 */
-		getOffset: function(relative) {
+		getOffset: function(relative, scroll) {
 			if (isBody(this))
 				return this.getWindow().getOffset();
 		 	if (relative && !DomNode.isNode(relative))
@@ -90,6 +90,12 @@ DomElement.inject(new function() {
 			if (relative) {
 				var rel = getAbsolute(DomNode.wrap(relative));
 				off = { x: off.x - rel.x, y: off.y - rel.y };
+			}
+			// Remove scroll offset if we want the visible position within parent
+			if (scroll) {
+				scroll = this.getScrollOffset();
+				off.x -= scroll.x;
+				off.y -= scroll.y;
 			}
 			return off;
 		},
@@ -106,10 +112,11 @@ DomElement.inject(new function() {
 				: { width: this.$.scrollWidth, height: this.$.scrollHeight };
 		},
 
-		getBounds: function(relative) {
+		getBounds: function(relative, scroll) {
 			if (isBody(this))
 				return this.getWindow().getBounds();
-			var off = this.getOffset(relative), el = this.$;
+			var off = this.getOffset(relative, scroll),
+				el = this.$;
 			return {
 				left: off.x,
 				top: off.y,
