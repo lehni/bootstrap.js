@@ -94,19 +94,15 @@ Array.inject({
 		}
 	}
 }, Enumerable, {
-	// TODO: this.each / this.findEntry / this.indexOf breaks many generics!
+	// TODO: Calling this.each / this.findEntry / this.indexOf breaks many
+	// generics!
 	generics: true,
 	BEANS_TRUE
 
 //#endif // !ECMASCRIPT_5
 
 	each: function(iter, bind) {
-		try {
-			Array.prototype.forEach.call(this, Base.iterator(iter), bind = bind || this);
-		} catch (e) {
-			if (e !== Base.stop) throw e;
-		}
-		return bind;
+		return Base.each(this, iter, bind, true); // asArray = true
 	},
 
 	collect: function(iter, bind) {

@@ -38,35 +38,7 @@ var Hash = Base.extend(Enumerable, {
 	},
 
 	each: function(iter, bind) {
-		// Do not use Object.keys for iteration as iterators might modify
-		// the object we're iterating over, making the hasOwnProperty still
-		// necessary.
-//#ifdef PROPERTY_DEFINITION
-		// If PROPERTY_DEFINITION is used, we can fully rely on hasOwnProperty,
-		// as even for FIX_PROTO, define(this, '__proto__', {}) is used.
-		// And we can rely on define() making __proto__ non-enumerable when this
-		// fix is required, as this only happens on IE, where
-		// Object.defineProperty is used.
-		// TODO: This is not true though for the case where we support both
-		// PROPERTY_DEFINITION and also want to fail back gracefully on older
-		// browsers.
-		var bind = bind || this, iter = Base.iterator(iter);
-		try {
-			for (var i in this)
-				if (this.hasOwnProperty(i))
-					iter.call(bind, this[i], i, this);
-//#else // !PROPERTY_DEFINITION
-		// Rely on Base.has instead of hasOwnProperty directly.
-		var bind = bind || this, iter = Base.iterator(iter), has = Base.has;
-		try {
-			for (var i in this)
-				if (has(this, i))
-					iter.call(bind, this[i], i, this);
-//#endif // !PROPERTY_DEFINITION
-		} catch (e) {
-			if (e !== Base.stop) throw e;
-		}
-		return bind;
+		return Base.each(this, iter, bind, false); // asArray = false
 	},
 
 	/**
