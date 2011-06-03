@@ -510,6 +510,7 @@ DomNode.inject(new function() {
 		},
 
 		appendChild: function(el) {
+			// TODO: Support toNodes here too, just as in inject*
 			if (el = DomNode.wrap(el)) {
 				// Fix a bug on Mac IE when inserting Option elements to Select
 				// elements, where the text on these objects is lost after insertion
