@@ -44,6 +44,12 @@ var Hash = Base.extend(Enumerable, {
 //#ifdef PROPERTY_DEFINITION
 		// If PROPERTY_DEFINITION is used, we can fully rely on hasOwnProperty,
 		// as even for FIX_PROTO, define(this, '__proto__', {}) is used.
+		// And we can rely on define() making __proto__ non-enumerable when this
+		// fix is required, as this only happens on IE, where
+		// Object.defineProperty is used.
+		// TODO: This is not true though for the case where we support both
+		// PROPERTY_DEFINITION and also want to fail back gracefully on older
+		// browsers.
 		var bind = bind || this, iter = Base.iterator(iter);
 		try {
 			for (var i in this)
