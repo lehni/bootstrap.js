@@ -24,7 +24,7 @@
 //#include "browser/dom/DomWindow.js"
 //#include "browser/dom/Dimension.js"
 //#include "browser/dom/DomEvent.js"
-//#include "browser/dom/Drag.js"
+//#include "browser/dom/DomEvent.Drag.js"
 
 // Dom Selectors
 //#include "browser/dom/query/Selectors.js"
