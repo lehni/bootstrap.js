@@ -27,7 +27,7 @@ DomElement.inject(new function() {
 				y += cur.$[top] || 0;
 			} while((next = DomNode.wrap(cur.$[parent])) && (!iter || iter(cur, next)))
 			return { x: x, y: y };
-		}
+		};
 	}
 
 	function setBounds(fields, offset) {
@@ -48,7 +48,7 @@ DomElement.inject(new function() {
 				var val = vals.length ? vals[i++] : vals[name];
 				if (val != null) this.setStyle(name, val);
 			}, this);
-		}
+		};
 	}
 
 	function isBody(that) {
