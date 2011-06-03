@@ -12,6 +12,9 @@
  * http://dean.edwards.name/weblog/2006/03/base/
  * http://dev.helma.org/Wiki/JavaScript+Inheritance+Sugar/
  * http://prototypejs.org/
+//#ifdef CORE_ONLY
+ */
+//#else // !CORE_ONLY
  * http://mootools.net/
  *
  * Some code in this file is based on Mootools.net and adapted to the
@@ -21,10 +24,14 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 // Base
+//#endif // !CORE_ONLY
 
 var Base = new function() { // Bootstrap scope
 //#ifdef FIX_PROTO
 	// Fix __proto__ for browsers where it is not implemented (IE and Opera).
+//#ifdef CORE_ONLY
+	var fix = !this.__proto__,
+//#else // !CORE_ONLY
 	// Do this before anything else, for "var i in" to work without filtering.
 //#ifdef EXTEND_OBJECT
 	var fix = !this.__proto__ && [Object, Function, Number, Boolean, String,
@@ -36,10 +43,12 @@ var Base = new function() { // Bootstrap scope
 	if (fix)
 		for (var i in fix)
 			fix[i].prototype.__proto__ = fix[i].prototype;
-//#endif // !FIX_PROTO
-
-// ALL
+//#endif // !CORE_ONLY
+		hidden = /^(HIDDEN_FIELDS)$/,
+//#else // !FIX_PROTO
 	var hidden = /^(HIDDEN_FIELDS)$/,
+//#endif // !FIX_PROTO
+//#comment ALL
 		proto = Object.prototype,
 		/**
 		 * Private function that checks if an object contains a given property.
@@ -89,18 +98,18 @@ var Base = new function() { // Bootstrap scope
 //#endif // !EXTEND_OBJECT
 			},
 //#endif // !ECMASCRIPT_3
-// ALL
-//#ifndef EXTEND_CORE
-// We're not extending the JS Core classes, so reference isArray here and use it
-// in each() further down instead of Base.type(obj) == 'array'
+//#comment ALL
+//#ifdef CORE_ONLY
+//#comment We're not extending the JS Core classes, so reference isArray here
+//#comment and use it in each() further down instead of Base.type() == 'array'
 		toString = proto.toString,
 		proto = Array.prototype,
 		isArray = Array.isArray = Array.isArray || function(obj) {
 			return toString.call(obj) === '[object Array]';
 		},
-//#else // EXTEND_CORE
+//#else // !CORE_ONLY
 		proto = Array.prototype,
-//#endif // EXTEND_CORE
+//#endif // !CORE_ONLY
 		slice = proto.slice,
 		forEach = proto.forEach = proto.forEach || function(iter, bind) {
 			for (var i = 0, l = this.length; i < l; i++)
@@ -111,15 +120,14 @@ var Base = new function() { // Bootstrap scope
 			// the object we're iterating over, making the hasOwnProperty still
 			// necessary.
 //#ifdef PROPERTY_DEFINITION
-			// If PROPERTY_DEFINITION is used, we can fully rely on
-			// hasOwnProperty, as even for FIX_PROTO,
-			// define(this, '__proto__', {}) is used.
-			// And we can rely on define() making __proto__ non-enumerable when
-			// this fix is required, as this only happens on IE, where
-			// Object.defineProperty is used.
-			// TODO: This is not true though for the case where we support both
-			// PROPERTY_DEFINITION and also want to fail back gracefully on
-			// older browsers.
+//#comment If PROPERTY_DEFINITION is used, we can fully rely on hasOwnProperty,
+//#comment as even for FIX_PROTO, define(this, '__proto__', {}) is used.
+//#comment And we can rely on define() making __proto__ non-enumerable when
+//#comment this fix is required, as this only happens on IE, where
+//#comment Object.defineProperty is used.
+//#comment TODO: This is not true though for the case where we support both
+//#comment PROPERTY_DEFINITION and also want to fail back gracefully on
+//#comment older browsers.
 			for (var i in this)
 				if (this.hasOwnProperty(i))
 					iter.call(bind, this[i], i, this);
@@ -130,11 +138,12 @@ var Base = new function() { // Bootstrap scope
 					iter.call(bind, this[i], i, this);
 //#endif // !PROPERTY_DEFINITION
 //#ifdef PROPERTY_DEFINITION
-// Use or simulate the standard Object.defineProperty
 //#ifdef ECMASCRIPT_5
 // ECMAScript version 5 compliant engines such as Rhino
-		}; // close forIn() from above
+//#comment close forIn() from above:
+		};
 
+	// Use the standard Object.defineProperty
 	function define(obj, name, desc) {
 		// Not all objects support Object.defineProperty, so fall back to
 		// simply setting properties
@@ -158,12 +167,13 @@ var Base = new function() { // Bootstrap scope
 		}
 	}
 //#else // !ECMASCRIPT_5
-		}, // close forIn() from above
+//#comment close forIn() from above:
+		},
 		_define = Object.defineProperty,
 		_describe = Object.getOwnPropertyDescriptor;
+
 	// Support a mixed environment of some ECMAScript 5 features present,
 	// along with __defineGetter/Setter__ functions, as found in browsers today.
-
 	function define(obj, name, desc) {
 		// Unfortunately Safari seems to ignore configurable: true and
 		// does not override existing properties, so we need to delete
@@ -200,7 +210,8 @@ var Base = new function() { // Bootstrap scope
 	}
 //#endif // !ECMASCRIPT_5
 //#else // !PROPERTY_DEFINITION
-		}; // close forIn() from above
+//#comment close forIn() from above:
+		};
 //#endif // !PROPERTY_DEFINITION
 
 	/**
@@ -225,24 +236,23 @@ var Base = new function() { // Bootstrap scope
 		 * The string of the function is parsed for this.base to detect calls.
 		 */
 //#ifdef BEANS
-		// For beans we need to provide a version of field() that takes an
-		// optional val argument. See bellow.
+//#comment For beans we need to provide a version of field() that takes an
+//#comment optional val argument. See bellow.
 		function field(name, val, dontCheck, generics) {
 			// This does even work for prop: 0, as it will just be looked up
-			// again through describe. Only the first line of variable
-			// definitions is special fo beans, the rest is shared with
-			// PROPERTY_DEFINITION bellow
+			// again through describe.
+//#comment Only the first line of variable definitions is special fo beans, the
+//#comment rest is shared with PROPERTY_DEFINITION bellow
 			var val = val || (val = describe(src, name))
-				&& (val.get ? val : val.value),
+					&& (val.get ? val : val.value),
 //#else // !BEANS
 		function field(name, dontCheck, generics) {
 //#endif // !BEANS
-//#ifdef PROPERTY_DEFINITION 
-// || BEANS (PROPERTY_DEFINITION is always on for BEANS)
+//#ifdef PROPERTY_DEFINITION // || BEANS (PROPERTY_DEFINITION always with BEANS)
 //#ifndef BEANS
 			var val = (val = describe(src, name)) && (val.get ? val : val.value),
 //#endif // !BEANS
-				func = typeof val == 'function',
+				func = typeof val === 'function',
 				res = val,
 				// Only lookup previous value if we preserve or define a
 				// function that might need it for this.base(). If we're
@@ -252,7 +262,7 @@ var Base = new function() { // Bootstrap scope
 					? (val && val.get ? name in dest : dest[name]) : null;
 //#else // !PROPERTY_DEFINITION
 			var val = src[name],
-				func = typeof val == 'function',
+				func = typeof val === 'function',
 				res = val,
 				prev = dest[name];
 //#endif // !PROPERTY_DEFINITION
@@ -269,8 +279,8 @@ var Base = new function() { // Bootstrap scope
 							slice.call(arguments, 1));
 				}
 			}
-			// TODO: On proper JS implementation, dontCheck is always set
-			// Add this with a compile switch here!
+//#comment TODO: On proper JS implementation, dontCheck is always set
+//#comment Add this with a compile switch here!
 			if ((dontCheck || val !== undefined && has.call(src, name))
 					&& (!preserve || !prev)) {
 				if (func) {
@@ -364,9 +374,9 @@ var Base = new function() { // Bootstrap scope
 				}
 //#ifdef PROPERTY_DEFINITION
 				// No need to look up getter if this is a function already.
-				// This also prevents _collection from becoming a getter, as
-				// DomElements is a constructor function and has both get / set
-				// generics for DomElement#get / #set.
+//#comment This also prevents Helma's _collection from becoming a getter, as
+//#comment DomElements is a constructor function and has both get / set
+//#comment generics for DomElement#get / #set.
 //#ifdef RHINO
 				if (!res || func || res instanceof java.lang.Object
 						|| !res.get && !res.set)
@@ -425,6 +435,7 @@ var Base = new function() { // Bootstrap scope
 				} catch (e) {}
 //#endif // BEANS
 		}
+		return dest;
 	}
 
 	/**
@@ -435,7 +446,7 @@ var Base = new function() { // Bootstrap scope
 	function extend(obj) {
 		// Create the constructor for the new prototype that calls initialize
 		// if it is defined.
-		function ctor(dont) {
+		var ctor = function(dont) {
 //#ifdef FIX_PROTO
 			// Fix __proto__
 //#ifdef PROPERTY_DEFINITION
@@ -467,28 +478,26 @@ var Base = new function() { // Bootstrap scope
 	function iterator(iter) {
 		return !iter
 			? function(val) { return val }
-			: typeof iter != 'function'
+			: typeof iter !== 'function'
 				? function(val) { return val == iter }
 				: iter;
-		/*
-		// For RegExp support, used this:
-		else switch (Base.type(iter)) {
-			case 'function': return iter;
-			case 'regexp': return function(val) { return iter.test(val) };
-			default: return function(val) { return val == iter };
-		}
-		*/
+//#comment For RegExp support, used something like this:
+//#comment	switch (Base.type(iter)) {
+//#comment		case 'function': return iter;
+//#comment		case 'regexp': return function(val) { return iter.test(val) };
+//#comment		default: return function(val) { return val == iter };
+//#comment	}
 	}
 
 	function each(obj, iter, bind, asArray) {
 		try {
 			if (obj)
-//#ifdef EXTEND_CORE
-				// See above in explanations about isArray:
-				(asArray || asArray === undefined && Base.type(obj) == 'array'
-//#else // !EXTEND_CORE
+//#comment See above in explanations about isArray:
+//#ifdef CORE_ONLY
 				(asArray || asArray === undefined && isArray(obj)
-//#endif // !EXTEND_CORE
+//#else // !CORE_ONLY
+				(asArray || asArray === undefined && Base.type(obj) == 'array'
+//#endif // !CORE_ONLY
 					? forEach : forIn).call(obj, iterator(iter),
 						bind = bind || obj);
 		} catch (e) {
@@ -503,8 +512,13 @@ var Base = new function() { // Bootstrap scope
 		}, new obj.constructor());
 	}
 
-	// Now we can use the private inject to add methods to the Function.prototype
+//#ifdef CORE_ONLY
+	// Inject into new ctor object that's passed to inject(), and then returned
+	return inject(function() {}, {
+//#else // !CORE_ONLY
+	// Now we can use the private inject to add methods to Function.prototype
 	inject(Function.prototype, {
+//#endif // !CORE_ONLY
 		inject: function(src/*, ... */) {
 			if (src) {
 				var proto = this.prototype,
@@ -512,10 +526,6 @@ var Base = new function() { // Bootstrap scope
 					// Allow the whole scope to just define statics by defining
 					// statics: true.
 					statics = src.statics == true ? src : src.statics;
-				// When called from extend, a third argument is passed, pointing
-				// to the base class (the constructor).
-				// this variable is needed for inheriting static fields and proper
-				// lookups of base on each call (see bellow)
 //#ifdef HELMA
 				// On the server side, we need some kind of version handling for
 				// HopObjects because every time a prototype gets updated, the js
@@ -534,7 +544,7 @@ var Base = new function() { // Bootstrap scope
 						|| (proto.constructor._version = 1));
 //#endif // HELMA
 				if (statics != src)
-					inject(proto, src, false, base && base.prototype,
+					inject(proto, src, src.enumerable, base && base.prototype,
 //#ifndef HELMA // !HELMA
 							src.preserve, src.generics && this);
 //#else // HELMA // Pass version
@@ -542,14 +552,13 @@ var Base = new function() { // Bootstrap scope
 //#endif // HELMA
 				// Define new static fields as enumerable, and inherit from
 				// base. enumerable is necessary so they can be copied over from
-				// base, and it does not disturb to be enumerable in the
-				// constructor. Use the preserve setting in src.preserve for
+				// base, and it does not harm to have enumerable properties in
+				// the constructor. Use the preserve setting in src.preserve for
 				// statics too, not their own.
 //#ifndef HELMA // !HELMA
-				inject(this, src.statics, true, base, src.preserve);
+				inject(this, statics, true, base, src.preserve);
 //#else // HELMA
-				inject(this, src.statics, true, base, src.preserve,
-					 	null, version);
+				inject(this, statics, true, base, src.preserve, null, version);
 				// For versioning, define onCodeUpdate to update _version each
 				// time:
 				if (version) {
@@ -613,16 +622,16 @@ var Base = new function() { // Bootstrap scope
 //#endif // !PROPERTY_DEFINITION
 			// Define an object to be passed as the first parameter in
 			// constructors when initialize should not be called.
-			// This needs to be a property of the created constructor, so that
-			// if .extend() is called on native constructors or constructors not
-			// created through .extend, this.dont will be undefined and no value
-			// will be passed to the constructor that would not know what to do
-			// with it.
+//#comment This needs to be a property on the created constructor, so that if
+//#comment .extend() is called on native constructors or constructors not
+//#comment created through .extend, this.dont will be undefined and no value
+//#comment will be passed to the constructor that would not know what to do
+//#comment with it.
 			ctor.dont = {};
 			// Copy over static fields, as prototype-like inheritance
 			// is not possible for static fields. Mark them as enumerable
 			// so they can be copied over again.
-			// TODO: This needs fixing for versioning on the server!
+//#comment TODO: This needs fixing for versioning on the server!
 			inject(ctor, this, true);
 			// Inject all the definitions in src. Use the new inject instead of
 			// the one in ctor, in case it was overriden. this is needed when
@@ -630,8 +639,12 @@ var Base = new function() { // Bootstrap scope
 			// something to actually inject.
 			return arguments.length ? this.inject.apply(ctor, arguments) : ctor;
 		}
+//#ifdef CORE_ONLY
+		// Pass true for enumerable, so inject() and extend() can be passed on
+		// to subclasses of Base through Base.inject() / extend().
+	}, true).inject({
+//#else // !CORE_ONLY
 	});
-
 //#ifdef EXTEND_OBJECT
 	// From now on Function inject can be used to enhance any prototype,
 	// for example Object.
@@ -642,6 +655,7 @@ var Base = new function() { // Bootstrap scope
 	// Let's not touch Object.prototype
 	return Object.extend({
 //#endif // !EXTEND_OBJECT
+//#endif // !CORE_ONLY
 		/**
 		 * Returns true if the object contains a property with the given name,
 		 * false otherwise.
@@ -706,7 +720,7 @@ var Base = new function() { // Bootstrap scope
 			},
 
 			type: function(obj) {
-//#ifdef BROWSER
+//#if defined(BROWSER) && !defined(CORE_ONLY)
 				// Handle elements, as needed by DomNode.js
 				return (obj || obj === 0) && (
 					obj._type || obj.nodeName && (
@@ -717,17 +731,17 @@ var Base = new function() { // Bootstrap scope
 						// the same cod ein DomNode$getConstructor
 						|| obj.location && obj.frames && obj.history && 'window'
 						|| typeof obj) || null;
-//#else // !BROWSER
+//#else // !BROWSER || CORE_ONLY
 //#ifdef RHINO
 				// Return 'java' instead of 'object' for java objects, to easily
 				// distinguish vanilla objects from native java ones.
 				return (obj || obj === 0) && (obj._type
 					|| (obj instanceof java.lang.Object ? 'java' : typeof obj))
 					|| null;
-//#else // !BROWSER && !RHINO
+//#else // !RHINO
 				return (obj || obj === 0) && (obj._type || typeof obj) || null;
-//#endif // !BROWSER && !RHINO
-//#endif // !BROWSER
+//#endif // !RHINO
+//#endif // !BROWSER || CORE_ONLY
 			},
 
 			check: function(obj) {
@@ -751,9 +765,9 @@ var Base = new function() { // Bootstrap scope
 			 *
 			 * $continue / Base.next is not implemented, as the same
 			 * functionality can achieved by using return in the closure.
-			 * In prototype, the implementation of $continue also leads to a huge
-			 * speed decrease, as the closure is wrapped in another closure that
-			 * does nothing else than handling $continue.
+			 * In prototype, the implementation of $continue also leads to a
+			 * huge speed decrease, as the closure is wrapped in another closure
+			 * that does nothing else than handling $continue.
 			 */
 			stop: {}
 		}

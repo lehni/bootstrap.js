@@ -1,5 +1,8 @@
 //#include "macros/macros.js"
 //#include "lang/Base.js"
+
+//#ifndef CORE_ONLY
+
 //#include "lang/Enumerable.js"
 //#include "lang/Hash.js"
 //#include "lang/Array.js"
@@ -58,3 +61,5 @@
 //#include "browser/effects/Fx.Transitions.js"
 
 //#endif // BROWSER
+
+//#endif // !CORE_ONLY

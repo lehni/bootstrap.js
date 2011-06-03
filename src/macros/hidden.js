@@ -1,7 +1,7 @@
 //#comment Compose hidden fields by appending macros to each other
 
 //#comment Standard hidden fields used in inject() / extend()
-//#define HIDDEN_FIELDS_1 statics|generics|preserve
+//#define HIDDEN_FIELDS_1 statics|generics|preserve|enumerable
 
 //#ifdef BEANS
 //#comment Add beans to hidden fields.
