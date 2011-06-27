@@ -29,7 +29,7 @@ var DomWindow, Window = DomWindow = DomElement.extend({
 	/**
 	 * A constructor for DomWindow that is based on window.open and extends it
 	 * to allow more options in the third parameter.
-	 *
+	 * 
 	 * If param is a string, the standard window.open is executed.
 	 * If param is an object, additional parameters maybe be defined, such as
 	 * param.confirm, param.focus, etc. Also, if param.width & height are
