@@ -385,10 +385,10 @@ DomNode.inject(new function() {
 		'disabled', 'readonly', 'multiple', 'selected', 'noresize', 'defer'
 	].associate();
 	var properties = Hash.append({ // props
-		text: Browser.TRIDENT || Browser.WEBKIT && Browser.VERSION < 420 || Browser.PRESTO && Browser.VERSION < 9
-			? function(node) {
-				return node.$.innerText !== undefined ? 'innerText' : 'nodeValue'
-			} : 'textContent',
+		text: (function() {
+			var div = document.createElement('div');
+			return div.textContent == null ? 'innerText' : 'textContent';
+		})(),
 		// Make sure that setting both class and className uses this.$.className instead of setAttribute
 		html: 'innerHTML', 'class': 'className', className: 'className', 'for': 'htmlFor'
 	}, [ // camels and other values that need to be accessed directly, not through getAttribute
@@ -576,7 +576,7 @@ DomNode.inject(new function() {
 		/**
 		 * Wraps the passed elements around the current one.
 		 * Elements are converted through toNodes
-		 *
+		 * 
 		 * Inspired by: jQuery
 		 */
 		wrap: function() {
