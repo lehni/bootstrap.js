@@ -51,7 +51,8 @@ var DomElement = DomNode.extend({
 		 * prototype when using new HtmlElement(name, props).
 		 */
 		create: function(tag, props, doc) {
-			if (Browser.TRIDENT && props) {
+			if (Browser.TRIDENT && Browser.VERSION < 8 && props) {
+				// Fix for readonly name and type properties in IE < 8
 				['name', 'type', 'checked'].each(function(key) {
 					if (props[key]) {
 						tag += ' ' + key + '="' + props[key] + '"';
