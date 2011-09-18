@@ -64,7 +64,7 @@ var Browser = new function() {
 			(window.console && console.log
 				|| window.opera && opera.postError
 				|| alert)(Array.join(arguments, ' '));
-	}
+	};
 
 	return fields;
 };

@@ -36,7 +36,7 @@ var DomEvent = Base.extend(new function() {
 				if (event.relatedTarget != this && !this.hasChild(event.relatedTarget))
 					this.fireEvent(name, [event]);
 			}
-		}
+		};
 	}
 
 	return {
@@ -71,7 +71,7 @@ var DomEvent = Base.extend(new function() {
 				this.offset = {
 					x: this.page.x - offset.x,
 					y: this.page.y - offset.y
-				}
+				};
 				this.rightClick = event.which == 3 || event.button == 2;
 				if (/^mouse(over|out)$/.test(this.type))
 					this.relatedTarget = DomNode.wrap(event.relatedTarget ||
@@ -118,7 +118,7 @@ var DomEvent = Base.extend(new function() {
 								doc.fireEvent('domready');
 								win.fireEvent('domready');
 							}
-						}
+						};
 						if (Browser.TRIDENT) {
 							// From: http://www.hedgerwow.com/360/dhtml/ie-dom-ondocumentready.html
 							var temp = doc.createElement('div');
@@ -176,14 +176,14 @@ DomElement.inject(new function() {
 			}
 			// Return true if event was fired, false otherwise
 			return !!entries;
-		}
+		};
 	}
 
 	return {
 		addEvent: function(type, func) {
 			this.events = this.events || {};
 			var entries = this.events[type] = this.events[type] || [];
-			if (func && !entries.find(function(entry) { return entry.func == func })) {
+			if (func && !entries.find(function(entry) { return entry.func == func; })) {
 				// See if we have a pseudo event here.
 				var listener = func, name = type, pseudo = DomEvent.events[type];
 				if (pseudo) {
@@ -219,7 +219,7 @@ DomElement.inject(new function() {
 		removeEvent: function(type, func) {
 			var entries = (this.events || {})[type], entry;
 			if (func && entries) {
-				if (entry = entries.remove(function(entry) { return entry.func == func })) {
+				if (entry = entries.remove(function(entry) { return entry.func == func; })) {
 					var name = entry.name, pseudo = DomEvent.events[type];
 					if (pseudo && pseudo.remove) pseudo.remove.call(this, func);
 					if (name) {

@@ -46,7 +46,7 @@ Function.inject(new function() {
 			return function() {
 				return that.apply(bind, args ? arguments.length > 0
 					? args.concat(slice.call(arguments)) : args : arguments);
-			}
+			};
 		},
 
 //#endif // !ECMASCRIPT_5
@@ -55,9 +55,9 @@ Function.inject(new function() {
 			var that = this;
 			return function() {
 				return that.apply(bind, args || arguments);
-			}
+			};
 		}
-	}
+	};
 });
 
 //#endif // __lang_Function__

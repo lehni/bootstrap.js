@@ -90,7 +90,7 @@ var DomNodes = Array.extend(new function() {
 								}
 							});
 							return values || this;
-						}
+						};
 					}
 					this[key] = val;
 				}, {}));
@@ -144,7 +144,7 @@ var DomNode = Base.extend(new function() {
 				// Safari. Just pass on the first argument and call directly.
 				var ret = this.$[name] && this.$[name](arg);
 				return ret === undefined ? this : ret;
-			}
+			};
 		});
 		// Define getter / setters
 		(src._properties || []).each(function(name) {
@@ -152,10 +152,10 @@ var DomNode = Base.extend(new function() {
 			var part = name.capitalize(), prop = name.toLowerCase();
 			src['get' + part] = function() {
 				return this.getProperty(prop);
-			}
+			};
 			src['set' + part] = function(value) {
 				return this.setProperty(prop, value);
-			}
+			};
 		});
 		delete src._methods;
 		delete src._properties;

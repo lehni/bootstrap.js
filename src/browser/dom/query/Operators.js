@@ -26,7 +26,7 @@ DomElement.operators = new function() {
 			function(a, v) {
 				return a.contains(v, sep);
 			}
-		]
+		];
 	}
 
 	return {

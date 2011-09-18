@@ -62,7 +62,7 @@ var Asset = new function() {
 					options.onProgress(src);
 				if (++count == sources.length && options.onComplete)
 					options.onComplete();
-			}
+			};
 			this.push(Asset[type](src, props));
 		}, new HtmlElements());
 	}
@@ -131,7 +131,7 @@ var Asset = new function() {
 	 	images: function(sources, options) {
 			return createMultiple('image', sources, options);
 		}
-	}
+	};
 };
 
 //#endif // __browser_remote_Asset__

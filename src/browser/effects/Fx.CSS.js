@@ -96,7 +96,7 @@ Fx.CSS = new function() {
 				return prev.concat(get ? get(cur.value, unit) : cur.value);
 			}, []);
 		}
-	}
+	};
 };
 
 //#endif // __browser_effects_Fx_CSS__

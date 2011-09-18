@@ -42,7 +42,7 @@ var Callback = {
 		ref = ref[type] = ref[type] || [];
 		// We need to pass an iterator function to find, as otherwise fn
 		// is used as an iterator.
-		if (!ref.find(function(val) { return val == fn })) ref.push(fn);
+		if (!ref.find(function(val) { return val == fn; })) ref.push(fn);
 		return this;
 	},
 

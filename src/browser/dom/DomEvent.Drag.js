@@ -32,7 +32,7 @@ DomEvent.add(new function() {
 		event.delta = {
 			x: event.page.x - last.x,
 			y: event.page.y - last.y
-		}
+		};
 		last = event.page;
 		object.fireEvent('drag', [event]);
 		event.preventDefault();

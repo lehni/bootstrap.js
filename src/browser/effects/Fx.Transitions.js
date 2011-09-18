@@ -21,11 +21,11 @@ Fx.Transitions = new Base().inject({
 
 			func.Out = function(pos) {
 				return 1 - func(1 - pos);
-			}
+			};
 
 			func.InOut = function(pos) {
 				return pos <= 0.5 ? func(2 * pos) / 2 : (2 - func(2 * (1 - pos))) / 2;
-			}
+			};
 		}));
 	},
 
@@ -76,7 +76,7 @@ Fx.Transitions.inject({
 Fx.Transitions.inject(['Quad', 'Cubic', 'Quart', 'Quint'].each(function(name, i) {
 	this[name] = function(p) {
 		return Math.pow(p, i + 2);
-	}
+	};
 }, {}));
 
 //#endif // __browser_effects_Fx_Transitions__
