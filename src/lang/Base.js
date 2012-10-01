@@ -671,7 +671,7 @@ var Base = new function() { // Bootstrap scope
 		 */
 		inject: function(/* src, ... */) {
 			for (var i = 0, l = arguments.length; i < l; i++)
-				inject(this, arguments[i]);
+				inject(this, arguments[i], arguments[i].enumerable);
 			return this;
 		},
 
