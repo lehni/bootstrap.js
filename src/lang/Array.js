@@ -360,6 +360,9 @@ Array.inject(new function() {
 		length: 0
 	});
 
+	// Firefox fix: On recent versions, 'find' cannot be enumerated, but why?
+	fields.find = proto.find;
+
 	return {
 		statics: {
 			/**
